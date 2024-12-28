@@ -431,10 +431,7 @@ ninja.data = [{
           window.location.href = "/blog/2015/formatting-and-links/";
         
       },
-    },{id: "news-our-paper-catalog-a-camera-trap-language-guided-contrastive-learning-model-has-been-accepted-at-the-ieee-cvf-winter-conference-on-applications-of-computer-vision-wacv-2025-more-details-soon",
-          title: 'Our paper “CATALOG: A Camera Trap Language-guided Contrastive Learning Model” has been accepted...',
-          description: "",
-          section: "News",},{id: "news-our-paper-hygene-a-diffusion-based-hypergraph-generation-method-has-been-accepted-at-the-aaai-conference-on-artificial-intelligence-2025",
+    },{id: "news-our-paper-hygene-a-diffusion-based-hypergraph-generation-method-has-been-accepted-at-the-aaai-conference-on-artificial-intelligence-2025",
           title: 'Our paper “HYGENE: A Diffusion-based Hypergraph Generation Method” has been accepted at the...',
           description: "",
           section: "News",},{id: "news-our-paper-higher-order-gnns-meet-efficiency-sparse-sobolev-graph-neural-networks-was-accepted-in-ieee-transactions-on-signal-and-information-processing-over-networks",
