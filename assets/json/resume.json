@@ -6,7 +6,7 @@
     "email": "jhony.giraldo@telecom-paris.fr",
     "phone": "(912) 123-4567",
     "url": "https://jhonygiraldo.github.io/",
-    "summary": "A Colombian-born computer scientist, widely ranked among the greatest and most influential scientists of all time",
+    "summary": "A Colombian-born computer scientist, working as an Assistant Professor at Télécom Paris, Institut Polytechnique de Paris.",
     "location": {
       "address": "19 place Marguerite Perey",
       "postalCode": "91120",
@@ -55,8 +55,31 @@
       "endDate": "2022-09-30",
       "score": null,
       "courses": ["Graph Signal Processing",
+        "Graph Neural Networks",
         "Machine Learning",
-        "Image and Video Processing"]
+        "Computer Vision"]
+    },
+    {
+      "institution": "Universidad de Antioquia",
+      "location": "Medellín, Colombia",
+      "url": null,
+      "area": "Computer Science",
+      "studyType": "Master of Science",
+      "startDate": "2016-08-01",
+      "endDate": "2018-06-01",
+      "score": null,
+      "courses": ["Computer Vision"]
+    },
+    {
+      "institution": "Universidad de Antioquia",
+      "location": "Medellín, Colombia",
+      "url": null,
+      "area": "Electronics Engineering",
+      "studyType": "Bachelor of Science",
+      "startDate": "2011-02-01",
+      "endDate": "2016-03-01",
+      "score": null,
+      "courses": ["Computer Vision"]
     }
   ],
   "awards": [
