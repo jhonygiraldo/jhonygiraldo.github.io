@@ -2,7 +2,7 @@
 layout: about
 title: about
 permalink: /
-subtitle: **Assistant Professor** at Télécom Paris, Institut Polytechnique de Paris
+subtitle: <a href='#'>Affiliations</a>. Address. Contacts. Motto. Etc.
 
 profile:
   align: right
