@@ -46,15 +46,17 @@
   ],
   "education": [
     {
-      "institution": "University of Zurich, Zurich, Switzerland",
-      "location": "Zurich, Switzerland",
-      "url": "https://www.uzh.ch/",
-      "area": "Software Development",
+      "institution": "La Rochelle Université, Laboratoire MIA",
+      "location": "La Rochelle, France",
+      "url": "https://www.univ-larochelle.fr/en/",
+      "area": "Applied Mathematics",
       "studyType": "PhD",
-      "startDate": "1905-01-01",
-      "endDate": "1905-01-01",
-      "score": "10",
-      "courses": ["Theory of Relativity"]
+      "startDate": "2019-10-01",
+      "endDate": "2022-09-30",
+      "score": null,
+      "courses": ["Graph Signal Processing",
+        "Machine Learning",
+        "Image and Video Processing"]
     }
   ],
   "awards": [

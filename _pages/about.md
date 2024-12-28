@@ -10,7 +10,7 @@ profile:
   image_circular: false # crops the image to make it circular
   more_info: >
     <p>Office 5D24</p>
-    <p>19 place Marguerite Perey.</p>
+    <p>19 place Marguerite Perey</p>
     <p>91120 Palaiseau, France</p>
 
 news: true # includes a list of news items
