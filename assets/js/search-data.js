@@ -3,8 +3,8 @@ const ninja = document.querySelector('ninja-keys');
 
 // add the home and posts menu items
 ninja.data = [{
-    id: "nav-",
-    title: "",
+    id: "nav-about",
+    title: "about",
     section: "Navigation",
     handler: () => {
       window.location.href = "/";
@@ -431,14 +431,16 @@ ninja.data = [{
           window.location.href = "/blog/2015/formatting-and-links/";
         
       },
-    },{id: "news-our-paper-hygene-a-diffusion-based-hypergraph-generation-method-has-been-accepted-at-the-aaai-conference-on-artificial-intelligence-2025",
-          title: 'Our paper “HYGENE: A Diffusion-based Hypergraph Generation Method” has been accepted at the...',
+    },{id: "news-a-simple-inline-announcement",
+          title: 'A simple inline announcement.',
           description: "",
-          section: "News",},{id: "news-our-paper-higher-order-gnns-meet-efficiency-sparse-sobolev-graph-neural-networks-was-accepted-in-ieee-transactions-on-signal-and-information-processing-over-networks",
-          title: 'Our paper “Higher-Order GNNs Meet Efficiency: Sparse Sobolev Graph Neural Networks” was accepted...',
+          section: "News",},{id: "news-a-long-announcement-with-details",
+          title: 'A long announcement with details',
           description: "",
-          section: "News",},{id: "news-i-ve-been-awarded-the-academic-grant-program-from-nvidia-for-my-project-bridging-the-gap-between-foundation-models-and-camera-trap-image-recognition",
-          title: 'I’ve been awarded the Academic Grant Program from NVIDIA for my project Bridging...',
+          section: "News",handler: () => {
+              window.location.href = "/news/announcement_2/";
+            },},{id: "news-a-simple-inline-announcement-with-markdown-emoji-sparkles-smile",
+          title: 'A simple inline announcement with Markdown emoji! :sparkles: :smile:',
           description: "",
           section: "News",},{id: "projects-project-1",
           title: 'project 1',
