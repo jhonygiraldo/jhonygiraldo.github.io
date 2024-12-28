@@ -1,8 +1,8 @@
 ---
 layout: post
-date: 2016-01-15 07:59:00-0400
+date: 2024-12-09 07:59:00-0400
 inline: true
 related_posts: false
 ---
 
-A simple inline announcement with Markdown emoji! :sparkles: :smile:
+Our paper "*HYGENE: A Diffusion-based Hypergraph Generation Method*" has been accepted at the **AAAI Conference on Artificial Intelligence 2025**!
