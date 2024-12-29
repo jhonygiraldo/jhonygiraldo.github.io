@@ -1,6 +1,6 @@
 ---
 layout: about
-title: about
+title: About
 permalink: /
 subtitle: Assistant Professor at Télécom Paris, Institut Polytechnique de Paris
 
