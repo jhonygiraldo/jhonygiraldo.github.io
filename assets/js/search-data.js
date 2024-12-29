@@ -444,20 +444,6 @@ ninja.data = [{
           section: "Projects",handler: () => {
               window.location.href = "/projects/9_project/";
             },},{
-        id: 'social-bluesky',
-        title: 'Bluesky',
-        section: 'Socials',
-        handler: () => {
-          window.open("jhonyhgiraldo.bsky.social", "_blank");
-        },
-      },{
-        id: 'social-email',
-        title: 'email',
-        section: 'Socials',
-        handler: () => {
-          window.open("mailto:%6A%68%6F%6E%79.%67%69%72%61%6C%64%6F@%74%65%6C%65%63%6F%6D-%70%61%72%69%73.%63%6F%6D", "_blank");
-        },
-      },{
         id: 'social-linkedin',
         title: 'LinkedIn',
         section: 'Socials',
@@ -470,6 +456,20 @@ ninja.data = [{
         section: 'Socials',
         handler: () => {
           window.open("https://scholar.google.com/citations?user=iwzmGKwAAAAJ", "_blank");
+        },
+      },{
+        id: 'social-bluesky',
+        title: 'Bluesky',
+        section: 'Socials',
+        handler: () => {
+          window.open("https://bsky.app/profile/jhonyhgiraldo.bsky.social", "_blank");
+        },
+      },{
+        id: 'social-email',
+        title: 'email',
+        section: 'Socials',
+        handler: () => {
+          window.open("mailto:%6A%68%6F%6E%79.%67%69%72%61%6C%64%6F@%74%65%6C%65%63%6F%6D-%70%61%72%69%73.%63%6F%6D", "_blank");
         },
       },{
       id: 'light-theme',
