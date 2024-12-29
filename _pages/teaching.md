@@ -7,6 +7,15 @@ nav: true
 nav_order: 6
 ---
 
-For now, this page is assumed to be a static description of your courses. You can convert it to a collection similar to `_projects/` so that you can have a dedicated page for each course.
+- **Machine Learning with Graphs**  
+  *January 2025 – Present*
 
-Organize your courses by years, topics, or universities, however you like!
+- **Deep Learning for Computer Vision**
+  *November 2023 – Present*
+
+- **Wavelets**
+  *October 2023 – Present*
+
+- **Advanced Machine Learning**
+  *March 2023 – Present*
+  **Content:** Graph Neural Networks
