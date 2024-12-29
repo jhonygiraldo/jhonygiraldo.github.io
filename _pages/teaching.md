@@ -18,4 +18,5 @@ nav_order: 6
 
 - **Advanced Machine Learning**
   *March 2023 – Present*
+
   **Content:** Graph Neural Networks
