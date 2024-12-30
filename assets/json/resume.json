@@ -62,7 +62,7 @@
       "courses": ["Computer Vision"]
     }
   ],
-  "awards": [
+  "grants": [
     {
       "title": "Agence Nationale de la Recherche (ANR) Project DeSNAP",
       "description": "Deep Simplicial Neural Networks for Advanced Geometry Processing",
