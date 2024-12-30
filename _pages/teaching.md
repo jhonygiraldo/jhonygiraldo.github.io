@@ -10,13 +10,12 @@ nav_order: 6
 - **Machine Learning with Graphs**  
   *January 2025 – Present*
 
-- **Deep Learning for Computer Vision**
+- **Deep Learning for Computer Vision**  
   *November 2023 – Present*
 
-- **Wavelets**
+- **Wavelets**  
   *October 2023 – Present*
 
-- **Advanced Machine Learning**
-  *March 2023 – Present*
-
+- **Advanced Machine Learning**  
+  *March 2023 – Present*  
   **Content:** Graph Neural Networks
