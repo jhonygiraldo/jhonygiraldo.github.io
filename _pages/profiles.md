@@ -9,14 +9,14 @@ nav_order: 2
 
 ### Postdoctoral Researchers
 
-- **Aref Einizade**: Postdoctoral Researcher, Geometric Deep Learning.  
+- [Aref Einizade](https://arefeinizade.github.io/): Postdoctoral Researcher, Geometric Deep Learning.  
   *Nov 2023 – Present*
 
 ### Ph.D. Students
 
 - **Sarra Khaïri**: Ph.D. Student at Télécom Paris, Computer Vision.  
   *Jun 2024 – Present*
-- **Dorian Gailhard**: Ph.D. Student at Télécom Paris, Hypergraph Generation.  
+- [Dorian Gailhard](https://doriangailhard.github.io/): Ph.D. Student at Télécom Paris, Hypergraph Generation.  
   *May 2024 – Present*
 - **Vahan Martirosyan**: Ph.D. Student at CentraleSupélec, Graph Neural Networks.  
   *Nov 2023 – Present*
