@@ -389,7 +389,10 @@ ninja.data = [{
           window.location.href = "/blog/2015/formatting-and-links/";
         
       },
-    },{id: "news-our-paper-higher-order-gnns-meet-efficiency-sparse-sobolev-graph-neural-networks-was-accepted-in-ieee-transactions-on-signal-and-information-processing-over-networks",
+    },{id: "news-our-paper-continuous-product-graph-neural-networks-has-been-accepted-at-the-advances-in-neural-information-processing-systems-neurips-2024-conference",
+          title: 'Our paper “Continuous Product Graph Neural Networks” has been accepted at the Advances...',
+          description: "",
+          section: "News",},{id: "news-our-paper-higher-order-gnns-meet-efficiency-sparse-sobolev-graph-neural-networks-was-accepted-in-ieee-transactions-on-signal-and-information-processing-over-networks",
           title: 'Our paper “Higher-Order GNNs Meet Efficiency: Sparse Sobolev Graph Neural Networks” was accepted...',
           description: "",
           section: "News",},{id: "news-our-paper-catalog-a-camera-trap-language-guided-contrastive-learning-model-has-been-accepted-at-ieee-cvf-winter-conference-on-applications-of-computer-vision-wacv-2025-more-details-soon",
