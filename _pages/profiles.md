@@ -28,6 +28,11 @@ nav_order: 2
 - **Julian Santamaria**: Master Student at Universidad de Antioquia, Computer Vision.  
   *Feb 2024 – Present*
 
+### Visiting Ph.D. Students
+
+- **Maria José Guerrero Muriel**: Ph.D. Student at Universidad de Antioquia, Learning Graphs from Data.  
+  *Nov 2024 - Dec 2024*
+
 ### Alumni
 
 - **Hamza Rami**: Ph.D. Student at Télécom Paris, Computer Vision.  

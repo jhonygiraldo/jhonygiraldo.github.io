@@ -81,26 +81,42 @@
   ],
   "interests": [
     {
-      "name": "Geometric Deep Learning",
+      "name": "Graph Neural Networks (GNNs)",
       "icon": "fa-solid fa-tag",
       "keywords": [
-        "Graph Neural Networks",
-        "Hypergraph Generation",
-        "Time-varying Graph Signals",
-        "Simplicial Neural Networks",
-        "Spatiotemporal Forecasting",
-        "Continuous Graph Neural Networks"
+        "Over-smoothing and Over-squashing",
+        "Scaling Up GNNs",
+        "Spatiotemporal Analysis",
+        "Continuous GNNs",
+        "Self-Supervised Learning on Graphs"
       ]
     },
     {
       "name": "Computer Vision",
       "icon": "fa-solid fa-tag",
       "keywords": [
-        "Foundation Models",
-        "Privacy-Preserving Computer Vision",
-        "Wildlife Monitoring",
-        "Vision Graph Neural Networks",
+        "GNNs for Vision Tasks",
+        "Domain Gap in Foundation Models",
+        "Biodiversity Monitoring",
+        "Privacy Preserving Computer Vision",
         "3D Generation"
+      ]
+    },
+    {
+      "name": "Hypergraphs (HNNs)",
+      "icon": "fa-solid fa-tag",
+      "keywords": [
+        "Hypergraph Generation",
+        "Hypergraph Neural Networks",
+        "Continuous HNNs"
+      ]
+    },
+    {
+      "name": "Abstract Simplicial Complexes",
+      "icon": "fa-solid fa-tag",
+      "keywords": [
+        "Deep Simplicial Neural Networks",
+        "Continuous Simplicial Neural Networks"
       ]
     }
   ]
