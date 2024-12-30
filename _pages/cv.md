@@ -9,3 +9,5 @@ description:
 toc:
   sidebar: left
 ---
+
+You can find a very long version of my CV [here](https://github.com/jhonygiraldo/jhonygiraldo.github.io/blob/main/assets/pdf/CV_Long.pdf).

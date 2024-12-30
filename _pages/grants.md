@@ -1,8 +1,8 @@
 ---
 layout: page
 permalink: /grants/
-title: Grants and Funding Sources
-description:
+title: Grants
+description: Grants and Funding Sources
 nav: true
 nav_order: 5
 ---
