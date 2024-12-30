@@ -103,11 +103,11 @@
       ]
     },
     {
-      "name": "Hypergraphs (HNNs)",
+      "name": "Hypergraphs",
       "icon": "fa-solid fa-tag",
       "keywords": [
         "Hypergraph Generation",
-        "Hypergraph Neural Networks",
+        "Hypergraph Neural Networks (HNNs)",
         "Continuous HNNs"
       ]
     },
@@ -115,8 +115,8 @@
       "name": "Abstract Simplicial Complexes",
       "icon": "fa-solid fa-tag",
       "keywords": [
-        "Deep Simplicial Neural Networks",
-        "Continuous Simplicial Neural Networks"
+        "Deep Simplicial Neural Networks (SNNs)",
+        "Continuous SNNs"
       ]
     }
   ]
