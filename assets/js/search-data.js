@@ -30,9 +30,9 @@ ninja.data = [{
           handler: () => {
             window.location.href = "/cv/";
           },
-        },{id: "nav-grants-and-funding-sources",
-          title: "Grants and Funding Sources",
-          description: "",
+        },{id: "nav-grants",
+          title: "Grants",
+          description: "Grants and Funding Sources",
           section: "Navigation",
           handler: () => {
             window.location.href = "/grants/";
