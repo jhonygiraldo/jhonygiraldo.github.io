@@ -24,6 +24,40 @@
       "highlights": ["Machine Learning with Graphs"]
     }
   ],
+  "grants": [
+    {
+      "name": "Agence Nationale de la Recherche (ANR) Project DeSNAP",
+      "summary": "Deep Simplicial Neural Networks for Advanced Geometry Processing",
+      "position": "Principal Investigator (PI)",
+      "highlights": ["€337,862"],
+      "startDate": "2025-01-01",
+      "endDate": "2029-12-31"
+    },
+    {
+      "name": "NVIDIA Academic Grant Program Award",
+      "summary": "Bridging the Gap between Foundation Models and Camera Trap Image Recognition",
+      "position": "Principal Investigator (PI)",
+      "highlights": ["10,000 A100 GPU-Hours"],
+      "startDate": "2025-01-01",
+      "endDate": "2025-06-30"
+    },
+    {
+      "name": "Agence Nationale de la Recherche (ANR) Project SODA",
+      "summary": "System On Chip Design leveraging Artificial Intelligence",
+      "position": "Team Member",
+      "highlights": ["€531,000"],
+      "startDate": "2023-01-01",
+      "endDate": "2027-12-31"
+    },
+    {
+      "name": "Hi! Paris Postdoc Fellowship (Aref Einizade)",
+      "summary": "Learning Multi-domain Graphs from Data via Graph Machine Learning: Theoretical Analysis and Applications",
+      "position": "Advisor",
+      "highlights": ["€120,000"],
+      "startDate": "2023-01-01",
+      "endDate": "2025-12-31"
+    }
+  ],
   "education": [
     {
       "institution": "La Rochelle Université, Laboratoire MIA",
