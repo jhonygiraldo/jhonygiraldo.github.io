@@ -472,6 +472,20 @@ ninja.data = [{
           window.open("mailto:%6A%68%6F%6E%79.%67%69%72%61%6C%64%6F@%74%65%6C%65%63%6F%6D-%70%61%72%69%73.%63%6F%6D", "_blank");
         },
       },{
+        id: 'social-orcid',
+        title: 'ORCID',
+        section: 'Socials',
+        handler: () => {
+          window.open("https://orcid.org/0000-0002-0039-1270", "_blank");
+        },
+      },{
+        id: 'social-researchgate',
+        title: 'ResearchGate',
+        section: 'Socials',
+        handler: () => {
+          window.open("https://www.researchgate.net/profile/Jhony-Giraldo/", "_blank");
+        },
+      },{
       id: 'light-theme',
       title: 'Change theme to light',
       description: 'Change the theme of the site to Light',
