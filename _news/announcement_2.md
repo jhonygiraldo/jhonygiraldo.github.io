@@ -5,4 +5,4 @@ inline: true
 related_posts: false
 ---
 
-Our paper "*HYGENE: A Diffusion-based Hypergraph Generation Method*" has been accepted at the **AAAI Conference on Artificial Intelligence 2025**!
+Our paper "*HYGENE: A Diffusion-based Hypergraph Generation Method*" has been accepted at the **AAAI Conference on Artificial Intelligence 2025!**
