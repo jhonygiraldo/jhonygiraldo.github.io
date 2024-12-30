@@ -24,12 +24,12 @@ email: jhony.giraldo@telecom-paris.com # your email address
 # leetcode_id: # your LeetCode id
 # mastodon_username: # your mastodon instance+username in the format instance.tld/@username
 # medium_username: # your Medium username
-# orcid_id: # your ORCID ID
+orcid_id: 0000-0002-0039-1270 # your ORCID ID
 # osf_id: # your OSF ID
 # pinterest_id: # your pinterest id
 # publons_id: # your ID on Publons
 # quora_username: # your Quora username
-# research_gate_profile: # your profile on ResearchGate
+research_gate_profile: Jhony-Giraldo # your profile on ResearchGate
 # rss_icon: true # set to true to show the RSS icon
 # scopus_id: # your profile on Scopus
 # semanticscholar_id: # your Semantic Scholar ID
