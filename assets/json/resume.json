@@ -91,6 +91,17 @@
         "Spatiotemporal Forecasting",
         "Continuous Graph Neural Networks"
       ]
+    },
+    {
+      "name": "Computer Vision",
+      "icon": "fa-solid fa-tag",
+      "keywords": [
+        "Foundation Models",
+        "Privacy-Preserving Computer Vision",
+        "Wildlife Monitoring",
+        "Vision Graph Neural Networks",
+        "3D Generation"
+      ]
     }
   ]
 }
