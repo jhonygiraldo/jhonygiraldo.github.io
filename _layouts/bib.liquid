@@ -26,21 +26,6 @@
         {% endif %}
       {% endif %}
 
-      <!-- Check if 'tag' exists and display it as a badge -->
-          {% if entry.tag %}
-            <span class="badge badge-info ml-2">{{ entry.tag }}</span>
-          {% endif %}
-
-        {% else %}
-          <abbr class="badge rounded w-100">{{ entry.abbr }}</abbr>
-
-          <!-- Check if 'tag' exists and display it as a badge -->
-          {% if entry.tag %}
-            <span class="badge badge-info ml-2">{{ entry.tag }}</span>
-          {% endif %}
-        {% endif %}
-      {% endif %}
-
       {% if entry.preview %}
         {% if entry.preview contains '://' %}
           <img class="preview z-depth-1 rounded" src="{{ entry.preview }}">
