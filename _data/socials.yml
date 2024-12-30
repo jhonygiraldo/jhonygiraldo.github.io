@@ -9,7 +9,6 @@ scholar_userid: iwzmGKwAAAAJ # your Google Scholar ID
 bluesky_url: https://bsky.app/profile/jhonyhgiraldo.bsky.social # your bluesky URL
 # dblp_url: # your DBLP profile url
 # discord_id: # your discord id (18-digit unique numerical identifier)
-email: jhony.giraldo@telecom-paris.com # your email address
 # facebook_id: # your facebook id
 # flickr_id: # your flickr id
 # github_username: # your GitHub user name
@@ -30,6 +29,7 @@ orcid_id: 0000-0002-0039-1270 # your ORCID ID
 # publons_id: # your ID on Publons
 # quora_username: # your Quora username
 research_gate_profile: Jhony-Giraldo # your profile on ResearchGate
+email: jhony.giraldo@telecom-paris.com # your email address
 # rss_icon: true # set to true to show the RSS icon
 # scopus_id: # your profile on Scopus
 # semanticscholar_id: # your Semantic Scholar ID
