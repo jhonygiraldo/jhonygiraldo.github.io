@@ -5,7 +5,7 @@
     "image": "",
     "email": "jhony.giraldo@telecom-paris.fr",
     "url": "https://jhonygiraldo.github.io/",
-    "summary": "A Colombian-born computer scientist, working as an Assistant Professor at Télécom Paris, Institut Polytechnique de Paris.",
+    "summary": "A computer scientist, working as an Assistant Professor at Télécom Paris, Institut Polytechnique de Paris.",
     "location": {
       "address": "19 place Marguerite Perey",
       "postalCode": "91120",
@@ -77,6 +77,20 @@
       "language": "French",
       "fluency": "Fluent",
       "icon": ""
+    }
+  ],
+  "interests": [
+    {
+      "name": "Geometric Deep Learning",
+      "icon": "fa-solid fa-tag",
+      "keywords": [
+        "Graph Neural Networks",
+        "Hypergraph Generation",
+        "Time-varying Graph Signals",
+        "Simplicial Neural Networks",
+        "Spatiotemporal Forecasting",
+        "Continuous Graph Neural Networks"
+      ]
     }
   ]
 }

@@ -1,13 +1,11 @@
 ---
 layout: page
 permalink: /grants/
-title: Grants
-description: Grants and Funding Sources
+title: Grants and Funding Sources
+description:
 nav: true
 nav_order: 5
 ---
-
-## Grants and Funding Sources
 
 - **Agence Nationale de la Recherche (ANR) Project DeSNAP**  
   *"Deep Simplicial Neural Networks for Advanced Geometry Processing"*  
