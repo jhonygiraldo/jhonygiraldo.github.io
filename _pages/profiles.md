@@ -25,13 +25,21 @@ nav_order: 2
 
 ### Master Students
 
-- **Julian Santamaria**: Master Student at Universidad de Antioquia, Computer Vision.  
+- [Julian Santamaria](https://julian075.github.io/): Master Student at Universidad de Antioquia, Computer Vision.  
   *Feb 2024 – Present*
+- **Kian Bakhtari**: Master Student at Institut Polytechnique de Paris, Computer Vision.  
+  *April 2025 – September 2025*
+- **Antoine Vialle**: Engineering Student at CentraleSupéléc, Geometric Deep Learning.  
+  *May 2025 – October 2025*
 
 ### Visiting Ph.D. Students
 
+- [Zepeng Zhang](https://zepengzhang.com/): Ph.D. Student at EPFL, Geometric Deep Learning.  
+  *April 2025 - August 2025*
 - **Maria José Guerrero Muriel**: Ph.D. Student at Universidad de Antioquia, Learning Graphs from Data.  
   *Nov 2024 - Dec 2024*
+- **Muhammad Rameez Ur Rahman**: Ph.D. Student at Sapienza University of Rome, Computer Vision.  
+  *June 2023*
 
 ### Alumni
 
