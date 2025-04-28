@@ -493,6 +493,13 @@ ninja.data = [{
           window.open("https://bsky.app/profile/jhonyhgiraldo.bsky.social", "_blank");
         },
       },{
+        id: 'social-orcid',
+        title: 'ORCID',
+        section: 'Socials',
+        handler: () => {
+          window.open("https://orcid.org/0000-0002-0039-1270", "_blank");
+        },
+      },{
         id: 'social-researchgate',
         title: 'ResearchGate',
         section: 'Socials',
