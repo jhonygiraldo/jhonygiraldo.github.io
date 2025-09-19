@@ -18,7 +18,7 @@ selected_papers: false # includes a list of papers marked as "selected={true}"
 social: true # includes social icons at the bottom of the page
 ---
 
-I am an Assistant Professor at [Télécom Paris](https://www.telecom-paris.fr/en/home), [Institut Polytechnique de Paris](https://www.ip-paris.fr/en), working in the Information Processing and Communications Laboratory (LTCI) in the Multimedia team. My research interests include the fundamentals and applications of **Geometric Deep Learning** (Graph and Simplicial Neural Networks), **Computer Vision**, **Machine Learning**, and **Graph Signal Processing**.
+I am an Assistant Professor at [Télécom Paris](https://www.telecom-paris.fr/en/home), [Institut Polytechnique de Paris](https://www.ip-paris.fr/en), working in the Information Processing and Communications Laboratory (LTCI) in the Multimedia team. I'm a member of the [ELLIS Society](https://ellis.eu/) and IEEE since 2025. My research interests include the fundamentals and applications of **Geometric Deep Learning** (Graph and Simplicial Neural Networks), **Computer Vision**, **Machine Learning**, and **Graph Signal Processing**.
 
 I received my Ph.D. in applied mathematics at La Rochelle Université, Laboratoire MIA (Mathématiques, Image, et Applications), France in 2022. During my Ph.D. studies I was a visiting Ph.D. student at Centre de Vision Numérique (CVN), Inria OPIS at CentraleSupélec, Université Paris-Saclay, France in 2022. I was also a visiting scholar at the Università degli Studi di Napoli Parthenope, Italy, working at the CVPR Lab “Alfredo Petrosino” in 2021.
 
