@@ -28,4 +28,4 @@ Before my doctoral studies, I worked as a Research Assistant at the University o
 
 📢 **Call for Internships 2025-2026:** I am looking for motivated students interested in **geometric deep learning** for internships starting in spring 2026.
 
-🎓 **For M1 and M2 students at IP Paris** I am happy to supervise a limited number of master’s projects. Please note that I expect you to be enrolled in my course *Machine Learning with Graphs* (APM_5DS30_TP).
+🎓 **For M1 and M2 students at IP Paris:** I am happy to supervise a limited number of master’s projects. Please note that I expect you to be enrolled in my course *Machine Learning with Graphs* (APM_5DS30_TP).
