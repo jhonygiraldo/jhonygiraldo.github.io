@@ -22,8 +22,6 @@ nav_order: 2
   *May 2024 – Present*
 - **Vahan Martirosyan**: Ph.D. Student at CentraleSupélec, Graph Neural Networks.  
   *Nov 2023 – Present*
-- **Gabriele Spadaro**: Ph.D. Student at Télécom Paris and University of Turin, Computer Vision.  
-  *Feb 2023 – Present*
 
 ### Visiting Ph.D. Students
 
@@ -44,6 +42,8 @@ nav_order: 2
 
 ### Alumni
 
+- **Gabriele Spadaro**: Ph.D. Student at Télécom Paris and University of Turin, Computer Vision. (Now Postdoc at University of Turin and Institut Polytechnique de Paris)
+  *Feb 2023 – Dec 2025*
 - [Julian Santamaria](https://julian075.github.io/): Intern, Computer Vision.  
   *Jan 2025 – Jun 2025*
 - **Kian Bakhtari**: Intern, Computer Vision.  
