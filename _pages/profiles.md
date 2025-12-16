@@ -42,15 +42,15 @@ nav_order: 2
 
 ### Alumni
 
-- **Gabriele Spadaro**: Ph.D. Student at Télécom Paris and University of Turin, Computer Vision. (Now Postdoc at University of Turin and Institut Polytechnique de Paris)
+- **Gabriele Spadaro**: Ph.D. Student at Télécom Paris and University of Turin, Computer Vision. (Now Postdoc at University of Turin and Institut Polytechnique de Paris)  
   *Feb 2023 – Dec 2025*
 - [Julian Santamaria](https://julian075.github.io/): Intern, Computer Vision.  
   *Jan 2025 – Jun 2025*
 - **Kian Bakhtari**: Intern, Computer Vision.  
-  *April 2025 – September 2025*
+  *April 2025 – Sep 2025*
 - **Antoine Vialle**: Intern, Geometric Deep Learning. (Now PhD student at Télécom Paris)  
-  *May 2025 – October 2025*
-- **Hamza Rami**: Ph.D. Student at Télécom Paris, Computer Vision. (Now associate consultant at Headmind Partners) 
+  *May 2025 – Oct 2025*
+- **Hamza Rami**: Ph.D. Student at Télécom Paris, Computer Vision. (Now associate consultant at Headmind Partners)  
   *Oct 2022 – May 2024*
 - **Vahan Martirosyan**: Intern, Graph Neural Networks. (Now PhD student at CentraleSupélec)  
   *May – Sep 2023*
