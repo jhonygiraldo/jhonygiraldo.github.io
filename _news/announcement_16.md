@@ -5,4 +5,4 @@ inline: true
 related_posts: false
 ---
 
-Our paper "*STEP-ones: A simple yet effective approach for transferability estimation of pruned backbones*" was accepted at **Neurocomputing**!
+Our paper "*TEP-ones: A simple yet effective approach for transferability estimation of pruned backbones*" was accepted at **Neurocomputing**!
