@@ -26,6 +26,10 @@ I received my Ph.D. in Applied Mathematics from La Rochelle Université (Laborat
 
 Before my doctoral studies, I worked as a Research Assistant at the University of Delaware, USA (2018–2019), focusing on Graph Signal Processing. I hold both a Master’s degree (with honors, 2018) and a Bachelor’s degree in Electronics Engineering (2016) from Universidad de Antioquia, Colombia.
 
+📢 **Call for Postdoc:** I am looking for postdoc interested in **geometric deep learning** starting in spring/summer 2026. More information: [Full postdoc call](https://docs.google.com/viewer?url=raw.githubusercontent.com/jhonygiraldo/jhonygiraldo.github.io/master/assets/pdf/Postdoc_Position.pdf)
+
+📢 **Call for PhD student:** We're looking for PhD student in **Compression and Efficient Processing of Graph Data: From Signal Processing to Deep Learning** starting in Fall 2026. More information: [Full PhD call](https://docs.google.com/viewer?url=raw.githubusercontent.com/jhonygiraldo/jhonygiraldo.github.io/master/assets/pdf/PhD_Position.pdf)
+
 📢 **Call for Internships 2025-2026:** I am looking for motivated students interested in **geometric deep learning** for internships starting in spring 2026.
 
 🎓 **For M1 and M2 students at IP Paris:** I am happy to supervise a limited number of master’s projects. Please note that I expect you to be enrolled in my course *Machine Learning with Graphs* (APM_5DS30_TP).
