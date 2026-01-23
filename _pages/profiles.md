@@ -9,8 +9,7 @@ nav_order: 2
 
 ### Postdoctoral Researchers
 
-- [Aref Einizade](https://arefeinizade.github.io/): Postdoctoral Researcher, Geometric Deep Learning.  
-  *Nov 2023 – Present*
+--
 
 ### Ph.D. Students
 
@@ -42,6 +41,8 @@ nav_order: 2
 
 ### Alumni
 
+- [Aref Einizade](https://arefeinizade.github.io/): Postdoctoral Researcher, Geometric Deep Learning. (Now Assistant Professor at Télécom SudParis, Institut Polytechnique de Paris)  
+  *Nov 2023 – Jan 2026*
 - **Gabriele Spadaro**: Ph.D. Student at Télécom Paris and University of Turin, Computer Vision. (Now Postdoc at University of Turin and Institut Polytechnique de Paris)  
   *Feb 2023 – Dec 2025*
 - [Julian Santamaria](https://julian075.github.io/): Intern, Computer Vision.  
