@@ -37,7 +37,7 @@ nav_order: 2
 
 ### Master Students
 
-- Bérénice Nghiem (2025-2026), Carolina Brandao (2025-2026), Nader Sadek (2025), Lucas Li (2025), Shifeng Xie (2024-2026), Julian Santamaria (2024-2025), Mouhamadou Thiaw (2024-2025), Amadou Sangare (2023-2024), Ayoub Benabbou (2023-2024).
+- Nada Hammad (2026), Bérénice Nghiem (2025-2026), Carolina Brandao (2025-2026), Nader Sadek (2025), Lucas Li (2025), Shifeng Xie (2024-2026), Julian Santamaria (2024-2025), Mouhamadou Thiaw (2024-2025), Amadou Sangare (2023-2024), Ayoub Benabbou (2023-2024).
 
 ### Alumni
 
