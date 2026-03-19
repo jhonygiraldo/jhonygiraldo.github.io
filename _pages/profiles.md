@@ -33,7 +33,10 @@ nav_order: 2
 
 ### Interns
 
---
+- **Sergei Gerasimov**: Intern, Geometric Deep Learning.  
+  *Apr 2026 - Sep 2026*
+- **Matthieu Kaeppelin**: Intern, Geometric Deep Learning.  
+  *Apr 2026 - Sep 2026*
 
 ### Master Students
 
@@ -48,7 +51,7 @@ nav_order: 2
 - [Julian Santamaria](https://julian075.github.io/): Intern, Computer Vision.  
   *Jan 2025 – Jun 2025*
 - **Kian Bakhtari**: Intern, Computer Vision.  
-  *April 2025 – Sep 2025*
+  *Apr 2025 – Sep 2025*
 - **Antoine Vialle**: Intern, Geometric Deep Learning. (Now PhD student at Télécom Paris)  
   *May 2025 – Oct 2025*
 - **Hamza Rami**: Ph.D. Student at Télécom Paris, Computer Vision. (Now associate consultant at Headmind Partners)  
