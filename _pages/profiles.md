@@ -24,7 +24,7 @@ nav_order: 2
 
 ### Visiting Ph.D. Students
 
-- [Zepeng Zhang](https://zepengzhang.com/): Ph.D. Student at EPFL, Geometric Deep Learning.  
+- [Zepeng Zhang](https://zepengzhang.github.io/): Ph.D. Student at EPFL, Geometric Deep Learning.  
   *April 2025 - August 2025*
 - **Maria José Guerrero Muriel**: Ph.D. Student at Universidad de Antioquia, Learning Graphs from Data.  
   *Nov 2024 - Dec 2024*
@@ -33,9 +33,11 @@ nav_order: 2
 
 ### Interns
 
-- **Sergei Gerasimov**: Intern, Geometric Deep Learning.  
+- **Nada Hammad**: Intern, Evaluation of Graph Generative Models.  
+  *May 2026 - Aug 2026*
+- **Sergei Gerasimov**: Intern, Graph Summarization.  
   *Apr 2026 - Sep 2026*
-- **Matthieu Kaeppelin**: Intern, Geometric Deep Learning.  
+- **Matthieu Kaeppelin**: Intern, Knowledge Graphs.  
   *Apr 2026 - Sep 2026*
 
 ### Master Students
