@@ -7,6 +7,12 @@ nav: true
 nav_order: 5
 ---
 
+- **Hi! Paris Fellowship, Project SIGMA**  
+  *"Signal-aware Graph Summarization with GNN Guarantees"*  
+  **Role**: Co-PI
+  **Duration**: 2026–2030  
+
+
 - **Agence Nationale de la Recherche (ANR) Project DeSNAP**  
   *"Deep Simplicial Neural Networks for Advanced Geometry Processing"*  
   **Role**: PI
