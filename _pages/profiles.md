@@ -34,7 +34,7 @@ nav_order: 2
 ### Interns
 
 - **Nada Hammad**: Intern, Evaluation of Graph Generative Models.  
-  *May 2026 - Aug 2026*
+  *Jun 2026 - Aug 2026*
 - **Sergei Gerasimov**: Intern, Graph Summarization.  
   *Apr 2026 - Sep 2026*
 - **Matthieu Kaeppelin**: Intern, Knowledge Graphs.  
