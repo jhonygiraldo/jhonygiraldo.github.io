@@ -7,18 +7,27 @@ nav: true
 nav_order: 5
 ---
 
-- **Hi! Paris Fellowship, Project SIGMA**  
-  *"Signal-aware Graph Summarization with GNN Guarantees"*  
-  **Role**: Co-PI
-  **Duration**: 2026–2030  
-
-
 - **Agence Nationale de la Recherche (ANR) Project DeSNAP**  
   *"Deep Simplicial Neural Networks for Advanced Geometry Processing"*  
-  **Role**: PI
+  **Role**: PI  
   **Duration**: 2025–2029  
 
 
+- **Hi! Paris Funding:**  
+  - Synergy Fellowship, Project SIGMA *"Signal-aware Graph Summarization with GNN Guarantees"*  
+  **Role**: Co-PI  
+  **Duration**: 2026–2029
+  - International Invited Chair (Antonio Ortega)  
+  **Role**: Host  
+  **Duration**: 2026–2029
+  - Half PhD Fellowship (Antoine Vialle)  
+  **Role**: Supervisor  
+  **Duration**: 2025–2028  
+  - Postdoc Fellowship (Aref Einizade)  
+  **Role**: Supervisor  
+  **Duration**: 2023–2025  
+
+    
 - **NVIDIA Academic Grant Program Award**  
   *"Bridging the Gap between Foundation Models and Camera Trap Image Recognition"*  
   **Role**: PI  
@@ -28,11 +37,5 @@ nav_order: 5
 
 - **Agence Nationale de la Recherche (ANR) Project SODA**  
   *"System On Chip Design leveraging Artificial Intelligence"*  
-  **Role**: Team Member
+  **Role**: Team Member  
   **Duration**: 2023–2027  
-
-
-- **Hi! Paris Postdoc Fellowship (Aref Einizade)**  
-  *"Learning Multi-domain Graphs from Data via Graph Machine Learning: Theoretical Analysis and Applications"*  
-  **Role**: PI
-  **Duration**: 2023–2025  
