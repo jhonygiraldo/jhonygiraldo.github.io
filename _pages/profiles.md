@@ -33,12 +33,14 @@ nav_order: 2
 
 ### Interns
 
-- **Nada Hammad**: Intern, Evaluation of Graph Generative Models.  
-  *Jun 2026 - Aug 2026*
 - **Sergei Gerasimov**: Intern, Graph Summarization.  
   *Apr 2026 - Sep 2026*
 - **Matthieu Kaeppelin**: Intern, Knowledge Graphs.  
   *Apr 2026 - Sep 2026*
+- **Nada Hammad**: Intern, Evaluation of Graph Generative Models.  
+  *Jun 2026 - Aug 2026*
+- **Bochun Jia**: Intern, Computer Vision.  
+  *Jun 2026 - Aug 2026*
 
 ### Master Students
 

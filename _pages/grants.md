@@ -17,9 +17,6 @@ nav_order: 5
   - Synergy Fellowship, Project SIGMA *"Signal-aware Graph Summarization with GNN Guarantees"*  
   **Role**: Co-PI  
   **Duration**: 2026–2029
-  - International Invited Chair (Antonio Ortega)  
-  **Role**: Host  
-  **Duration**: 2026–2029
   - Half PhD Fellowship (Antoine Vialle)  
   **Role**: Supervisor  
   **Duration**: 2025–2028  
