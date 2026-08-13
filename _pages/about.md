@@ -20,12 +20,10 @@ social: true # includes social icons at the bottom of the page
 
 I am an Assistant Professor at [Télécom Paris](https://www.telecom-paris.fr/en/home), [Institut Polytechnique de Paris](https://www.ip-paris.fr/en), working in the Information Processing and Communications Laboratory (LTCI) in the Multimedia team. I'm a member of the [ELLIS Society](https://ellis.eu/).
 
-My research focuses on the theory and applications of **Geometric Deep Learning** (graph and higher-order networks), **Computer Vision**, **Machine Learning**, and **Graph Signal Processing**.
+My research focuses on **machine learning** and **signal processing** for relational data such as graphs and higher-order structures. I am also interested in several applications in science and engineering, including some problems in computer vision, circuit design, environmental monitoring, materials analysis, and underwater acoustics.
 
 I received my Ph.D. in Applied Mathematics from La Rochelle Université (Laboratoire MIA – Mathématiques, Image et Applications) in 2022. During my Ph.D., I was a visiting researcher at the Centre de Vision Numérique (CVN) and Inria OPIS, CentraleSupélec, Université Paris-Saclay (2022), and at the CVPR Lab, Università degli Studi di Napoli Parthenope, Italy (2021).
 
 Before my doctoral studies, I worked as a Research Assistant at the University of Delaware, USA (2018–2019), focusing on Graph Signal Processing. I hold both a Master’s degree (with honors, 2018) and a Bachelor’s degree in Electronics Engineering (2016) from Universidad de Antioquia, Colombia.
-
-📢 **Call for PhD students:** I am looking for PhD student interested in **graph signal processing and geometric deep learning** starting as soon as possible. More information: [Full PhD call](https://docs.google.com/viewer?url=raw.githubusercontent.com/jhonygiraldo/jhonygiraldo.github.io/master/assets/pdf/PhD_Position_SIGMA.pdf)
 
 📢 **Call for Postdoc:** I am looking for postdoc interested in **geometric deep learning** starting as soon as possible. More information: [Full postdoc call](https://docs.google.com/viewer?url=raw.githubusercontent.com/jhonygiraldo/jhonygiraldo.github.io/master/assets/pdf/Postdoc_Position.pdf)
