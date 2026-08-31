@@ -22,6 +22,11 @@ nav_order: 2
 - **Vahan Martirosyan**: Ph.D. Student at CentraleSupélec, Graph Neural Networks.  
   *Nov 2023 – Present*
 
+### Research Engineers
+
+- [Emanuele Mule](https://emamule.github.io/): Geometric Deep Learning.  
+  *Sep 2026 - Present*
+
 ### Visiting Ph.D. Students
 
 - [Zepeng Zhang](https://zepengzhang.github.io/): Ph.D. Student at EPFL, Geometric Deep Learning.  
