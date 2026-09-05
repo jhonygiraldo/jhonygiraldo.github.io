@@ -25,30 +25,12 @@ By the end of the course, students should be able to:
 - use graph models for semi-supervised learning, molecular-property prediction, spatiotemporal analysis, recommendation, and graph generation;
 - evaluate assumptions, failure modes, and empirical evidence in graph-ML research.
 
-## Lecture notes
-
-### 01 · Introduction to machine learning on graphs
-
-Graphs as a modeling language; graph representations and task levels; handcrafted structural features; node embeddings; DeepWalk; node2vec.
-
-```{=html}
-<div class="button-row">
-  <a class="button-link primary" href="lecture-01.html">Read the web note</a>
-  <a class="button-link secondary" href="/assets/pdf/Lecture-01-Introduction-to-Machine-Learning-on-Graphs.pdf">Original slides (PDF)</a>
-</div>
-```
-
 ## Course sequence
 
-1. Introduction to machine learning on graphs
-2. Introduction to graph neural networks
-3. Practical: graph neural networks
-4. Scaling graph neural networks
-5. Spatiotemporal analysis with graph neural networks
-6. Practical: spatiotemporal graph learning
-7. Recommender systems using graphs
-8. Graph generation
-9. Practical: graph generation
+The course runs over nine sessions. Web notes and slides appear below as each
+lecture is given.
+
+{{< include ../../_includes/generated/lecture-notes.md >}}
 
 ## Core references
 

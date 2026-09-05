@@ -181,7 +181,18 @@ def anchor(value: str) -> str:
 
 
 def internal_url(value: str) -> str:
-    if value.startswith(("https://", "http://", "mailto:", "/")):
+    """Normalize an internal link.
+
+    A path ending in "/" is a directory, and browsers serving the site from
+    disk show a folder listing for it instead of the page. Point such links at
+    the Quarto source of the index page; Quarto rewrites ".qmd" to ".html" when
+    it renders, so the result works from disk and from a web server alike.
+    """
+    if value.startswith(("https://", "http://", "mailto:")):
+        return value
+    if value.endswith("/"):
+        value += "index.qmd"
+    if value.startswith("/"):
         return value
     return "/" + value.lstrip("./")
 
@@ -215,6 +226,20 @@ def validate(news: list[dict[str, Any]], people: dict[str, Any], courses: list[d
         for field in ("title", "level", "period", "summary"):
             if not course.get(field):
                 errors.append(f"course {index} is missing {field}")
+        numbers = [lecture.get("number") for lecture in course.get("lectures", [])]
+        if numbers != sorted(number for number in numbers if isinstance(number, int)):
+            errors.append(f"course {index} has lectures that are unnumbered or out of order")
+        for lecture in course.get("lectures", []):
+            label = f"course {index} lecture {lecture.get('number', '?')}"
+            for field in ("number", "title", "topics"):
+                if not lecture.get(field):
+                    errors.append(f"{label} is missing {field}")
+            note = lecture.get("note")
+            if note and not (ROOT / note).exists():
+                errors.append(f"{label} points at a missing web note: {note}")
+            slides = lecture.get("slides")
+            if slides and not (ROOT / "assets" / "pdf" / slides).exists():
+                errors.append(f"{label} points at missing slides: {slides}")
 
     keys = [publication.get("key", "") for publication in publications]
     duplicate_keys = [key for key, count in Counter(keys).items() if key and count > 1]
@@ -311,6 +336,89 @@ def render_courses(courses: list[dict[str, Any]]) -> str:
         )
     lines.append("</div>")
     return "\n".join(raw_block(lines)) + "\n"
+
+
+def slides_url(lecture: dict[str, Any]) -> str:
+    return "/assets/pdf/" + lecture["slides"]
+
+
+def render_lecture_item(lecture: dict[str, Any]) -> list[str]:
+    number = f"{lecture['number']:02d}"
+    published = bool(lecture.get("note"))
+    buttons: list[str] = []
+    if published:
+        buttons.append(
+            f'    <a class="button-link primary" href="{internal_url(lecture["note"])}">Read the web note</a>'
+        )
+    if lecture.get("slides"):
+        label = "Original slides (PDF)" if published else "Slides (PDF)"
+        buttons.append(f'    <a class="button-link secondary" href="{slides_url(lecture)}">{label}</a>')
+
+    lines = [
+        f'<li class="lecture-item{" is-published" if published else ""}">',
+        f'  <div class="lecture-index">{number}</div>',
+        '  <div class="lecture-body">',
+        f'    <h3>{html.escape(lecture["title"])}</h3>',
+        f'    <p>{html.escape(lecture["topics"])}</p>',
+    ]
+    if buttons:
+        lines.append('    <div class="button-row">')
+        lines.extend(buttons)
+        lines.append("    </div>")
+    else:
+        lines.append('    <p class="lecture-status">Web note in preparation.</p>')
+    lines.extend(["  </div>", "</li>"])
+    return lines
+
+
+def render_lectures(courses: list[dict[str, Any]]) -> tuple[str, str]:
+    """Render the course-page session list and the home-page spotlight.
+
+    Both come from the same data, so publishing a note is a single edit in
+    _data/courses.json and neither page can fall out of step with the other.
+    """
+    course = next((item for item in courses if item.get("lectures")), None)
+    if course is None:
+        empty = "\n".join(raw_block(["<!-- no lectures declared in _data/courses.json -->"])) + "\n"
+        return empty, empty
+
+    lectures = course["lectures"]
+    listing = ['<ol class="lecture-list">']
+    for lecture in lectures:
+        listing.extend(render_lecture_item(lecture))
+    listing.append("</ol>")
+
+    published = [lecture for lecture in lectures if lecture.get("note")]
+    if not published:
+        spotlight_lines = ["<!-- no web notes published yet -->"]
+        return "\n".join(raw_block(listing)) + "\n", "\n".join(raw_block(spotlight_lines)) + "\n"
+
+    latest = published[-1]
+    earlier = published[:-1]
+    course_link = internal_url(course.get("url", "teaching/index.qmd"))
+    spotlight_lines = [
+        '<section class="spotlight">',
+        '  <div class="eyebrow">Web lecture notes</div>',
+        f'  <h3>{html.escape(course["title"])}</h3>',
+        f'  <p><strong>Lecture {latest["number"]} · {html.escape(latest["title"])}.</strong> {html.escape(latest["topics"])}</p>',
+        '  <div class="button-row">',
+        f'    <a class="button-link primary" href="{internal_url(latest["note"])}">Read Lecture {latest["number"]}</a>',
+        f'    <a class="button-link secondary" href="{course_link}">Open the course</a>',
+        "  </div>",
+    ]
+    if earlier:
+        shown = earlier[-3:]
+        links = ", ".join(
+            f'<a href="{internal_url(lecture["note"])}">Lecture {lecture["number"]} · {html.escape(lecture["title"])}</a>'
+            for lecture in shown
+        )
+        remainder = len(earlier) - len(shown)
+        if remainder:
+            links += f', and {remainder} more'
+        spotlight_lines.append(f'  <p class="spotlight-also">Also online: {links}.</p>')
+    spotlight_lines.append("</section>")
+
+    return "\n".join(raw_block(listing)) + "\n", "\n".join(raw_block(spotlight_lines)) + "\n"
 
 
 def news_link(item: dict[str, Any]) -> str | None:
@@ -444,10 +552,13 @@ def main() -> int:
     people_full, people_preview = render_people(people)
     news_full, news_latest = render_news(news)
     publications_full, publications_selected = render_publications(publications)
+    lectures_full, lectures_spotlight = render_lectures(courses)
     generated = {
         "people.md": people_full,
         "team-preview.md": people_preview,
         "courses.md": render_courses(courses),
+        "lecture-notes.md": lectures_full,
+        "lecture-spotlight.md": lectures_spotlight,
         "news.md": news_full,
         "latest-news.md": news_latest,
         "publications.md": publications_full,

@@ -7,8 +7,59 @@
     "role": "Course lead",
     "period": "2024–present",
     "summary": "Graph representation learning, graph neural networks, scaling, spatiotemporal learning, recommender systems, and graph generation.",
-    "url": "teaching/machine-learning-with-graphs/",
-    "featured": true
+    "url": "teaching/machine-learning-with-graphs/index.qmd",
+    "featured": true,
+    "lectures": [
+      {
+        "number": 1,
+        "title": "Introduction to machine learning on graphs",
+        "topics": "Graphs as a modeling language; graph representations and task levels; handcrafted structural features; node embeddings; DeepWalk; node2vec.",
+        "note": "teaching/machine-learning-with-graphs/lecture-01.qmd",
+        "slides": "Lecture-01-Introduction-to-Machine-Learning-on-Graphs.pdf"
+      },
+      {
+        "number": 2,
+        "title": "Introduction to graph neural networks",
+        "topics": "Convolutions as polynomials in a shift operator; graph signals and diffusion; graph convolutional filters; GCN; message passing; GAT; homophily, over-smoothing, and over-squashing; PyTorch Geometric.",
+        "note": "teaching/machine-learning-with-graphs/lecture-02.qmd",
+        "slides": "Lecture-02-Graph-Neural-Networks.pdf"
+      },
+      {
+        "number": 3,
+        "title": "Practical: graph neural networks",
+        "topics": "Implementing, training, and debugging GNNs on real datasets with PyTorch Geometric."
+      },
+      {
+        "number": 4,
+        "title": "Scaling graph neural networks",
+        "topics": "Sampling, mini-batching, and architectures for graphs too large to fit in memory."
+      },
+      {
+        "number": 5,
+        "title": "Spatiotemporal analysis with graph neural networks",
+        "topics": "Learning on graphs whose signals evolve in time: traffic, sensors, and dynamic systems."
+      },
+      {
+        "number": 6,
+        "title": "Practical: spatiotemporal graph learning",
+        "topics": "Building and evaluating a spatiotemporal graph model end to end."
+      },
+      {
+        "number": 7,
+        "title": "Recommender systems using graphs",
+        "topics": "User-item bipartite graphs, collaborative filtering, and graph-based recommendation."
+      },
+      {
+        "number": 8,
+        "title": "Graph generation",
+        "topics": "Generative models for graphs and molecules, and how such models are evaluated."
+      },
+      {
+        "number": 9,
+        "title": "Practical: graph generation",
+        "topics": "Training a graph generative model and assessing the graphs it produces."
+      }
+    ]
   },
   {
     "code": "APM 5DA12 TP",
@@ -41,4 +92,3 @@
     "featured": false
   }
 ]
-

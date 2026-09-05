@@ -23,7 +23,7 @@ format:
   <div class="lecture-meta"><span>Original lecture: 3 October 2025</span><span>Web note revised: 5 September 2026</span><span>Mathematics rendered with MathJax</span></div>
   <div class="button-row">
     <a class="button-link primary" href="/assets/pdf/Lecture-01-Introduction-to-Machine-Learning-on-Graphs.pdf">Download the original slides</a>
-    <a class="button-link secondary" href="./">Back to the course</a>
+    <a class="button-link secondary" href="/teaching/machine-learning-with-graphs/index.qmd">Back to the course</a>
   </div>
 </header>
 ```

@@ -12,7 +12,7 @@
 </article>
 <article class="news-card">
   <div class="news-date"><time datetime="2026-04-30">30 Apr 2026</time></div>
-  <h3><a href="/publications/">Two papers accepted at ICML 2026</a></h3>
+  <h3><a href="/publications/index.qmd">Two papers accepted at ICML 2026</a></h3>
   <p>The papers study feature-aware hypergraph generation and graph-informed flow matching for spatiotemporal imputation.</p>
 </article>
 </div>

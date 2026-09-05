@@ -395,6 +395,70 @@ body.fullcontent #quarto-content > main.content,
   background: linear-gradient(135deg, #eaf5f3, #fffaf4);
 }
 
+.spotlight-also {
+  margin: 1rem 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.lecture-list {
+  margin: 1.6rem 0 2.6rem;
+  padding: 0;
+  list-style: none;
+  counter-reset: lecture;
+}
+
+.lecture-item {
+  display: grid;
+  grid-template-columns: 3.4rem minmax(0, 1fr);
+  gap: 0 1.1rem;
+  margin-bottom: 0.9rem;
+  padding: 1.25rem 1.35rem;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.lecture-item.is-published {
+  border-color: #b9d7d9;
+  background: white;
+  box-shadow: 0 8px 24px rgba(32, 61, 67, 0.05);
+}
+
+.lecture-index {
+  color: var(--muted);
+  font-family: $headings-font-family;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.lecture-item.is-published .lecture-index {
+  color: var(--coral);
+}
+
+.lecture-body h3 {
+  margin: 0 0 0.45rem;
+  font-size: 1.22rem;
+}
+
+.lecture-body p {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.lecture-body .button-row {
+  margin-top: 0.9rem;
+}
+
+.lecture-status {
+  margin-top: 0.55rem;
+  color: #7b8b95;
+  font-size: 0.88rem;
+  font-style: italic;
+}
+
 .email-note {
   margin: 2.2rem 0;
   padding: 1.25rem 1.4rem;
@@ -722,6 +786,15 @@ body.fullcontent #quarto-content > main.content,
   body.fullcontent #quarto-content > main.content,
   #quarto-content.page-layout-full > main.content {
     width: min(100% - 2rem, 1100px);
+  }
+
+  .lecture-item {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.3rem;
+  }
+
+  .lecture-index {
+    font-size: 1.1rem;
   }
 
   .academic-profile-grid {

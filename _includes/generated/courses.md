@@ -2,7 +2,7 @@
 <div class="course-grid">
 <article class="course-card">
   <div class="course-code">APM 5DS30 TP</div>
-  <h3><a href="/teaching/machine-learning-with-graphs/">Machine Learning with Graphs</a></h3>
+  <h3><a href="/teaching/machine-learning-with-graphs/index.qmd">Machine Learning with Graphs</a></h3>
   <p>Graph representation learning, graph neural networks, scaling, spatiotemporal learning, recommender systems, and graph generation.</p>
   <p class="person-links">MSc · Course lead · 2024–present</p>
 </article>

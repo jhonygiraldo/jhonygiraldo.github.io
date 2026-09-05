@@ -14,7 +14,7 @@
 </article>
 <article class="news-card">
   <div class="news-date"><time datetime="2026-04-30">30 Apr 2026</time></div>
-  <h3><a href="/publications/">Two papers accepted at ICML 2026</a></h3>
+  <h3><a href="/publications/index.qmd">Two papers accepted at ICML 2026</a></h3>
   <p>The papers study feature-aware hypergraph generation and graph-informed flow matching for spatiotemporal imputation.</p>
 </article>
 <article class="news-card">
@@ -51,7 +51,7 @@
 </article>
 <article class="news-card">
   <div class="news-date"><time datetime="2025-11-16">16 Nov 2025</time></div>
-  <h3><a href="/publications/">Four papers at NeurIPS 2025</a></h3>
+  <h3><a href="/publications/index.qmd">Four papers at NeurIPS 2025</a></h3>
   <p>One main-track and three workshop papers cover simplicial neural networks, tensorial PDEs, materials science, and environmental applications.</p>
 </article>
 <article class="news-card">
@@ -91,7 +91,7 @@
 </article>
 <article class="news-card">
   <div class="news-date"><time datetime="2025-01-20">20 Jan 2025</time></div>
-  <h3><a href="/publications/">Two oral presentations at WACV 2025</a></h3>
+  <h3><a href="/publications/index.qmd">Two oral presentations at WACV 2025</a></h3>
   <p>WiGNet and CATALOG were selected for oral presentation at WACV 2025.</p>
 </article>
 <article class="news-card">

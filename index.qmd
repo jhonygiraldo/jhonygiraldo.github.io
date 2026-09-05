@@ -17,8 +17,8 @@ page-layout: full
       <p>My research focuses on <strong>machine learning</strong> and <strong>signal processing</strong> for relational data, including graphs and higher-order structures. I study how mathematical structure can guide the design of scalable, stable, and interpretable learning models. I am also interested in applications in computer vision, circuit design, environmental monitoring, materials analysis, physical systems, and underwater acoustics.</p>
       <p>I received my PhD in Applied Mathematics from La Rochelle Université in 2022. Before my doctoral studies, I worked on graph signal processing at the University of Delaware and completed my MSc and BSc degrees at Universidad de Antioquia, Colombia.</p>
       <div class="hero-actions">
-        <a class="button-link primary" href="/research/">Research</a>
-        <a class="button-link secondary" href="/publications/">Publications</a>
+        <a class="button-link primary" href="/research/index.qmd">Research</a>
+        <a class="button-link secondary" href="/publications/index.qmd">Publications</a>
         <a class="button-link secondary" href="/assets/pdf/Jhony-Giraldo-CV.pdf">Curriculum vitae</a>
       </div>
     </div>
@@ -50,7 +50,7 @@ My work lies at the intersection of learning, signal processing, and structured 
 
 ## Selected publications
 
-These papers represent the three threads of the research program. The [complete publication record](/publications/) is searchable by title, author, venue, and year.
+These papers represent the three threads of the research program. The [complete publication record](/publications/index.qmd) is searchable by title, author, venue, and year.
 
 {{< include _includes/generated/selected-publications.md >}}
 
@@ -58,23 +58,13 @@ These papers represent the three threads of the research program. The [complete 
 
 {{< include _includes/generated/latest-news.md >}}
 
-[See all news →](/news/)
+[See all news →](/news/index.qmd)
 
 ## For students
 
 The teaching area is designed as a durable course library: lecture notes, equations, references, exercises, slides, and course logistics live together and remain readable on phones and laptops.
 
-```{=html}
-<section class="spotlight">
-  <div class="eyebrow">New lecture notes</div>
-  <h3>Machine Learning with Graphs</h3>
-  <p>Lecture 1 develops the language of graphs, graph machine-learning tasks, classical structural features, and the random-walk view of DeepWalk and node2vec.</p>
-  <div class="button-row">
-    <a class="button-link primary" href="/teaching/machine-learning-with-graphs/lecture-01.html">Read Lecture 1</a>
-    <a class="button-link secondary" href="/teaching/machine-learning-with-graphs/">Open the course</a>
-  </div>
-</section>
-```
+{{< include _includes/generated/lecture-spotlight.md >}}
 
 ```{=html}
 <div class="email-note" role="note" aria-label="A note about email">
