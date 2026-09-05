@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520" role="img" aria-labelledby="title desc">
+  <title id="title">A graph represented as a drawing, an edge list, and an adjacency matrix</title>
+  <desc id="desc">A four-node undirected graph is translated into an edge list and its symmetric binary adjacency matrix.</desc>
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#97aaae"/></marker>
+    <style>
+      .box{fill:#fff;stroke:#dbe2df;stroke-width:2}.edge{stroke:#71878c;stroke-width:6}.node{fill:#0f6c78;stroke:#fff;stroke-width:5}.n{font:700 22px system-ui,sans-serif;fill:#fff;text-anchor:middle;dominant-baseline:middle}.label{font:700 27px system-ui,sans-serif;fill:#16343c;text-anchor:middle}.mono{font:600 21px ui-monospace,SFMono-Regular,monospace;fill:#33474f}.arrow{stroke:#97aaae;stroke-width:4;marker-end:url(#arr)}.cell{fill:#edf6f5;stroke:#b8cbcd}.one{fill:#d2644b;font:800 21px ui-monospace,monospace;text-anchor:middle;dominant-baseline:middle}.zero{fill:#73878b;font:500 21px ui-monospace,monospace;text-anchor:middle;dominant-baseline:middle}
+    </style>
+  </defs>
+  <rect class="box" x="20" y="55" width="320" height="410" rx="24"/><rect class="box" x="440" y="55" width="270" height="410" rx="24"/><rect class="box" x="810" y="55" width="370" height="410" rx="24"/>
+  <text class="label" x="180" y="105">Drawing</text><text class="label" x="575" y="105">Edge list</text><text class="label" x="995" y="105">Adjacency matrix</text>
+  <path class="edge" d="M98 205L221 155L270 282L160 355L98 205M221 155L160 355"/>
+  <circle class="node" cx="98" cy="205" r="29"/><circle class="node" cx="221" cy="155" r="29"/><circle class="node" cx="270" cy="282" r="29"/><circle class="node" cx="160" cy="355" r="29"/>
+  <text class="n" x="98" y="205">1</text><text class="n" x="221" y="155">2</text><text class="n" x="270" y="282">3</text><text class="n" x="160" y="355">4</text>
+  <path class="arrow" d="M357 260H414"/><path class="arrow" d="M727 260H784"/>
+  <text class="mono" x="510" y="175">(1, 2)</text><text class="mono" x="510" y="218">(1, 4)</text><text class="mono" x="510" y="261">(2, 3)</text><text class="mono" x="510" y="304">(2, 4)</text><text class="mono" x="510" y="347">(3, 4)</text>
+  <g transform="translate(887,142)">
+    <text class="mono" x="-32" y="31">1</text><text class="mono" x="-32" y="87">2</text><text class="mono" x="-32" y="143">3</text><text class="mono" x="-32" y="199">4</text>
+    <text class="mono" x="21" y="-17">1</text><text class="mono" x="77" y="-17">2</text><text class="mono" x="133" y="-17">3</text><text class="mono" x="189" y="-17">4</text>
+    <g>
+      <rect class="cell" x="0" y="0" width="50" height="50"/><rect class="cell" x="56" y="0" width="50" height="50"/><rect class="cell" x="112" y="0" width="50" height="50"/><rect class="cell" x="168" y="0" width="50" height="50"/>
+      <rect class="cell" x="0" y="56" width="50" height="50"/><rect class="cell" x="56" y="56" width="50" height="50"/><rect class="cell" x="112" y="56" width="50" height="50"/><rect class="cell" x="168" y="56" width="50" height="50"/>
+      <rect class="cell" x="0" y="112" width="50" height="50"/><rect class="cell" x="56" y="112" width="50" height="50"/><rect class="cell" x="112" y="112" width="50" height="50"/><rect class="cell" x="168" y="112" width="50" height="50"/>
+      <rect class="cell" x="0" y="168" width="50" height="50"/><rect class="cell" x="56" y="168" width="50" height="50"/><rect class="cell" x="112" y="168" width="50" height="50"/><rect class="cell" x="168" y="168" width="50" height="50"/>
+    </g>
+    <g class="zero"><text x="25" y="25">0</text><text x="137" y="25">0</text><text x="81" y="81">0</text><text x="137" y="137">0</text><text x="25" y="137">0</text><text x="193" y="193">0</text></g>
+    <g class="one"><text x="81" y="25">1</text><text x="193" y="25">1</text><text x="25" y="81">1</text><text x="137" y="81">1</text><text x="193" y="81">1</text><text x="81" y="137">1</text><text x="193" y="137">1</text><text x="25" y="193">1</text><text x="81" y="193">1</text><text x="137" y="193">1</text></g>
+  </g>
+</svg>

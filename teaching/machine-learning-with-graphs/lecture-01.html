@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Web lecture note covering graph definitions, task levels, structural features, DeepWalk, and node2vec.">
+
+<title>Lecture 1 — Introduction to Machine Learning on Graphs – Jhony H. Giraldo</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../assets/images/jhony-giraldo.jpg" rel="icon" type="image/jpeg">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1b7a93e697b4997453238fc7b360c330.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Jhony H. Giraldo",
+  "jobTitle": "Assistant Professor in Machine Learning and Computer Vision",
+  "url": "https://jhonygiraldo.github.io/",
+  "image": "https://jhonygiraldo.github.io/assets/images/jhony-giraldo.jpg",
+  "email": "mailto:jhony.giraldo@telecom-paris.fr",
+  "affiliation": [
+    {"@type": "CollegeOrUniversity", "name": "Télécom Paris"},
+    {"@type": "CollegeOrUniversity", "name": "Institut Polytechnique de Paris"}
+  ],
+  "sameAs": [
+    "https://orcid.org/0000-0002-0039-1270",
+    "https://scholar.google.com/citations?user=iwzmGKwAAAAJ",
+    "https://www.linkedin.com/in/jhonyhgiraldo",
+    "https://bsky.app/profile/jhonyhgiraldo.bsky.social"
+  ],
+  "knowsAbout": [
+    "Graph machine learning",
+    "Geometric deep learning",
+    "Graph signal processing",
+    "Computer vision",
+    "Higher-order neural networks"
+  ]
+}
+</script>
+
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<meta property="og:title" content="Lecture 1 — Introduction to Machine Learning on Graphs">
+<meta property="og:description" content="Web lecture note covering graph definitions, task levels, structural features, DeepWalk, and node2vec.">
+<meta property="og:image" content="https://jhonygiraldo.github.io/assets/figures/structured-data.svg">
+<meta property="og:site_name" content="Jhony H. Giraldo">
+<meta property="og:image:alt" content="Colored groups of isolated points connected to form a network">
+<meta name="twitter:title" content="Lecture 1 — Introduction to Machine Learning on Graphs">
+<meta name="twitter:description" content="Web lecture note covering graph definitions, task levels, structural features, DeepWalk, and node2vec.">
+<meta name="twitter:image" content="https://jhonygiraldo.github.io/assets/figures/structured-data.svg">
+<meta name="twitter:image:alt" content="Colored groups of isolated points connected to form a network">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed custom-title-page lecture-page quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Jhony H. Giraldo</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../research/index.html"> 
+<span class="menu-text">Research</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../people/index.html"> 
+<span class="menu-text">Team</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../publications/index.html"> 
+<span class="menu-text">Publications</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../teaching/index.html"> 
+<span class="menu-text">Teaching</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../news/index.html"> 
+<span class="menu-text">News</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../cv/index.html"> 
+<span class="menu-text">CV</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:jhony.giraldo@telecom-paris.fr"> <i class="bi bi-envelope" role="img" aria-label="Email Jhony Giraldo">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://scholar.google.com/citations?user=iwzmGKwAAAAJ"> <i class="bi bi-mortarboard-fill" role="img" aria-label="Google Scholar">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/jhonyhgiraldo"> <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives"><span class="header-section-number">1</span> Learning objectives</a></li>
+  <li><a href="#why-graphs" id="toc-why-graphs" class="nav-link" data-scroll-target="#why-graphs"><span class="header-section-number">2</span> Why graphs?</a>
+  <ul class="collapse">
+  <li><a href="#applications" id="toc-applications" class="nav-link" data-scroll-target="#applications"><span class="header-section-number">2.1</span> Applications</a></li>
+  </ul></li>
+  <li><a href="#basic-graph-language" id="toc-basic-graph-language" class="nav-link" data-scroll-target="#basic-graph-language"><span class="header-section-number">3</span> Basic graph language</a>
+  <ul class="collapse">
+  <li><a href="#undirected-directed-and-weighted-graphs" id="toc-undirected-directed-and-weighted-graphs" class="nav-link" data-scroll-target="#undirected-directed-and-weighted-graphs"><span class="header-section-number">3.1</span> Undirected, directed, and weighted graphs</a></li>
+  <li><a href="#bipartite-graphs" id="toc-bipartite-graphs" class="nav-link" data-scroll-target="#bipartite-graphs"><span class="header-section-number">3.2</span> Bipartite graphs</a></li>
+  </ul></li>
+  <li><a href="#representing-a-graph" id="toc-representing-a-graph" class="nav-link" data-scroll-target="#representing-a-graph"><span class="header-section-number">4</span> Representing a graph</a>
+  <ul class="collapse">
+  <li><a href="#adjacency-matrix" id="toc-adjacency-matrix" class="nav-link" data-scroll-target="#adjacency-matrix"><span class="header-section-number">4.1</span> Adjacency matrix</a></li>
+  <li><a href="#edge-list-and-adjacency-list" id="toc-edge-list-and-adjacency-list" class="nav-link" data-scroll-target="#edge-list-and-adjacency-list"><span class="header-section-number">4.2</span> Edge list and adjacency list</a></li>
+  <li><a href="#features-and-labels" id="toc-features-and-labels" class="nav-link" data-scroll-target="#features-and-labels"><span class="header-section-number">4.3</span> Features and labels</a></li>
+  </ul></li>
+  <li><a href="#prediction-tasks-on-graphs" id="toc-prediction-tasks-on-graphs" class="nav-link" data-scroll-target="#prediction-tasks-on-graphs"><span class="header-section-number">5</span> Prediction tasks on graphs</a>
+  <ul class="collapse">
+  <li><a href="#node-level-tasks" id="toc-node-level-tasks" class="nav-link" data-scroll-target="#node-level-tasks"><span class="header-section-number">5.1</span> Node-level tasks</a></li>
+  <li><a href="#edge-level-tasks" id="toc-edge-level-tasks" class="nav-link" data-scroll-target="#edge-level-tasks"><span class="header-section-number">5.2</span> Edge-level tasks</a></li>
+  <li><a href="#subgraph-level-tasks" id="toc-subgraph-level-tasks" class="nav-link" data-scroll-target="#subgraph-level-tasks"><span class="header-section-number">5.3</span> Subgraph-level tasks</a></li>
+  <li><a href="#graph-level-tasks" id="toc-graph-level-tasks" class="nav-link" data-scroll-target="#graph-level-tasks"><span class="header-section-number">5.4</span> Graph-level tasks</a></li>
+  </ul></li>
+  <li><a href="#why-graph-machine-learning-is-different" id="toc-why-graph-machine-learning-is-different" class="nav-link" data-scroll-target="#why-graph-machine-learning-is-different"><span class="header-section-number">6</span> Why graph machine learning is different</a></li>
+  <li><a href="#classical-structural-features" id="toc-classical-structural-features" class="nav-link" data-scroll-target="#classical-structural-features"><span class="header-section-number">7</span> Classical structural features</a>
+  <ul class="collapse">
+  <li><a href="#degree-centrality" id="toc-degree-centrality" class="nav-link" data-scroll-target="#degree-centrality"><span class="header-section-number">7.1</span> Degree centrality</a></li>
+  <li><a href="#eigenvector-centrality" id="toc-eigenvector-centrality" class="nav-link" data-scroll-target="#eigenvector-centrality"><span class="header-section-number">7.2</span> Eigenvector centrality</a></li>
+  <li><a href="#closeness-centrality" id="toc-closeness-centrality" class="nav-link" data-scroll-target="#closeness-centrality"><span class="header-section-number">7.3</span> Closeness centrality</a></li>
+  <li><a href="#betweenness-centrality" id="toc-betweenness-centrality" class="nav-link" data-scroll-target="#betweenness-centrality"><span class="header-section-number">7.4</span> Betweenness centrality</a></li>
+  <li><a href="#clustering-coefficient-and-graphlets" id="toc-clustering-coefficient-and-graphlets" class="nav-link" data-scroll-target="#clustering-coefficient-and-graphlets"><span class="header-section-number">7.5</span> Clustering coefficient and graphlets</a></li>
+  </ul></li>
+  <li><a href="#from-feature-engineering-to-representation-learning" id="toc-from-feature-engineering-to-representation-learning" class="nav-link" data-scroll-target="#from-feature-engineering-to-representation-learning"><span class="header-section-number">8</span> From feature engineering to representation learning</a></li>
+  <li><a href="#random-walks-as-a-similarity-model" id="toc-random-walks-as-a-similarity-model" class="nav-link" data-scroll-target="#random-walks-as-a-similarity-model"><span class="header-section-number">9</span> Random walks as a similarity model</a></li>
+  <li><a href="#deepwalk" id="toc-deepwalk" class="nav-link" data-scroll-target="#deepwalk"><span class="header-section-number">10</span> DeepWalk</a></li>
+  <li><a href="#node2vec-controlling-the-walk" id="toc-node2vec-controlling-the-walk" class="nav-link" data-scroll-target="#node2vec-controlling-the-walk"><span class="header-section-number">11</span> node2vec: controlling the walk</a></li>
+  <li><a href="#what-these-embeddings-preserveand-what-they-do-not" id="toc-what-these-embeddings-preserveand-what-they-do-not" class="nav-link" data-scroll-target="#what-these-embeddings-preserveand-what-they-do-not"><span class="header-section-number">12</span> What these embeddings preserve—and what they do not</a></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">13</span> Exercises</a>
+  <ul class="collapse">
+  <li><a href="#exercise-1-representation" id="toc-exercise-1-representation" class="nav-link" data-scroll-target="#exercise-1-representation"><span class="header-section-number">13.1</span> Exercise 1 — Representation</a></li>
+  <li><a href="#exercise-2-centrality" id="toc-exercise-2-centrality" class="nav-link" data-scroll-target="#exercise-2-centrality"><span class="header-section-number">13.2</span> Exercise 2 — Centrality</a></li>
+  <li><a href="#exercise-3-permutations" id="toc-exercise-3-permutations" class="nav-link" data-scroll-target="#exercise-3-permutations"><span class="header-section-number">13.3</span> Exercise 3 — Permutations</a></li>
+  <li><a href="#exercise-4-negative-sampling" id="toc-exercise-4-negative-sampling" class="nav-link" data-scroll-target="#exercise-4-negative-sampling"><span class="header-section-number">13.4</span> Exercise 4 — Negative sampling</a></li>
+  <li><a href="#exercise-5-node2vec" id="toc-exercise-5-node2vec" class="nav-link" data-scroll-target="#exercise-5-node2vec"><span class="header-section-number">13.5</span> Exercise 5 — node2vec</a></li>
+  </ul></li>
+  <li><a href="#main-takeaways" id="toc-main-takeaways" class="nav-link" data-scroll-target="#main-takeaways"><span class="header-section-number">14</span> Main takeaways</a></li>
+  <li><a href="#references-and-provenance" id="toc-references-and-provenance" class="nav-link" data-scroll-target="#references-and-provenance">References and provenance</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+</div>
+
+<div>
+  <div class="description">
+    Web lecture note covering graph definitions, task levels, structural features, DeepWalk, and node2vec.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    <div>
+    <div class="quarto-title-meta-heading">Modified</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date-modified">September 5, 2026</p>
+    </div>
+  </div>
+    
+  </div>
+  
+
+
+</header>
+
+
+<header class="lecture-header">
+  <div class="eyebrow">APM 5DS30 TP · Machine Learning with Graphs</div>
+  <h1>Introduction to machine learning on graphs</h1>
+  <p>Lecture 1 · Jhony H. Giraldo · Télécom Paris, Institut Polytechnique de Paris</p>
+  <div class="lecture-meta"><span>Original lecture: 3 October 2025</span><span>Web note revised: 5 September 2026</span><span>Mathematics rendered with MathJax</span></div>
+  <div class="button-row">
+    <a class="button-link primary" href="../../assets/pdf/Lecture-01-Introduction-to-Machine-Learning-on-Graphs.pdf">Download the original slides</a>
+    <a class="button-link secondary" href="../../teaching/machine-learning-with-graphs/index.html">Back to the course</a>
+  </div>
+</header>
+<p>This note turns the first lecture into a self-contained reading. It normalizes the notation, expands several derivations, and adds short checks that are difficult to fit on slides. The aim is to understand the <strong>problem formulation</strong> before introducing graph neural networks in Lecture 2.</p>
+<section id="learning-objectives" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="learning-objectives"><span class="header-section-number">1</span> Learning objectives</h2>
+<p>After studying this note, you should be able to:</p>
+<ol class="learning-objectives">
+  <li>define directed, undirected, weighted, and bipartite graphs using precise notation;</li>
+  <li>move between a graph drawing, an edge list, and an adjacency matrix;</li>
+  <li>distinguish node-, edge-, subgraph-, and graph-level prediction tasks;</li>
+  <li>compute and interpret several classical structural node features;</li>
+  <li>formulate shallow node representation learning as an encoder–decoder problem;</li>
+  <li>explain how DeepWalk and node2vec learn from random-walk co-occurrences.</li>
+</ol>
+</section>
+<section id="why-graphs" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="why-graphs"><span class="header-section-number">2</span> Why graphs?</h2>
+<p>Many standard machine-learning datasets present observations as isolated rows of a matrix. That representation is suitable when the samples can reasonably be treated as independent. In many systems, however, <strong>relations are part of the data</strong>:</p>
+<ul>
+<li>people communicate in social networks;</li>
+<li>routers exchange packets over physical links;</li>
+<li>atoms interact through chemical bonds;</li>
+<li>sensors measure a physical field at related locations;</li>
+<li>objects and agents influence one another in a scene;</li>
+<li>papers cite other papers, and users interact with items.</li>
+</ul>
+<p>A graph separates the <strong>entities</strong> from the <strong>relations</strong> between them. This simple abstraction is expressive enough to describe logical, physical, biological, and engineered systems <span class="citation" data-cites="battaglia2018relational">(<a href="#ref-battaglia2018relational" role="doc-biblioref"><span class="nocase">Battaglia et al.</span> 2018</a>)</span>.</p>
+<div class="figure-panel">
+<div id="fig-structured-data" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Colored groups of isolated points connected to form a network">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-structured-data-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/structured-data.svg" class="img-fluid figure-img" alt="Colored groups of isolated points connected to form a network">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-structured-data-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Isolated observations become substantially more informative when their relations are included. Vector figure from the supplied course material.
+</figcaption>
+</figure>
+</div>
+</div>
+<section id="applications" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="applications"><span class="header-section-number">2.1</span> Applications</h3>
+<p>Graph-based learning is now used in physical simulation <span class="citation" data-cites="sanchez2020learning">(<a href="#ref-sanchez2020learning" role="doc-biblioref"><span class="nocase">Sanchez-Gonzalez et al.</span> 2020</a>)</span>, decentralized control <span class="citation" data-cites="tolstaya2020learning">(<a href="#ref-tolstaya2020learning" role="doc-biblioref"><span class="nocase">Tolstaya et al.</span> 2020</a>)</span>, protein modeling <span class="citation" data-cites="jumper2021highly">(<a href="#ref-jumper2021highly" role="doc-biblioref"><span class="nocase">Jumper et al.</span> 2021</a>)</span>, and weather prediction <span class="citation" data-cites="lam2023graphcast">(<a href="#ref-lam2023graphcast" role="doc-biblioref"><span class="nocase">Lam et al.</span> 2023</a>)</span>, among many other settings.</p>
+<p>The modeling question always comes first:</p>
+<blockquote class="blockquote">
+<p>What are the entities, what do the relations mean, and what should remain unchanged if we rename or reorder the entities?</p>
+</blockquote>
+</section>
+</section>
+<section id="basic-graph-language" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="basic-graph-language"><span class="header-section-number">3</span> Basic graph language</h2>
+<div class="definition">
+<p><strong>Definition 1 — Graph</strong></p>
+<p>A graph is a pair</p>
+<p><span class="math display">\[
+\mathcal{G}=(\mathcal{V},\mathcal{E}),
+\]</span></p>
+<p>where <span class="math inline">\(\mathcal{V}=\{v_1,\ldots,v_N\}\)</span> is a set of <strong>nodes</strong> (or vertices) and <span class="math inline">\(\mathcal{E}\subseteq\mathcal{V}\times\mathcal{V}\)</span> is a set of <strong>edges</strong>. An edge <span class="math inline">\((u,v)\in\mathcal{E}\)</span> records a relation from <span class="math inline">\(u\)</span> to <span class="math inline">\(v\)</span>.</p>
+</div>
+<p>We write <span class="math inline">\(N=|\mathcal{V}|\)</span> and <span class="math inline">\(M=|\mathcal{E}|\)</span>. A node can carry a feature vector <span class="math inline">\(\mathbf{x}_v\in\mathbb{R}^F\)</span>; an edge can carry a scalar or vector attribute, such as distance, capacity, time, or bond type.</p>
+<section id="undirected-directed-and-weighted-graphs" class="level3" data-number="3.1">
+<h3 data-number="3.1" class="anchored" data-anchor-id="undirected-directed-and-weighted-graphs"><span class="header-section-number">3.1</span> Undirected, directed, and weighted graphs</h3>
+<p>In an <strong>undirected graph</strong>, <span class="math inline">\((u,v)\)</span> and <span class="math inline">\((v,u)\)</span> represent the same edge. In a <strong>directed graph</strong>, their meanings differ. A <strong>weighted graph</strong> associates a value <span class="math inline">\(w_{uv}\)</span> with every edge.</p>
+<div class="figure-panel">
+<div id="fig-graph-types" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three six-node graphs showing undirected edges, directed arrows, and numerical edge weights">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-graph-types-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/graph-anatomy.svg" class="img-fluid figure-img" alt="Three six-node graphs showing undirected edges, directed arrows, and numerical edge weights">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-graph-types-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: The graph type encodes assumptions about symmetry, orientation, and interaction strength.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>For an unweighted graph, the adjacency matrix <span class="math inline">\(\mathbf{A}\in\{0,1\}^{N\times N}\)</span> is</p>
+<p><span class="math display">\[
+A_{ij}=
+\begin{cases}
+1, &amp; (v_i,v_j)\in\mathcal{E},\\
+0, &amp; \text{otherwise}.
+\end{cases}
+\]</span></p>
+<p>For a weighted graph, replace <span class="math inline">\(1\)</span> with <span class="math inline">\(w_{ij}\)</span>. An undirected graph produces a symmetric matrix, <span class="math inline">\(\mathbf{A}=\mathbf{A}^{\top}\)</span>; a directed graph need not.</p>
+</section>
+<section id="bipartite-graphs" class="level3" data-number="3.2">
+<h3 data-number="3.2" class="anchored" data-anchor-id="bipartite-graphs"><span class="header-section-number">3.2</span> Bipartite graphs</h3>
+<p>A graph is <strong>bipartite</strong> when its nodes can be split into disjoint sets <span class="math inline">\(\mathcal{U}\)</span> and <span class="math inline">\(\mathcal{W}\)</span>, with edges only between the sets:</p>
+<p><span class="math display">\[
+\mathcal{G}=(\mathcal{U},\mathcal{W},\mathcal{E}),
+\qquad
+\mathcal{E}\subseteq\mathcal{U}\times\mathcal{W}.
+\]</span></p>
+<p>User–item recommendation, author–paper networks, and patient–treatment records are natural examples.</p>
+</section>
+</section>
+<section id="representing-a-graph" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="representing-a-graph"><span class="header-section-number">4</span> Representing a graph</h2>
+<p>The same abstract graph admits several computational representations.</p>
+<div class="figure-panel">
+<div id="fig-representations" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Four-node graph translated into five edge pairs and a four by four symmetric adjacency matrix">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-representations-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/graph-representations.svg" class="img-fluid figure-img" alt="Four-node graph translated into five edge pairs and a four by four symmetric adjacency matrix">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-representations-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: A graph drawing, an edge list, and an adjacency matrix encode the same five undirected edges.
+</figcaption>
+</figure>
+</div>
+</div>
+<section id="adjacency-matrix" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="adjacency-matrix"><span class="header-section-number">4.1</span> Adjacency matrix</h3>
+<p>An adjacency matrix supports algebraic operations and dense linear algebra. Its storage cost is <span class="math inline">\(O(N^2)\)</span>, even when only a small fraction of node pairs are connected.</p>
+</section>
+<section id="edge-list-and-adjacency-list" class="level3" data-number="4.2">
+<h3 data-number="4.2" class="anchored" data-anchor-id="edge-list-and-adjacency-list"><span class="header-section-number">4.2</span> Edge list and adjacency list</h3>
+<p>An <strong>edge list</strong> stores pairs <span class="math inline">\((u,v)\)</span> and needs <span class="math inline">\(O(M)\)</span> space. An <strong>adjacency list</strong> stores a neighborhood</p>
+<p><span class="math display">\[
+\mathcal{N}(u)=\{v:(u,v)\in\mathcal{E}\}
+\]</span></p>
+<p>for each node <span class="math inline">\(u\)</span>. Both are effective for sparse graphs, where <span class="math inline">\(M\ll N^2\)</span>.</p>
+<div class="worked-example">
+<p><strong>Worked example — Reading the adjacency matrix</strong></p>
+<p>For <a href="#fig-representations" class="quarto-xref">Figure&nbsp;3</a>,</p>
+<p><span class="math display">\[
+\mathbf{A}=
+\begin{bmatrix}
+0&amp;1&amp;0&amp;1\\
+1&amp;0&amp;1&amp;1\\
+0&amp;1&amp;0&amp;1\\
+1&amp;1&amp;1&amp;0
+\end{bmatrix}.
+\]</span></p>
+<p>The node-degree vector is <span class="math inline">\(\mathbf{d}=\mathbf{A}\mathbf{1}=[2,3,2,3]^\top\)</span>. Moreover, <span class="math inline">\((\mathbf{A}^2)_{13}=2\)</span>: there are two length-two walks from node 1 to node 3, through nodes 2 and 4.</p>
+</div>
+</section>
+<section id="features-and-labels" class="level3" data-number="4.3">
+<h3 data-number="4.3" class="anchored" data-anchor-id="features-and-labels"><span class="header-section-number">4.3</span> Features and labels</h3>
+<p>If every node has <span class="math inline">\(F\)</span> features, collect them row-wise in</p>
+<p><span class="math display">\[
+\mathbf{X}=
+\begin{bmatrix}
+\mathbf{x}_{v_1}^{\top}\\[-2pt]
+\vdots\\[-2pt]
+\mathbf{x}_{v_N}^{\top}
+\end{bmatrix}
+\in\mathbb{R}^{N\times F}.
+\]</span></p>
+<p>Labels may exist at any task level: one label per node, edge, subgraph, or entire graph.</p>
+</section>
+</section>
+<section id="prediction-tasks-on-graphs" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="prediction-tasks-on-graphs"><span class="header-section-number">5</span> Prediction tasks on graphs</h2>
+<p>The <strong>level of the target</strong> determines the learning problem.</p>
+<div class="figure-panel">
+<div id="fig-task-levels" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Four graph panels highlighting one node, one edge, a community, and the whole graph">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-task-levels-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/task-levels.svg" class="img-fluid figure-img" alt="Four graph panels highlighting one node, one edge, a community, and the whole graph">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-task-levels-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: Graph machine-learning tasks differ according to whether the prediction concerns a node, edge, subgraph, or complete graph.
+</figcaption>
+</figure>
+</div>
+</div>
+<section id="node-level-tasks" class="level3" data-number="5.1">
+<h3 data-number="5.1" class="anchored" data-anchor-id="node-level-tasks"><span class="header-section-number">5.1</span> Node-level tasks</h3>
+<p>Predict <span class="math inline">\(y_v\)</span> for a node <span class="math inline">\(v\)</span>: document topic, user role, protein function, or whether an account is anomalous. Semi-supervised node classification is common: labels are known for only a subset <span class="math inline">\(\mathcal{V}_{\mathrm{train}}\subset\mathcal{V}\)</span>.</p>
+</section>
+<section id="edge-level-tasks" class="level3" data-number="5.2">
+<h3 data-number="5.2" class="anchored" data-anchor-id="edge-level-tasks"><span class="header-section-number">5.2</span> Edge-level tasks</h3>
+<p>Predict <span class="math inline">\(y_{uv}\)</span> for a node pair: whether a link will appear, whether two drugs interact, or which product a user may choose. A negative example is usually an unobserved pair, but “unobserved” does not always mean “truly negative.”</p>
+</section>
+<section id="subgraph-level-tasks" class="level3" data-number="5.3">
+<h3 data-number="5.3" class="anchored" data-anchor-id="subgraph-level-tasks"><span class="header-section-number">5.3</span> Subgraph-level tasks</h3>
+<p>Predict or discover a subset of nodes and edges: communities, functional motifs, fraudulent transaction rings, or interaction patterns.</p>
+</section>
+<section id="graph-level-tasks" class="level3" data-number="5.4">
+<h3 data-number="5.4" class="anchored" data-anchor-id="graph-level-tasks"><span class="header-section-number">5.4</span> Graph-level tasks</h3>
+<p>Predict one output for an entire graph: molecular toxicity, program behavior, material property, or whether two graph-structured objects belong to the same class.</p>
+<div class="checkpoint">
+<p><strong>Check 1</strong></p>
+<p>A citation network contains papers as nodes and citations as directed edges. Classifying each paper by field is a node-level task. Predicting a future citation is an edge-level task. Classifying the complete citation network by scientific domain is a graph-level task.</p>
+<details>
+<summary>
+Why does the direction matter?
+</summary>
+A citation from paper A to paper B does not imply that B cites A. Replacing the directed graph with an undirected one discards this asymmetry.
+</details>
+</div>
+</section>
+</section>
+<section id="why-graph-machine-learning-is-different" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="why-graph-machine-learning-is-different"><span class="header-section-number">6</span> Why graph machine learning is different</h2>
+<p>Graph learning has several structural complications.</p>
+<ol type="1">
+<li><strong>Variable size.</strong> Different graphs—and different neighborhoods—contain different numbers of nodes and edges.</li>
+<li><strong>No canonical ordering.</strong> Node identifiers are arbitrary. Relabeling nodes should not change a graph-level prediction.</li>
+<li><strong>Dependence.</strong> Connected observations cannot generally be treated as independent samples.</li>
+<li><strong>Sparsity and scale.</strong> Real graphs may have billions of possible pairs but comparatively few observed edges.</li>
+<li><strong>Heterogeneity and dynamics.</strong> Nodes and edges may have different types and may change with time.</li>
+</ol>
+<p>Let <span class="math inline">\(\mathbf{P}\)</span> be a permutation matrix that reorders the nodes. Then</p>
+<p><span class="math display">\[
+\mathbf{A}'=\mathbf{P}\mathbf{A}\mathbf{P}^{\top},
+\qquad
+\mathbf{X}'=\mathbf{P}\mathbf{X}.
+\]</span></p>
+<p>A node-level model <span class="math inline">\(f\)</span> should usually be <strong>permutation equivariant</strong>:</p>
+<p><span class="math display">\[
+f(\mathbf{P}\mathbf{A}\mathbf{P}^{\top},\mathbf{P}\mathbf{X})
+=\mathbf{P}f(\mathbf{A},\mathbf{X}),
+\]</span></p>
+<p>while a graph-level model <span class="math inline">\(g\)</span> should be <strong>permutation invariant</strong>:</p>
+<p><span class="math display">\[
+g(\mathbf{P}\mathbf{A}\mathbf{P}^{\top},\mathbf{P}\mathbf{X})
+=g(\mathbf{A},\mathbf{X}).
+\]</span></p>
+<p>These conditions will become central when we introduce graph neural networks.</p>
+</section>
+<section id="classical-structural-features" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="classical-structural-features"><span class="header-section-number">7</span> Classical structural features</h2>
+<p>Before representation learning, graph machine learning relied heavily on <strong>feature engineering</strong>. These features remain useful baselines and diagnostic tools.</p>
+<section id="degree-centrality" class="level3" data-number="7.1">
+<h3 data-number="7.1" class="anchored" data-anchor-id="degree-centrality"><span class="header-section-number">7.1</span> Degree centrality</h3>
+<p>For an unweighted undirected graph,</p>
+<p><span class="math display">\[
+d_i=\sum_{j=1}^{N}A_{ij},
+\qquad
+C_D(i)=\frac{d_i}{N-1}.
+\]</span></p>
+<p>Degree measures immediate connectivity. In directed graphs, in-degree and out-degree should be distinguished.</p>
+</section>
+<section id="eigenvector-centrality" class="level3" data-number="7.2">
+<h3 data-number="7.2" class="anchored" data-anchor-id="eigenvector-centrality"><span class="header-section-number">7.2</span> Eigenvector centrality</h3>
+<p>Degree treats every neighbor equally. Eigenvector centrality assigns greater importance to connections with already-important nodes. It solves</p>
+<p><span class="math display">\[
+\mathbf{A}\mathbf{c}=\lambda_{\max}\mathbf{c}.
+\]</span></p>
+<p>For a connected nonnegative undirected graph, the Perron–Frobenius theorem supports a nonnegative leading eigenvector. The scale is arbitrary; common choices are <span class="math inline">\(\|\mathbf{c}\|_2=1\)</span> or <span class="math inline">\(\max_i c_i=1\)</span>.</p>
+<p>The power iteration</p>
+<p><span class="math display">\[
+\mathbf{x}^{(t+1)}=\frac{\mathbf{A}\mathbf{x}^{(t)}}{\|\mathbf{A}\mathbf{x}^{(t)}\|_2}
+\]</span></p>
+<p>often converges toward this dominant direction when the standard spectral conditions hold.</p>
+</section>
+<section id="closeness-centrality" class="level3" data-number="7.3">
+<h3 data-number="7.3" class="anchored" data-anchor-id="closeness-centrality"><span class="header-section-number">7.3</span> Closeness centrality</h3>
+<p>Let <span class="math inline">\(d(i,j)\)</span> be shortest-path distance. For a connected graph,</p>
+<p><span class="math display">\[
+C_C(i)=\frac{N-1}{\sum_{j\neq i}d(i,j)}.
+\]</span></p>
+<p>A high value means that the node can reach the rest of the network in relatively few steps. For disconnected graphs, harmonic variants avoid infinite-distance problems.</p>
+</section>
+<section id="betweenness-centrality" class="level3" data-number="7.4">
+<h3 data-number="7.4" class="anchored" data-anchor-id="betweenness-centrality"><span class="header-section-number">7.4</span> Betweenness centrality</h3>
+<p>Let <span class="math inline">\(\sigma_{st}\)</span> be the number of shortest paths from <span class="math inline">\(s\)</span> to <span class="math inline">\(t\)</span>, and <span class="math inline">\(\sigma_{st}(i)\)</span> the number of those paths passing through <span class="math inline">\(i\)</span>. Then</p>
+<p><span class="math display">\[
+C_B(i)=\sum_{\substack{s\neq i\neq t\\s\neq t}}
+\frac{\sigma_{st}(i)}{\sigma_{st}}.
+\]</span></p>
+<p>Betweenness identifies potential bridges and bottlenecks rather than merely well-connected nodes.</p>
+</section>
+<section id="clustering-coefficient-and-graphlets" class="level3" data-number="7.5">
+<h3 data-number="7.5" class="anchored" data-anchor-id="clustering-coefficient-and-graphlets"><span class="header-section-number">7.5</span> Clustering coefficient and graphlets</h3>
+<p>Let <span class="math inline">\(T_i\)</span> be the number of edges among the neighbors of node <span class="math inline">\(i\)</span>. For a simple undirected graph with <span class="math inline">\(d_i\geq 2\)</span>,</p>
+<p><span class="math display">\[
+C_i=\frac{2T_i}{d_i(d_i-1)}.
+\]</span></p>
+<p>The coefficient counts the fraction of possible neighbor–neighbor edges that exist. <strong>Graphlets</strong> generalize this idea by counting small rooted subgraph patterns. A graphlet-degree vector can describe the structural role of a node, but its dimension and computational cost grow as larger patterns are included <span class="citation" data-cites="leskovec2020mmds">(<a href="#ref-leskovec2020mmds" role="doc-biblioref">Leskovec et al. 2020</a>)</span>.</p>
+<div class="checkpoint">
+<p><strong>Check 2 — Importance is not one concept</strong></p>
+<p>A high-degree node has many immediate contacts. A high-closeness node reaches other nodes quickly. A high-betweenness node mediates many shortest routes. A high-eigenvector-centrality node connects to influential neighbors. The rankings need not agree.</p>
+</div>
+</section>
+</section>
+<section id="from-feature-engineering-to-representation-learning" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="from-feature-engineering-to-representation-learning"><span class="header-section-number">8</span> From feature engineering to representation learning</h2>
+<p>A classical pipeline constructs structural features <span class="math inline">\(\phi(v)\)</span> and sends them to a downstream learner. The feature definition must be reconsidered for each task. <strong>Graph representation learning</strong> attempts to learn useful features from the graph itself <span class="citation" data-cites="hamilton2020graph">(<a href="#ref-hamilton2020graph" role="doc-biblioref">Hamilton 2020</a>)</span>.</p>
+<div class="two-figures">
+<div class="figure-panel">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../../assets/figures/representation-learning.svg" class="img-fluid figure-img" alt="Pipeline from input graph to automatically learned representation and prediction"></p>
+<figcaption>A classical pipeline depends on manually engineered structural features. Vector figure from the supplied course material.</figcaption>
+</figure>
+</div>
+</div>
+<div class="figure-panel">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../../assets/figures/node-embedding.svg" class="img-fluid figure-img" alt="A graph node mapped by a function into a numerical embedding vector"></p>
+<figcaption>A node encoder maps each node to a vector in a lower-dimensional representation space. Vector figure from the supplied course material.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>For shallow node embeddings, learn a function</p>
+<p><span class="math display">\[
+f:\mathcal{V}\rightarrow\mathbb{R}^{d},
+\qquad
+f(u)=\mathbf{z}_u,
+\]</span></p>
+<p>and collect the vectors in <span class="math inline">\(\mathbf{Z}\in\mathbb{R}^{d\times N}\)</span>. “Shallow” means that the encoder is an embedding lookup:</p>
+<p><span class="math display">\[
+\operatorname{ENC}(u)=\mathbf{z}_u=\mathbf{Z}\mathbf{e}_u,
+\]</span></p>
+<p>where <span class="math inline">\(\mathbf{e}_u\)</span> is the one-hot vector identifying <span class="math inline">\(u\)</span>.</p>
+<p>The decoder converts two embeddings into a similarity score. A common choice is the dot product</p>
+<p><span class="math display">\[
+\operatorname{DEC}(u,v)=\mathbf{z}_u^{\top}\mathbf{z}_v.
+\]</span></p>
+<p>The missing ingredient is the training signal: <strong>which nodes should be similar in the original graph?</strong></p>
+</section>
+<section id="random-walks-as-a-similarity-model" class="level2" data-number="9">
+<h2 data-number="9" class="anchored" data-anchor-id="random-walks-as-a-similarity-model"><span class="header-section-number">9</span> Random walks as a similarity model</h2>
+<p>A random walk begins at a node, repeatedly selects a neighbor, and moves to it. In an unweighted graph, the one-step transition matrix is</p>
+<p><span class="math display">\[
+P_{uv}=
+\begin{cases}
+\dfrac{1}{d_u}, &amp; v\in\mathcal{N}(u),\\
+0, &amp; \text{otherwise}.
+\end{cases}
+\]</span></p>
+<p>After <span class="math inline">\(k\)</span> steps, <span class="math inline">\((\mathbf{P}^k)_{uv}\)</span> gives the probability of being at <span class="math inline">\(v\)</span> when the walk began at <span class="math inline">\(u\)</span>.</p>
+<div class="figure-panel">
+<div id="fig-random-walk" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Highlighted path through a graph followed by a node sequence and positive context pairs">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-random-walk-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/random-walk.svg" class="img-fluid figure-img" alt="Highlighted path through a graph followed by a node sequence and positive context pairs">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-random-walk-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5: A random walk produces node sequences. Nearby positions in each sequence form positive center–context training pairs.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>Random walks are useful because they provide:</p>
+<ul>
+<li><strong>expressivity:</strong> a stochastic notion of similarity containing local and higher-order neighborhood information;</li>
+<li><strong>efficiency:</strong> training uses sampled co-occurrences rather than every one of the <span class="math inline">\(N^2\)</span> node pairs.</li>
+</ul>
+<p>Let <span class="math inline">\(N_R(u)\)</span> be the multiset of context nodes produced by a walk strategy <span class="math inline">\(R\)</span> around <span class="math inline">\(u\)</span>. A maximum-likelihood objective is</p>
+<p><span class="math display">\[
+\max_{\mathbf{Z}}
+\sum_{u\in\mathcal{V}}
+\sum_{v\in N_R(u)}
+\log P(v\mid\mathbf{z}_u).
+\]</span></p>
+<p>With a softmax decoder,</p>
+<p><span class="math display">\[
+P(v\mid\mathbf{z}_u)
+=
+\frac{\exp(\mathbf{z}_u^{\top}\mathbf{z}_v)}
+{\sum_{n\in\mathcal{V}}\exp(\mathbf{z}_u^{\top}\mathbf{z}_n)}.
+\]</span></p>
+<p>The denominator costs <span class="math inline">\(O(N)\)</span> for each positive pair. <strong>Negative sampling</strong> replaces the full normalization with <span class="math inline">\(K\)</span> sampled negative nodes <span class="math inline">\(n_1,\ldots,n_K\)</span>:</p>
+<p><span class="math display">\[
+\mathcal{L}_{u,v}
+=
+-\log\sigma(\mathbf{z}_u^{\top}\mathbf{z}_v)
+-\sum_{k=1}^{K}
+\log\sigma(-\mathbf{z}_u^{\top}\mathbf{z}_{n_k}),
+\]</span></p>
+<p>where <span class="math inline">\(\sigma(a)=1/(1+e^{-a})\)</span>. The first term attracts an observed center–context pair; the second repels sampled negatives.</p>
+</section>
+<section id="deepwalk" class="level2" data-number="10">
+<h2 data-number="10" class="anchored" data-anchor-id="deepwalk"><span class="header-section-number">10</span> DeepWalk</h2>
+<p>DeepWalk applies the word2vec skip-gram idea to random-walk sequences <span class="citation" data-cites="perozzi2014deepwalk">(<a href="#ref-perozzi2014deepwalk" role="doc-biblioref">Perozzi et al. 2014</a>)</span>.</p>
+<ol type="1">
+<li>Start several short unbiased random walks from every node.</li>
+<li>Treat each walk as a sentence and each node as a token.</li>
+<li>Within a context window, form center–context pairs.</li>
+<li>Optimize the embeddings with stochastic gradient descent and negative sampling.</li>
+</ol>
+<div class="figure-panel">
+<div id="fig-deepwalk" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Network communities on the left and their separated two-dimensional embedding clusters on the right">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-deepwalk-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/deepwalk-embedding.svg" class="img-fluid figure-img" alt="Network communities on the left and their separated two-dimensional embedding clusters on the right">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-deepwalk-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6: DeepWalk places structurally related nodes near one another in a low-dimensional embedding. Course-supplied vector based on the DeepWalk example.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>The embeddings are <strong>transductive</strong>: <span class="math inline">\(\mathbf{Z}\)</span> contains one learned vector per training node. A new node has no column in <span class="math inline">\(\mathbf{Z}\)</span> and therefore no embedding unless the model is retrained or extended. Graph neural networks will replace this lookup table with a feature- and neighborhood-dependent encoder.</p>
+</section>
+<section id="node2vec-controlling-the-walk" class="level2" data-number="11">
+<h2 data-number="11" class="anchored" data-anchor-id="node2vec-controlling-the-walk"><span class="header-section-number">11</span> node2vec: controlling the walk</h2>
+<p>Unbiased walks have a fixed exploration behavior. node2vec introduces two parameters to interpolate between local, breadth-first-like exploration and outward, depth-first-like exploration <span class="citation" data-cites="grover2016node2vec">(<a href="#ref-grover2016node2vec" role="doc-biblioref">Grover and Leskovec 2016</a>)</span>.</p>
+<p>Suppose the walk arrived at <span class="math inline">\(v\)</span> from <span class="math inline">\(t\)</span> and considers a neighbor <span class="math inline">\(x\in\mathcal{N}(v)\)</span>. Define</p>
+<p><span class="math display">\[
+\pi_{vx}=\alpha_{pq}(t,x)w_{vx},
+\]</span></p>
+<p>with</p>
+<p><span class="math display">\[
+\alpha_{pq}(t,x)=
+\begin{cases}
+1/p, &amp; d(t,x)=0,\\
+1,   &amp; d(t,x)=1,\\
+1/q, &amp; d(t,x)=2.
+\end{cases}
+\]</span></p>
+<p>The normalized transition probability is</p>
+<p><span class="math display">\[
+P(c_{i+1}=x\mid c_i=v,c_{i-1}=t)
+=\frac{\pi_{vx}}{\sum_{y\in\mathcal{N}(v)}\pi_{vy}}.
+\]</span></p>
+<p>The <strong>return parameter</strong> <span class="math inline">\(p\)</span> controls immediate backtracking. A larger <span class="math inline">\(p\)</span> makes returning to <span class="math inline">\(t\)</span> less likely. The <strong>in–out parameter</strong> <span class="math inline">\(q\)</span> controls outward exploration: <span class="math inline">\(q&gt;1\)</span> suppresses distance-two moves and tends to remain local, whereas <span class="math inline">\(q&lt;1\)</span> encourages outward exploration.</p>
+<div class="two-figures">
+<div class="figure-panel">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../../assets/figures/bfs-vs-dfs.svg" class="img-fluid figure-img" alt="A network with red local BFS arrows and blue outward DFS arrows"></p>
+<figcaption>Breadth-first-like walks remain near the source; depth-first-like walks explore farther away. Vector figure from the supplied course material.</figcaption>
+</figure>
+</div>
+</div>
+<div class="figure-panel">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../../assets/figures/node2vec-transition.svg" class="img-fluid figure-img" alt="Current and previous nodes with candidate transitions labeled one over p, one, and one over q"></p>
+<figcaption>node2vec assigns unnormalized transition weights according to the distance from the preceding node. Vector figure from the supplied course material.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The complete algorithm is therefore:</p>
+<ol type="1">
+<li>precompute or efficiently evaluate the biased transition probabilities;</li>
+<li>simulate <span class="math inline">\(r\)</span> walks of length <span class="math inline">\(\ell\)</span> from each node;</li>
+<li>extract context pairs using a window of width <span class="math inline">\(c\)</span>;</li>
+<li>optimize the negative-sampling objective.</li>
+</ol>
+<div class="worked-example">
+<p><strong>Worked example — Interpreting <span class="math inline">\(p\)</span> and <span class="math inline">\(q\)</span></strong></p>
+<p>If <span class="math inline">\(p=4\)</span> and <span class="math inline">\(q=0.5\)</span>, an immediate return receives factor <span class="math inline">\(1/4\)</span>, a neighbor of the previous node receives factor <span class="math inline">\(1\)</span>, and an outward distance-two move receives factor <span class="math inline">\(2\)</span>. Before accounting for edge weights and normalization, outward exploration is eight times as likely as immediate return.</p>
+</div>
+</section>
+<section id="what-these-embeddings-preserveand-what-they-do-not" class="level2" data-number="12">
+<h2 data-number="12" class="anchored" data-anchor-id="what-these-embeddings-preserveand-what-they-do-not"><span class="header-section-number">12</span> What these embeddings preserve—and what they do not</h2>
+<p>The context strategy defines the notion of similarity. Short local walks tend to emphasize <strong>homophily</strong> and community structure. More exploratory walks can capture broader structural roles, but neither method guarantees that every useful task signal will be preserved.</p>
+<p>Important limitations include:</p>
+<ul>
+<li>embeddings are tied to the nodes observed during training;</li>
+<li>proximity in the embedding inherits biases from the graph and sampling process;</li>
+<li>missing or spurious edges alter the training distribution;</li>
+<li>degree-skewed sampling can overrepresent hubs;</li>
+<li>evaluating only on random edge splits may leak temporal or structural information.</li>
+</ul>
+<p>Treat the graph construction, train/test split, negative sampling, and evaluation metric as modeling decisions—not implementation details.</p>
+</section>
+<section id="exercises" class="level2" data-number="13">
+<h2 data-number="13" class="anchored" data-anchor-id="exercises"><span class="header-section-number">13</span> Exercises</h2>
+<section id="exercise-1-representation" class="level3" data-number="13.1">
+<h3 data-number="13.1" class="anchored" data-anchor-id="exercise-1-representation"><span class="header-section-number">13.1</span> Exercise 1 — Representation</h3>
+<p>For the graph in <a href="#fig-representations" class="quarto-xref">Figure&nbsp;3</a>, compute <span class="math inline">\(\mathbf{A}^2\)</span>. Interpret its diagonal and the entry <span class="math inline">\((\mathbf{A}^2)_{13}\)</span>.</p>
+</section>
+<section id="exercise-2-centrality" class="level3" data-number="13.2">
+<h3 data-number="13.2" class="anchored" data-anchor-id="exercise-2-centrality"><span class="header-section-number">13.2</span> Exercise 2 — Centrality</h3>
+<p>Construct a graph where the highest-degree node does not have the highest betweenness centrality. Explain the structural reason.</p>
+</section>
+<section id="exercise-3-permutations" class="level3" data-number="13.3">
+<h3 data-number="13.3" class="anchored" data-anchor-id="exercise-3-permutations"><span class="header-section-number">13.3</span> Exercise 3 — Permutations</h3>
+<p>Choose a permutation matrix <span class="math inline">\(\mathbf{P}\)</span> that swaps nodes 1 and 4 in <a href="#fig-representations" class="quarto-xref">Figure&nbsp;3</a>. Compute <span class="math inline">\(\mathbf{PAP}^{\top}\)</span> and verify that the degree multiset is unchanged.</p>
+</section>
+<section id="exercise-4-negative-sampling" class="level3" data-number="13.4">
+<h3 data-number="13.4" class="anchored" data-anchor-id="exercise-4-negative-sampling"><span class="header-section-number">13.4</span> Exercise 4 — Negative sampling</h3>
+<p>Differentiate</p>
+<p><span class="math display">\[
+-\log\sigma(\mathbf{z}_u^{\top}\mathbf{z}_v)
+-\log\sigma(-\mathbf{z}_u^{\top}\mathbf{z}_n)
+\]</span></p>
+<p>with respect to <span class="math inline">\(\mathbf{z}_u\)</span>. Describe how one gradient step changes its relation to the positive and negative embeddings.</p>
+</section>
+<section id="exercise-5-node2vec" class="level3" data-number="13.5">
+<h3 data-number="13.5" class="anchored" data-anchor-id="exercise-5-node2vec"><span class="header-section-number">13.5</span> Exercise 5 — node2vec</h3>
+<p>For a candidate set with distances <span class="math inline">\(d(t,x)\in\{0,1,2,2\}\)</span>, unit edge weights, <span class="math inline">\(p=2\)</span>, and <span class="math inline">\(q=0.5\)</span>, calculate the normalized next-step probabilities.</p>
+</section>
+</section>
+<section id="main-takeaways" class="level2" data-number="14">
+<h2 data-number="14" class="anchored" data-anchor-id="main-takeaways"><span class="header-section-number">14</span> Main takeaways</h2>
+<ol type="1">
+<li>Graphs model entities <strong>and</strong> relations; constructing the graph is part of the learning problem.</li>
+<li>Drawings, edge lists, adjacency lists, and matrices are different representations of the same abstract object.</li>
+<li>The target may live at the node, edge, subgraph, or graph level.</li>
+<li>Classical centrality and motif features remain meaningful baselines, but require manual design.</li>
+<li>Representation learning replaces repeated feature engineering with learned vectors.</li>
+<li>DeepWalk learns from unbiased random-walk contexts; node2vec controls the context distribution with <span class="math inline">\(p\)</span> and <span class="math inline">\(q\)</span>.</li>
+<li>The next step is to replace the per-node lookup table with a permutation-aware encoder that can use features and neighborhoods: a graph neural network.</li>
+</ol>
+</section>
+<section id="references-and-provenance" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="references-and-provenance">References and provenance</h2>
+<p>This web note is adapted from the supplied Lecture 1 slides by Jhony H. Giraldo. The mathematical notation was normalized, explanatory derivations were added, and several diagrams were redrawn as accessible SVGs for the web. Retained course vectors are identified in their captions.</p>
+<div id="refs" class="references-small references csl-bib-body hanging-indent" role="list">
+<div id="ref-battaglia2018relational" class="csl-entry" role="listitem">
+<span class="nocase">Battaglia, Peter W. et al.</span> 2018. <span>“Relational Inductive Biases, Deep Learning, and Graph Networks.”</span> <em>arXiv Preprint arXiv:1806.01261</em>.
+</div>
+<div id="ref-grover2016node2vec" class="csl-entry" role="listitem">
+Grover, Aditya, and Jure Leskovec. 2016. <span>“Node2vec: Scalable Feature Learning for Networks.”</span> <em>Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining</em>. <a href="https://doi.org/10.1145/2939672.2939754">https://doi.org/10.1145/2939672.2939754</a>.
+</div>
+<div id="ref-hamilton2020graph" class="csl-entry" role="listitem">
+Hamilton, William L. 2020. <em>Graph Representation Learning</em>. Morgan &amp; Claypool Publishers.
+</div>
+<div id="ref-jumper2021highly" class="csl-entry" role="listitem">
+<span class="nocase">Jumper, John et al.</span> 2021. <span>“Highly Accurate Protein Structure Prediction with AlphaFold.”</span> <em>Nature</em> 596: 583–89. <a href="https://doi.org/10.1038/s41586-021-03819-2">https://doi.org/10.1038/s41586-021-03819-2</a>.
+</div>
+<div id="ref-lam2023graphcast" class="csl-entry" role="listitem">
+<span class="nocase">Lam, Remi et al.</span> 2023. <span>“Learning Skillful Medium-Range Global Weather Forecasting.”</span> <em>Science</em> 382 (6677): 1416–21. <a href="https://doi.org/10.1126/science.adi2336">https://doi.org/10.1126/science.adi2336</a>.
+</div>
+<div id="ref-leskovec2020mmds" class="csl-entry" role="listitem">
+Leskovec, Jure, Anand Rajaraman, and Jeffrey David Ullman. 2020. <em>Mining of Massive Datasets</em>. 3rd ed. Cambridge University Press.
+</div>
+<div id="ref-perozzi2014deepwalk" class="csl-entry" role="listitem">
+Perozzi, Bryan, Rami Al-Rfou, and Steven Skiena. 2014. <span>“DeepWalk: Online Learning of Social Representations.”</span> <em>Proceedings of the 20th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining</em>. <a href="https://doi.org/10.1145/2623330.2623732">https://doi.org/10.1145/2623330.2623732</a>.
+</div>
+<div id="ref-sanchez2020learning" class="csl-entry" role="listitem">
+<span class="nocase">Sanchez-Gonzalez, Alvaro et al.</span> 2020. <span>“Learning to Simulate Complex Physics with Graph Networks.”</span> <em>International Conference on Machine Learning</em>.
+</div>
+<div id="ref-tolstaya2020learning" class="csl-entry" role="listitem">
+<span class="nocase">Tolstaya, Ekaterina et al.</span> 2020. <span>“Learning Decentralized Controllers for Robot Swarms with Graph Neural Networks.”</span> <em>Conference on Robot Learning</em>.
+</div>
+</div>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script src="../../assets/site.js" defer=""></script>
+
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/jhonygiraldo\.github\.io");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© 2026 Jhony H. Giraldo</p>
+</div>   
+    <div class="nav-footer-center">
+<p>Télécom Paris · Institut Polytechnique de Paris</p>
+</div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+    <a class="nav-link" href="https://orcid.org/0000-0002-0039-1270">
+<p>ORCID</p>
+</a>
+  </li>  
+    <li class="nav-item">
+    <a class="nav-link" href="mailto:jhony.giraldo@telecom-paris.fr">
+<p>Email</p>
+</a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+<script src="../../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

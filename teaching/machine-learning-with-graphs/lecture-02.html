@@ -1,0 +1,1746 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Web lecture note covering graph convolutions, graph filters, GCN, the message-passing framework, GAT, and the limitations of graph neural networks.">
+
+<title>Lecture 2 — Graph Neural Networks – Jhony H. Giraldo</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../assets/images/jhony-giraldo.jpg" rel="icon" type="image/jpeg">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1b7a93e697b4997453238fc7b360c330.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Jhony H. Giraldo",
+  "jobTitle": "Assistant Professor in Machine Learning and Computer Vision",
+  "url": "https://jhonygiraldo.github.io/",
+  "image": "https://jhonygiraldo.github.io/assets/images/jhony-giraldo.jpg",
+  "email": "mailto:jhony.giraldo@telecom-paris.fr",
+  "affiliation": [
+    {"@type": "CollegeOrUniversity", "name": "Télécom Paris"},
+    {"@type": "CollegeOrUniversity", "name": "Institut Polytechnique de Paris"}
+  ],
+  "sameAs": [
+    "https://orcid.org/0000-0002-0039-1270",
+    "https://scholar.google.com/citations?user=iwzmGKwAAAAJ",
+    "https://www.linkedin.com/in/jhonyhgiraldo",
+    "https://bsky.app/profile/jhonyhgiraldo.bsky.social"
+  ],
+  "knowsAbout": [
+    "Graph machine learning",
+    "Geometric deep learning",
+    "Graph signal processing",
+    "Computer vision",
+    "Higher-order neural networks"
+  ]
+}
+</script>
+
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<meta property="og:title" content="Lecture 2 — Graph Neural Networks">
+<meta property="og:description" content="Web lecture note covering graph convolutions, graph filters, GCN, the message-passing framework, GAT, and the limitations of graph neural networks.">
+<meta property="og:image" content="https://jhonygiraldo.github.io/assets/figures/node-embedding.svg">
+<meta property="og:site_name" content="Jhony H. Giraldo">
+<meta property="og:image:alt" content="A node of a graph mapped by a function f into a low-dimensional embedding vector">
+<meta name="twitter:title" content="Lecture 2 — Graph Neural Networks">
+<meta name="twitter:description" content="Web lecture note covering graph convolutions, graph filters, GCN, the message-passing framework, GAT, and the limitations of graph neural networks.">
+<meta name="twitter:image" content="https://jhonygiraldo.github.io/assets/figures/node-embedding.svg">
+<meta name="twitter:image:alt" content="A node of a graph mapped by a function f into a low-dimensional embedding vector">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed custom-title-page lecture-page quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Jhony H. Giraldo</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../research/index.html"> 
+<span class="menu-text">Research</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../people/index.html"> 
+<span class="menu-text">Team</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../publications/index.html"> 
+<span class="menu-text">Publications</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../teaching/index.html"> 
+<span class="menu-text">Teaching</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../news/index.html"> 
+<span class="menu-text">News</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../cv/index.html"> 
+<span class="menu-text">CV</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:jhony.giraldo@telecom-paris.fr"> <i class="bi bi-envelope" role="img" aria-label="Email Jhony Giraldo">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://scholar.google.com/citations?user=iwzmGKwAAAAJ"> <i class="bi bi-mortarboard-fill" role="img" aria-label="Google Scholar">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/jhonyhgiraldo"> <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives"><span class="header-section-number">1</span> Learning objectives</a></li>
+  <li><a href="#where-lecture-1-stopped" id="toc-where-lecture-1-stopped" class="nav-link" data-scroll-target="#where-lecture-1-stopped"><span class="header-section-number">2</span> Where Lecture 1 stopped</a></li>
+  <li><a href="#why-convolutions-and-why-they-are-hard-on-graphs" id="toc-why-convolutions-and-why-they-are-hard-on-graphs" class="nav-link" data-scroll-target="#why-convolutions-and-why-they-are-hard-on-graphs"><span class="header-section-number">3</span> Why convolutions, and why they are hard on graphs</a></li>
+  <li><a href="#time-and-space-are-graphs" id="toc-time-and-space-are-graphs" class="nav-link" data-scroll-target="#time-and-space-are-graphs"><span class="header-section-number">4</span> Time and space are graphs</a></li>
+  <li><a href="#graph-language-and-shift-operators" id="toc-graph-language-and-shift-operators" class="nav-link" data-scroll-target="#graph-language-and-shift-operators"><span class="header-section-number">5</span> Graph language and shift operators</a>
+  <ul class="collapse">
+  <li><a href="#why-the-adjacency-matrix-is-a-bad-data-structure" id="toc-why-the-adjacency-matrix-is-a-bad-data-structure" class="nav-link" data-scroll-target="#why-the-adjacency-matrix-is-a-bad-data-structure"><span class="header-section-number">5.1</span> Why the adjacency matrix is a bad data structure</a></li>
+  </ul></li>
+  <li><a href="#graph-signals" id="toc-graph-signals" class="nav-link" data-scroll-target="#graph-signals"><span class="header-section-number">6</span> Graph signals</a></li>
+  <li><a href="#diffusion-what-the-shift-operator-does" id="toc-diffusion-what-the-shift-operator-does" class="nav-link" data-scroll-target="#diffusion-what-the-shift-operator-does"><span class="header-section-number">7</span> Diffusion: what the shift operator does</a>
+  <ul class="collapse">
+  <li><a href="#the-diffusion-sequence" id="toc-the-diffusion-sequence" class="nav-link" data-scroll-target="#the-diffusion-sequence"><span class="header-section-number">7.1</span> The diffusion sequence</a></li>
+  </ul></li>
+  <li><a href="#graph-convolutional-filters" id="toc-graph-convolutional-filters" class="nav-link" data-scroll-target="#graph-convolutional-filters"><span class="header-section-number">8</span> Graph convolutional filters</a></li>
+  <li><a href="#from-filters-to-graph-neural-networks" id="toc-from-filters-to-graph-neural-networks" class="nav-link" data-scroll-target="#from-filters-to-graph-neural-networks"><span class="header-section-number">9</span> From filters to graph neural networks</a></li>
+  <li><a href="#sec-gcn" id="toc-sec-gcn" class="nav-link" data-scroll-target="#sec-gcn"><span class="header-section-number">10</span> Graph convolutional networks</a>
+  <ul class="collapse">
+  <li><a href="#deriving-the-propagation-rule" id="toc-deriving-the-propagation-rule" class="nav-link" data-scroll-target="#deriving-the-propagation-rule"><span class="header-section-number">10.1</span> Deriving the propagation rule</a></li>
+  <li><a href="#shapes-and-parameters" id="toc-shapes-and-parameters" class="nav-link" data-scroll-target="#shapes-and-parameters"><span class="header-section-number">10.2</span> Shapes and parameters</a></li>
+  <li><a href="#loss-function" id="toc-loss-function" class="nav-link" data-scroll-target="#loss-function"><span class="header-section-number">10.3</span> Loss function</a></li>
+  <li><a href="#gcn-is-inductive" id="toc-gcn-is-inductive" class="nav-link" data-scroll-target="#gcn-is-inductive"><span class="header-section-number">10.4</span> GCN is inductive</a></li>
+  <li><a href="#what-the-outputs-are-used-for" id="toc-what-the-outputs-are-used-for" class="nav-link" data-scroll-target="#what-the-outputs-are-used-for"><span class="header-section-number">10.5</span> What the outputs are used for</a></li>
+  </ul></li>
+  <li><a href="#the-message-passing-framework" id="toc-the-message-passing-framework" class="nav-link" data-scroll-target="#the-message-passing-framework"><span class="header-section-number">11</span> The message-passing framework</a>
+  <ul class="collapse">
+  <li><a href="#gcn-as-a-message-passing-layer" id="toc-gcn-as-a-message-passing-layer" class="nav-link" data-scroll-target="#gcn-as-a-message-passing-layer"><span class="header-section-number">11.1</span> GCN as a message-passing layer</a></li>
+  </ul></li>
+  <li><a href="#graph-attention-networks" id="toc-graph-attention-networks" class="nav-link" data-scroll-target="#graph-attention-networks"><span class="header-section-number">12</span> Graph attention networks</a>
+  <ul class="collapse">
+  <li><a href="#multi-head-attention" id="toc-multi-head-attention" class="nav-link" data-scroll-target="#multi-head-attention"><span class="header-section-number">12.1</span> Multi-head attention</a></li>
+  </ul></li>
+  <li><a href="#limitations-of-message-passing-models" id="toc-limitations-of-message-passing-models" class="nav-link" data-scroll-target="#limitations-of-message-passing-models"><span class="header-section-number">13</span> Limitations of message-passing models</a>
+  <ul class="collapse">
+  <li><a href="#homophily-and-heterophily" id="toc-homophily-and-heterophily" class="nav-link" data-scroll-target="#homophily-and-heterophily"><span class="header-section-number">13.1</span> Homophily and heterophily</a></li>
+  <li><a href="#over-smoothing" id="toc-over-smoothing" class="nav-link" data-scroll-target="#over-smoothing"><span class="header-section-number">13.2</span> Over-smoothing</a></li>
+  <li><a href="#over-squashing" id="toc-over-squashing" class="nav-link" data-scroll-target="#over-squashing"><span class="header-section-number">13.3</span> Over-squashing</a></li>
+  <li><a href="#practical-remedies" id="toc-practical-remedies" class="nav-link" data-scroll-target="#practical-remedies"><span class="header-section-number">13.4</span> Practical remedies</a></li>
+  </ul></li>
+  <li><a href="#implementation-with-pytorch-geometric" id="toc-implementation-with-pytorch-geometric" class="nav-link" data-scroll-target="#implementation-with-pytorch-geometric"><span class="header-section-number">14</span> Implementation with PyTorch Geometric</a>
+  <ul class="collapse">
+  <li><a href="#a-gcn" id="toc-a-gcn" class="nav-link" data-scroll-target="#a-gcn"><span class="header-section-number">14.1</span> A GCN</a></li>
+  <li><a href="#a-gat" id="toc-a-gat" class="nav-link" data-scroll-target="#a-gat"><span class="header-section-number">14.2</span> A GAT</a></li>
+  </ul></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">15</span> Exercises</a>
+  <ul class="collapse">
+  <li><a href="#exercise-1-convolution-as-a-polynomial" id="toc-exercise-1-convolution-as-a-polynomial" class="nav-link" data-scroll-target="#exercise-1-convolution-as-a-polynomial"><span class="header-section-number">15.1</span> Exercise 1 — Convolution as a polynomial</a></li>
+  <li><a href="#exercise-2-permutation-equivariance" id="toc-exercise-2-permutation-equivariance" class="nav-link" data-scroll-target="#exercise-2-permutation-equivariance"><span class="header-section-number">15.2</span> Exercise 2 — Permutation equivariance</a></li>
+  <li><a href="#exercise-3-the-renormalization-trick" id="toc-exercise-3-the-renormalization-trick" class="nav-link" data-scroll-target="#exercise-3-the-renormalization-trick"><span class="header-section-number">15.3</span> Exercise 3 — The renormalization trick</a></li>
+  <li><a href="#exercise-4-counting-parameters" id="toc-exercise-4-counting-parameters" class="nav-link" data-scroll-target="#exercise-4-counting-parameters"><span class="header-section-number">15.4</span> Exercise 4 — Counting parameters</a></li>
+  <li><a href="#exercise-5-gcn-coefficients" id="toc-exercise-5-gcn-coefficients" class="nav-link" data-scroll-target="#exercise-5-gcn-coefficients"><span class="header-section-number">15.5</span> Exercise 5 — GCN coefficients</a></li>
+  <li><a href="#exercise-6-homophily" id="toc-exercise-6-homophily" class="nav-link" data-scroll-target="#exercise-6-homophily"><span class="header-section-number">15.6</span> Exercise 6 — Homophily</a></li>
+  <li><a href="#exercise-7-over-smoothing-in-practice" id="toc-exercise-7-over-smoothing-in-practice" class="nav-link" data-scroll-target="#exercise-7-over-smoothing-in-practice"><span class="header-section-number">15.7</span> Exercise 7 — Over-smoothing in practice</a></li>
+  </ul></li>
+  <li><a href="#main-takeaways" id="toc-main-takeaways" class="nav-link" data-scroll-target="#main-takeaways"><span class="header-section-number">16</span> Main takeaways</a></li>
+  <li><a href="#references-and-provenance" id="toc-references-and-provenance" class="nav-link" data-scroll-target="#references-and-provenance">References and provenance</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+</div>
+
+<div>
+  <div class="description">
+    Web lecture note covering graph convolutions, graph filters, GCN, the message-passing framework, GAT, and the limitations of graph neural networks.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    <div>
+    <div class="quarto-title-meta-heading">Modified</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date-modified">September 5, 2026</p>
+    </div>
+  </div>
+    
+  </div>
+  
+
+
+</header>
+
+
+<header class="lecture-header">
+  <div class="eyebrow">APM 5DS30 TP · Machine Learning with Graphs</div>
+  <h1>Graph neural networks</h1>
+  <p>Lecture 2 · Jhony H. Giraldo · Télécom Paris, Institut Polytechnique de Paris</p>
+  <div class="lecture-meta"><span>Original lecture: 21 January 2025</span><span>Web note revised: 5 September 2026</span><span>Mathematics rendered with MathJax</span></div>
+  <div class="button-row">
+    <a class="button-link primary" href="../../assets/pdf/Lecture-02-Graph-Neural-Networks.pdf">Download the original slides</a>
+    <a class="button-link secondary" href="../../teaching/machine-learning-with-graphs/index.html">Back to the course</a>
+  </div>
+</header>
+<p>Lecture 1 ended with a limitation. Shallow node embeddings such as DeepWalk and node2vec learn one vector per node, so they cannot use node features, cannot generalize to unseen nodes, and must be retrained whenever the graph changes. This note replaces that lookup table with a <strong>learned encoder</strong>: a neural network whose linear maps are <em>graph convolutions</em>.</p>
+<p>The route taken here is the signal-processing one. We first ask what a convolution <em>is</em>, observe that convolutions in time and space are polynomials in a shift operator, define the same object for an arbitrary graph, and only then compose graph filters with pointwise nonlinearities to obtain a graph neural network. The two most widely used architectures, GCN and GAT, then appear as principled approximations rather than as arbitrary formulas.</p>
+<section id="learning-objectives" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="learning-objectives"><span class="header-section-number">1</span> Learning objectives</h2>
+<p>After studying this note, you should be able to:</p>
+<ol class="learning-objectives">
+  <li>explain why multilayer perceptrons do not scale to graph-structured data and why convolutional models do;</li>
+  <li>write a convolution in time, in space, and on a graph as a polynomial in a shift operator;</li>
+  <li>derive the GCN propagation rule as an approximation of a graph convolutional filter;</li>
+  <li>express GCN and GAT inside the message-passing framework and state what distinguishes them;</li>
+  <li>compute the shapes of every matrix in a two-layer GCN and count its parameters;</li>
+  <li>diagnose homophily, over-smoothing, and over-squashing, and name a remedy for each;</li>
+  <li>implement a GCN and a GAT in PyTorch Geometric.</li>
+</ol>
+</section>
+<section id="where-lecture-1-stopped" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="where-lecture-1-stopped"><span class="header-section-number">2</span> Where Lecture 1 stopped</h2>
+<p>Recall the shallow encoder from Lecture 1: <span class="math inline">\(\operatorname{ENC}(u) = \mathbf{z}_u = \mathbf{Z}\mathbf{e}_u\)</span>, an embedding lookup trained on random-walk co-occurrences.</p>
+<div class="figure-panel">
+<div id="fig-node-embedding" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A node of a graph mapped by a function f into a low-dimensional embedding vector">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-node-embedding-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/node-embedding.svg" class="img-fluid figure-img" alt="A node of a graph mapped by a function f into a low-dimensional embedding vector">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-node-embedding-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Node embedding maps every node to a vector in a low-dimensional space. Lecture 1 learned the map <span class="math inline">\(f\)</span> as a lookup table; this lecture learns it as a neural network that also reads node features.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>Three problems follow directly from that definition.</p>
+<ol type="1">
+<li><strong>Parameter count.</strong> <span class="math inline">\(\mathbf{Z}\in\mathbb{R}^{d\times N}\)</span> has <span class="math inline">\(dN\)</span> parameters. The model grows with the graph.</li>
+<li><strong>Transductivity.</strong> A node that was absent at training time has no column in <span class="math inline">\(\mathbf{Z}\)</span>, so it has no embedding.</li>
+<li><strong>Features are ignored.</strong> If node <span class="math inline">\(v\)</span> carries a feature vector <span class="math inline">\(\mathbf{x}_v\in\mathbb{R}^{F}\)</span>, the lookup table has no way to use it.</li>
+</ol>
+<p>We want an encoder that is <strong>local</strong>, has a <strong>fixed number of parameters</strong> independent of <span class="math inline">\(N\)</span>, reads <strong>node features</strong>, and can be applied to a graph it has never seen. That is exactly the specification a convolutional architecture satisfies in Euclidean domains.</p>
+</section>
+<section id="why-convolutions-and-why-they-are-hard-on-graphs" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="why-convolutions-and-why-they-are-hard-on-graphs"><span class="header-section-number">3</span> Why convolutions, and why they are hard on graphs</h2>
+<p>Fully connected neural networks do not scale. A single dense layer mapping <span class="math inline">\(\mathbb{R}^{N}\to\mathbb{R}^{N}\)</span> has <span class="math inline">\(N^2\)</span> parameters; for a graph with a million nodes that is <span class="math inline">\(10^{12}\)</span> weights for one layer. Convolutional neural networks avoid this by reusing a small filter everywhere in the domain, which makes the parameter count independent of the input size and makes the layer local and translation equivariant.</p>
+<div class="figure-panel">
+<div id="fig-domains" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Left, a signal on an irregular network of hundreds of nodes; right, the same kind of signal on a regular square grid">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-domains-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/irregular-vs-regular-domains.svg" class="img-fluid figure-img" alt="Left, a signal on an irregular network of hundreds of nodes; right, the same kind of signal on a regular square grid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-domains-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Our data lives on a) an irregular graph, whereas convolutional networks were designed for b) a regular grid. The lecture’s programme is to transport the convolution from b) to a).
+</figcaption>
+</figure>
+</div>
+</div>
+<p>The obstacle is that the definition of convolution used in signal processing relies on <em>shifting</em> a filter across the domain, and an arbitrary graph has no notion of translation. The resolution is to notice that shifting is itself a linear operator, and that this operator is precisely the adjacency matrix of the domain.</p>
+</section>
+<section id="time-and-space-are-graphs" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="time-and-space-are-graphs"><span class="header-section-number">4</span> Time and space are graphs</h2>
+<div class="figure-panel">
+<div id="fig-time-space" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A six-node directed line graph beside an eight-by-eight grid graph">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-time-space-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/time-space-graphs.svg" class="img-fluid figure-img" alt="A six-node directed line graph beside an eight-by-eight grid graph">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-time-space-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: a) A discrete time axis is a directed line graph; b) an image is a grid graph. Both are graphs whose adjacency matrix expresses which samples are neighbors.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>A discrete-time signal <span class="math inline">\(\mathbf{x}\in\mathbb{R}^{N}\)</span> lives on a <strong>directed line graph</strong>: sample <span class="math inline">\(i\)</span> is connected to sample <span class="math inline">\(i+1\)</span>. An image lives on a <strong>grid graph</strong>: pixel <span class="math inline">\((i,j)\)</span> is connected to its four neighbors. In both cases the adjacency matrix implements the elementary shift. For the line graph,</p>
+<p><span class="math display">\[
+\mathbf{S}=
+\begin{bmatrix}
+0&amp;0&amp;\cdots&amp;0\\
+1&amp;0&amp;\cdots&amp;0\\
+\vdots&amp;\ddots&amp;\ddots&amp;\vdots\\
+0&amp;\cdots&amp;1&amp;0
+\end{bmatrix},
+\qquad
+(\mathbf{S}\mathbf{x})_i=x_{i-1}.
+\]</span></p>
+<p>Multiplying by <span class="math inline">\(\mathbf{S}\)</span> delays the signal by one sample; multiplying by <span class="math inline">\(\mathbf{S}^{k}\)</span> delays it by <span class="math inline">\(k\)</span>.</p>
+<div class="figure-panel">
+<div id="fig-convolution-time-space" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A line graph with the first six nodes highlighted and a grid graph with a diamond-shaped highlighted region">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-convolution-time-space-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/convolution-time-space.svg" class="img-fluid figure-img" alt="A line graph with the first six nodes highlighted and a grid graph with a diamond-shaped highlighted region">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-convolution-time-space-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: Two applications of the shift operator on a) the line graph and b) the grid graph. The red set is the part of the domain reached after two steps: exactly the support of <span class="math inline">\(\mathbf{S}^{2}\)</span> acting on an impulse.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>Now write the familiar convolution of a signal <span class="math inline">\(\mathbf{x}\)</span> with a filter <span class="math inline">\(\mathbf{h}=\{h_k\}\)</span>:</p>
+<p><span class="math display">\[
+\mathbf{z}
+= h_0\mathbf{S}^{0}\mathbf{x}
++ h_1\mathbf{S}^{1}\mathbf{x}
++ h_2\mathbf{S}^{2}\mathbf{x}
++ \cdots
+= \sum_{k=0}^{\infty} h_k\mathbf{S}^{k}\mathbf{x}.
+\]</span></p>
+<p>This is the ordinary discrete convolution. Nothing in the expression, however, requires <span class="math inline">\(\mathbf{S}\)</span> to be the line-graph adjacency matrix.</p>
+<div class="checkpoint">
+<p><strong>Check 1 — The key observation</strong></p>
+<p>A convolution is a <strong>polynomial in the shift operator</strong>. The filter contributes the coefficients <span class="math inline">\(h_k\)</span>; the domain contributes the operator <span class="math inline">\(\mathbf{S}\)</span>. Replace <span class="math inline">\(\mathbf{S}\)</span> by the adjacency matrix of an arbitrary graph and the same formula defines a convolution on that graph.</p>
+</div>
+</section>
+<section id="graph-language-and-shift-operators" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="graph-language-and-shift-operators"><span class="header-section-number">5</span> Graph language and shift operators</h2>
+<p>We recall the notation from Lecture 1 and fix the operators used throughout.</p>
+<div class="definition">
+<p><strong>Definition 1 — Graph shift operator</strong></p>
+<p>Let <span class="math inline">\(\mathcal{G}=(\mathcal{V},\mathcal{E})\)</span> with <span class="math inline">\(N=|\mathcal{V}|\)</span>, adjacency matrix <span class="math inline">\(\mathbf{A}\in\mathbb{R}^{N\times N}\)</span> and degree matrix <span class="math inline">\(\mathbf{D}=\operatorname{diag}(\mathbf{A}\mathbf{1})\)</span>. A <strong>graph shift operator</strong> <span class="math inline">\(\mathbf{S}\in\mathbb{R}^{N\times N}\)</span> is any matrix satisfying <span class="math inline">\(S_{ij}=0\)</span> whenever <span class="math inline">\(i\neq j\)</span> and <span class="math inline">\((v_j,v_i)\notin\mathcal{E}\)</span>.</p>
+<p>Common choices are</p>
+<p><span class="math display">\[
+\mathbf{A},
+\qquad
+\mathbf{L}=\mathbf{D}-\mathbf{A},
+\qquad
+\hat{\mathbf{A}}=\mathbf{D}^{-1/2}\mathbf{A}\mathbf{D}^{-1/2},
+\qquad
+\hat{\mathbf{L}}=\mathbf{D}^{-1/2}\mathbf{L}\mathbf{D}^{-1/2}.
+\]</span></p>
+</div>
+<p>The sparsity condition is what matters: <span class="math inline">\(\mathbf{S}\)</span> may only mix a node with its neighbors. Which operator you pick is not a detail — it fixes the scaling of the diffusion and therefore the conditioning of the whole network, as <a href="#sec-gcn" class="quarto-xref">Section&nbsp;10</a> shows.</p>
+<div class="two-figures">
+<div class="figure-panel">
+<div id="fig-adjacency-example" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Four nodes arranged in a diamond with colored directed arrows between them">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-adjacency-example-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/adjacency-matrix-example.svg" class="img-fluid figure-img" alt="Four nodes arranged in a diamond with colored directed arrows between them">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-adjacency-example-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5: A four-node graph. Two of its relations are one-way.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="figure-panel">
+<div id="fig-edge-list" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Four nodes connected by five undirected edges">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-edge-list-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/edge-list-graph.svg" class="img-fluid figure-img" alt="Four nodes connected by five undirected edges">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-edge-list-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6: An undirected four-node graph, stored below as a list of edges.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="worked-example">
+<p><strong>Worked example — Reading <a href="#fig-adjacency-example" class="quarto-xref">Figure&nbsp;5</a></strong></p>
+<p>The adjacency matrix of the graph is</p>
+<p><span class="math display">\[
+\mathbf{A}=
+\begin{bmatrix}
+0&amp;1&amp;1&amp;0\\
+1&amp;0&amp;1&amp;1\\
+0&amp;1&amp;0&amp;0\\
+0&amp;1&amp;1&amp;0
+\end{bmatrix}.
+\]</span></p>
+<p>Since <span class="math inline">\(A_{13}=1\)</span> but <span class="math inline">\(A_{31}=0\)</span>, the matrix is not symmetric: the graph is <strong>directed</strong>. Every nonzero entry equals one, so it is <strong>unweighted</strong>.</p>
+</div>
+<section id="why-the-adjacency-matrix-is-a-bad-data-structure" class="level3" data-number="5.1">
+<h3 data-number="5.1" class="anchored" data-anchor-id="why-the-adjacency-matrix-is-a-bad-data-structure"><span class="header-section-number">5.1</span> Why the adjacency matrix is a bad data structure</h3>
+<p>Real graphs are sparse: a node has far fewer neighbors than <span class="math inline">\(N\)</span>. Storing all <span class="math inline">\(N^2\)</span> entries is therefore wasteful, and quickly impossible.</p>
+<div class="worked-example">
+<p><strong>Worked example — A social network with <span class="math inline">\(N = 25\,000\,000\)</span> users</strong></p>
+<p>A double-precision float occupies <span class="math inline">\(64/8 = 8\)</span> bytes, so a dense adjacency matrix needs</p>
+<p><span class="math display">\[
+8\,N^{2}
+= 8\times(2.5\times10^{7})^{2}
+= 5\times10^{15}\ \text{bytes}
+= 5\ \text{petabytes}.
+\]</span></p>
+<p>No machine holds that in RAM. Now suppose every user has <span class="math inline">\(300\)</span> connections on average. An edge list stores two node indices per edge:</p>
+<p><span class="math display">\[
+8\times N\times 300\times 2
+= 1.2\times10^{11}\ \text{bytes}
+= 120\ \text{gigabytes},
+\]</span></p>
+<p>a reduction by more than four orders of magnitude. This is why PyTorch Geometric represents a graph as an <code>edge_index</code> tensor of shape <span class="math inline">\(2\times|\mathcal{E}|\)</span> rather than as a matrix.</p>
+</div>
+<p>For <a href="#fig-edge-list" class="quarto-xref">Figure&nbsp;6</a>, the edge list in the format PyTorch Geometric expects is</p>
+<p><span class="math display">\[
+\texttt{edge\_index}=
+\begin{bmatrix}
+1&amp;1&amp;2&amp;2&amp;2&amp;3&amp;4&amp;4\\
+2&amp;4&amp;1&amp;3&amp;4&amp;2&amp;1&amp;2
+\end{bmatrix},
+\]</span></p>
+<p>with each undirected edge stored in both directions. The adjacency matrix remains the right tool for <em>analysis</em>; the edge list is the right tool for <em>computation</em>.</p>
+</section>
+</section>
+<section id="graph-signals" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="graph-signals"><span class="header-section-number">6</span> Graph signals</h2>
+<div class="definition">
+<p><strong>Definition 2 — Graph signal</strong></p>
+<p>A graph signal is a map <span class="math inline">\(x:\mathcal{V}\to\mathbb{R}^{m}\)</span> from the node set into a vector space. For <span class="math inline">\(m=1\)</span> we collect the values into a vector <span class="math inline">\(\mathbf{x}\in\mathbb{R}^{N}\)</span>; for <span class="math inline">\(m=F\)</span> features we collect them row-wise into <span class="math inline">\(\mathbf{X}\in\mathbb{R}^{N\times F}\)</span>.</p>
+</div>
+<div class="two-figures">
+<div class="figure-panel">
+<div id="fig-graph-signal" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A large irregular network whose nodes are colored on a blue-to-red scale">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-graph-signal-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/graph-signal-sensor.svg" class="img-fluid figure-img" alt="A large irregular network whose nodes are colored on a blue-to-red scale">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-graph-signal-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7: A sensor network carrying a temperature field. The graph encodes which sensors are close; the colors are the signal.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="figure-panel">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../../assets/figures/karate-graph.svg" class="img-fluid figure-img" alt="The Zachary karate club network drawn with colored nodes"></p>
+<figcaption>Graphs are generic descriptors of structure. Values sit on nodes; edges express similarity between them.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The important shift in perspective is that the graph and the signal are <strong>separate objects</strong>. The graph is the domain; the signal is the data on it. In a molecule, nodes are atoms, the signal is the atom type; in a particle simulation, nodes are particles, the signal is their state; in a citation network, nodes are papers and the signal is a bag-of-words vector.</p>
+</section>
+<section id="diffusion-what-the-shift-operator-does" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="diffusion-what-the-shift-operator-does"><span class="header-section-number">7</span> Diffusion: what the shift operator does</h2>
+<p>Applying <span class="math inline">\(\mathbf{S}\)</span> to a signal mixes each node with its neighbors:</p>
+<p><span class="math display">\[
+\mathbf{y}=\mathbf{A}\mathbf{x},
+\qquad
+y_i=\sum_{j=1}^{N}a_{ij}x_j=\sum_{j\in\mathcal{N}_i}a_{ij}x_j .
+\]</span></p>
+<p>Only neighbors contribute, and in a weighted graph stronger edges contribute more. This single operation is the entire local mechanism behind every model in this note.</p>
+<div class="two-figures">
+<div class="figure-panel">
+<div id="fig-diffusion-1" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A four-node graph with node 1 in red and nodes 2 and 3 circled in red">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-diffusion-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/diffusion-step-1.svg" class="img-fluid figure-img" alt="A four-node graph with node 1 in red and nodes 2 and 3 circled in red">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-diffusion-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8: One diffusion step. A unit value at node 1 reaches its neighbors 2 and 3.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="figure-panel">
+<div id="fig-diffusion-2" class="quarto-float quarto-figure quarto-figure-center anchored" alt="The same four-node graph with the signal now present on all nodes">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-diffusion-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/diffusion-step-2.svg" class="img-fluid figure-img" alt="The same four-node graph with the signal now present on all nodes">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-diffusion-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;9: A second diffusion step spreads the signal to the two-hop neighborhood.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="worked-example">
+<p><strong>Worked example — Two diffusion steps</strong></p>
+<p>For the graph of <a href="#fig-diffusion-1" class="quarto-xref">Figure&nbsp;8</a> with <span class="math inline">\(\mathbf{x}=[1,0,0,0]^{\top}\)</span>,</p>
+<p><span class="math display">\[
+\mathbf{y}=
+\begin{bmatrix}
+0&amp;1&amp;1&amp;0\\
+1&amp;0&amp;1&amp;1\\
+1&amp;1&amp;0&amp;1\\
+0&amp;1&amp;1&amp;0
+\end{bmatrix}
+\begin{bmatrix}1\\0\\0\\0\end{bmatrix}
+=
+\begin{bmatrix}0\\1\\1\\0\end{bmatrix},
+\qquad
+\mathbf{y}_2=\mathbf{A}\mathbf{y}=
+\begin{bmatrix}2\\1\\1\\2\end{bmatrix}.
+\]</span></p>
+<p>After one step the signal occupies the one-hop neighborhood of node 1; after two steps it has reached every node, and the entry <span class="math inline">\(2\)</span> at node 1 counts the two length-two walks returning to it.</p>
+<p>If the graph is weighted with <span class="math inline">\(a_{12}=0.5\)</span>, the same computation gives <span class="math inline">\(\mathbf{y}=[0,0.5,1,0]^{\top}\)</span> and <span class="math inline">\(\mathbf{y}_2=[1.25,1,0.5,1.5]^{\top}\)</span>: the weaker edge transports less.</p>
+</div>
+<section id="the-diffusion-sequence" class="level3" data-number="7.1">
+<h3 data-number="7.1" class="anchored" data-anchor-id="the-diffusion-sequence"><span class="header-section-number">7.1</span> The diffusion sequence</h3>
+<p>Composing the operation defines the <strong>diffusion sequence</strong></p>
+<p><span class="math display">\[
+\mathbf{x}^{(k+1)}=\mathbf{S}\mathbf{x}^{(k)},
+\qquad
+\mathbf{x}^{(0)}=\mathbf{x},
+\]</span></p>
+<p>which unrolls into the power sequence <span class="math inline">\(\mathbf{x}^{(k)}=\mathbf{S}^{k}\mathbf{x}\)</span>.</p>
+<div class="figure-panel">
+<div id="fig-diffusion-sequence" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three copies of a large sensor network showing an impulse spreading outward over successive steps">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-diffusion-sequence-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/graph-diffusion-sequence.svg" class="img-fluid figure-img" alt="Three copies of a large sensor network showing an impulse spreading outward over successive steps">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-diffusion-sequence-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;10: The diffusion sequence on a sensor graph. An impulse at <span class="math inline">\(k=0\)</span> reaches the one-hop neighborhood at <span class="math inline">\(k=1\)</span> and the two-hop neighborhood at <span class="math inline">\(k=2\)</span>: the <span class="math inline">\(k\)</span>-th element carries information from <span class="math inline">\(k\)</span> hops away.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="checkpoint">
+<p><strong>Check 2 — Always implement the recursion</strong></p>
+<p>The two expressions <span class="math inline">\(\mathbf{x}^{(k+1)}=\mathbf{S}\mathbf{x}^{(k)}\)</span> and <span class="math inline">\(\mathbf{x}^{(k)}=\mathbf{S}^{k}\mathbf{x}\)</span> are mathematically identical and computationally very different.</p>
+<p>Each recursive step is one sparse matrix–vector product, costing <span class="math inline">\(O(|\mathcal{E}|)\)</span>; <span class="math inline">\(K\)</span> steps cost <span class="math inline">\(O(K|\mathcal{E}|)\)</span> and never build a matrix. Forming <span class="math inline">\(\mathbf{S}^{k}\)</span> explicitly costs a dense matrix product <em>and</em> destroys sparsity: powers of a sparse matrix fill in rapidly, so <span class="math inline">\(\mathbf{S}^{k}\)</span> soon needs <span class="math inline">\(O(N^{2})\)</span> memory. Use the recursion; use the powers only for analysis.</p>
+</div>
+</section>
+</section>
+<section id="graph-convolutional-filters" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="graph-convolutional-filters"><span class="header-section-number">8</span> Graph convolutional filters</h2>
+<div class="definition">
+<p><strong>Definition 3 — Graph filter and graph convolution</strong></p>
+<p>A <strong>graph filter</strong> is a polynomial in the shift operator,</p>
+<p><span class="math display">\[
+\mathbf{H}(\mathbf{S})=\sum_{k=0}^{\infty}h_k\mathbf{S}^{k}.
+\]</span></p>
+<p>Applying it to a graph signal produces the <strong>graph convolution</strong></p>
+<p><span id="eq-graph-convolution"><span class="math display">\[
+\mathbf{y}=\mathbf{H}(\mathbf{S})\mathbf{x}=\sum_{k=0}^{\infty}h_k\mathbf{S}^{k}\mathbf{x} .
+\tag{1}\]</span></span></p>
+</div>
+<p>In practice the sum is truncated at <span class="math inline">\(K\)</span> taps, giving a filter of order <span class="math inline">\(K-1\)</span>. Three properties make <a href="#eq-graph-convolution" class="quarto-xref">Equation&nbsp;1</a> the right generalization of the classical convolution.</p>
+<ul>
+<li><strong>Locality.</strong> The <span class="math inline">\(k\)</span>-th term reads only the <span class="math inline">\(k\)</span>-hop neighborhood, so a <span class="math inline">\(K\)</span>-tap filter is supported on <span class="math inline">\(K-1\)</span> hops.</li>
+<li><strong>Fixed parameter count.</strong> The filter has <span class="math inline">\(K\)</span> coefficients whatever the size of the graph. This is the property that shallow embeddings lacked.</li>
+<li><strong>Permutation equivariance.</strong> If <span class="math inline">\(\mathbf{P}\)</span> is a permutation matrix, then <span class="math inline">\(\mathbf{H}(\mathbf{P}\mathbf{S}\mathbf{P}^{\top})\mathbf{P}\mathbf{x}=\mathbf{P}\mathbf{H}(\mathbf{S})\mathbf{x}\)</span>, because <span class="math inline">\((\mathbf{P}\mathbf{S}\mathbf{P}^{\top})^{k}=\mathbf{P}\mathbf{S}^{k}\mathbf{P}^{\top}\)</span> and <span class="math inline">\(\mathbf{P}^{\top}\mathbf{P}=\mathbf{I}\)</span>. Relabelling the nodes relabels the output and changes nothing else — exactly the invariance Lecture 1 demanded of a graph model.</li>
+</ul>
+<p>Aggregation grows from local to global as <span class="math inline">\(k\)</span> increases: the filter reads the node itself (<span class="math inline">\(k=0\)</span>), then its neighbors (<span class="math inline">\(k=1\)</span>), then their neighbors (<span class="math inline">\(k=2\)</span>), and the coefficients <span class="math inline">\(h_k\)</span> decide how much each scale contributes.</p>
+</section>
+<section id="from-filters-to-graph-neural-networks" class="level2" data-number="9">
+<h2 data-number="9" class="anchored" data-anchor-id="from-filters-to-graph-neural-networks"><span class="header-section-number">9</span> From filters to graph neural networks</h2>
+<p>A neural network is a composition of layers, each a linear map followed by a pointwise nonlinearity. The three architectures below differ only in <em>which</em> linear map they use.</p>
+<div class="figure-panel">
+<div id="fig-nn-layers" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A block diagram of two layers, each a matrix multiplication followed by a pointwise nonlinearity">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-nn-layers-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/nn-layer-composition.svg" class="img-fluid figure-img" alt="A block diagram of two layers, each a matrix multiplication followed by a pointwise nonlinearity">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-nn-layers-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;11: A fully connected network: each layer applies an arbitrary matrix <span class="math inline">\(\mathbf{H}_\ell\)</span>. The parameter count grows with the size of the input, so the model does not scale.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="figure-panel">
+<div id="fig-cnn-layers" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A block diagram of two layers, each a convolution followed by a pointwise nonlinearity">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-cnn-layers-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/cnn-layer-composition.svg" class="img-fluid figure-img" alt="A block diagram of two layers, each a convolution followed by a pointwise nonlinearity">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cnn-layers-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;12: A convolutional network: the same block diagram, with the arbitrary matrix replaced by a convolution. The filter is reused everywhere, so the layer is local and has few parameters.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="figure-panel">
+<div id="fig-gnn-layers" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A block diagram of two graph filtering layers, each followed by a pointwise nonlinearity">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-gnn-layers-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/gnn-layer-composition.svg" class="img-fluid figure-img" alt="A block diagram of two graph filtering layers, each followed by a pointwise nonlinearity">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gnn-layers-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13: A graph neural network: each layer applies a graph filter <span class="math inline">\(\sum_k h_{\ell k}\mathbf{S}^{k}\)</span> followed by a pointwise nonlinearity. Choosing <span class="math inline">\(\mathbf{S}\)</span> to be a directed line graph recovers the convolutional network exactly.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>Formally, with <span class="math inline">\(\mathbf{x}_0=\mathbf{x}\)</span>,</p>
+<p><span class="math display">\[
+\mathbf{z}_{\ell}=\sum_{k=0}^{K-1}h_{\ell k}\mathbf{S}^{k}\mathbf{x}_{\ell-1},
+\qquad
+\mathbf{x}_{\ell}=\sigma(\mathbf{z}_{\ell}),
+\qquad
+\ell=1,\dots,L,
+\]</span></p>
+<p>and the network computes <span class="math inline">\(\mathbf{x}_{L}=f(\mathbf{x};\mathbf{S},\boldsymbol{\Theta})\)</span> with <span class="math inline">\(\boldsymbol{\Theta}=\{h_{\ell k}\}\)</span>. Because <span class="math inline">\(\sigma\)</span> acts pointwise, it commutes with node permutations, so the whole network inherits the permutation equivariance of its filters.</p>
+<div class="checkpoint">
+<p><strong>Check 3 — What we want from a GNN</strong></p>
+<p>Before choosing an architecture, fix the requirements:</p>
+<ol type="1">
+<li><strong>cost</strong> proportional to <span class="math inline">\(O(|\mathcal{E}|)\)</span> in time and memory;</li>
+<li>a <strong>fixed number of parameters</strong>, independent of <span class="math inline">\(N\)</span>;</li>
+<li><strong>locality</strong>, so that each output depends on a bounded neighborhood;</li>
+<li>applicability to <strong>inductive</strong> problems, that is, to graphs unseen during training.</li>
+</ol>
+<p>The generic filter of <a href="#eq-graph-convolution" class="quarto-xref">Equation&nbsp;1</a> satisfies 2 and 3 but not 1: the recursion <span class="math inline">\(\mathbf{S}\mathbf{x}^{(k)}\)</span> is inherently sequential across <span class="math inline">\(k\)</span> and cannot be parallelized, while the alternative of precomputing <span class="math inline">\(\mathbf{S}^{k}\)</span> destroys sparsity. Architectures built directly on high-order filters, such as ChebNet <span class="citation" data-cites="defferrard2016convolutional">(<a href="#ref-defferrard2016convolutional" role="doc-biblioref">Defferrard et al. 2016</a>)</span>, pay this price. The practical answer is to approximate.</p>
+</div>
+</section>
+<section id="sec-gcn" class="level2" data-number="10">
+<h2 data-number="10" class="anchored" data-anchor-id="sec-gcn"><span class="header-section-number">10</span> Graph convolutional networks</h2>
+<p>The graph convolutional network of Kipf and Welling <span class="citation" data-cites="kipf2016semi">(<a href="#ref-kipf2016semi" role="doc-biblioref">Kipf and Welling 2017</a>)</span> is the most widely used GNN — over 40 000 citations by the time of this lecture in January 2025 — and its success comes entirely from being the cheapest possible approximation of <a href="#eq-graph-convolution" class="quarto-xref">Equation&nbsp;1</a>.</p>
+<section id="deriving-the-propagation-rule" class="level3" data-number="10.1">
+<h3 data-number="10.1" class="anchored" data-anchor-id="deriving-the-propagation-rule"><span class="header-section-number">10.1</span> Deriving the propagation rule</h3>
+<p>Start from a first-order filter on the normalized Laplacian, keeping only <span class="math inline">\(k=0\)</span> and <span class="math inline">\(k=1\)</span>:</p>
+<p><span class="math display">\[
+\mathbf{y}\approx\theta_0\mathbf{x}+\theta_1\hat{\mathbf{L}}\mathbf{x}
+=\theta_0\mathbf{x}-\theta_1\mathbf{D}^{-1/2}\mathbf{A}\mathbf{D}^{-1/2}\mathbf{x},
+\]</span></p>
+<p>using <span class="math inline">\(\hat{\mathbf{L}}=\mathbf{I}-\hat{\mathbf{A}}\)</span> up to the constant term. Tying the two coefficients with <span class="math inline">\(\theta=\theta_0=-\theta_1\)</span> leaves a <strong>single</strong> parameter per filter:</p>
+<p><span class="math display">\[
+\mathbf{y}\approx\theta\left(\mathbf{I}+\mathbf{D}^{-1/2}\mathbf{A}\mathbf{D}^{-1/2}\right)\mathbf{x}.
+\]</span></p>
+<p>The operator <span class="math inline">\(\mathbf{I}+\hat{\mathbf{A}}\)</span> has eigenvalues in <span class="math inline">\([0,2]\)</span>, so repeatedly applying it in a deep network amplifies or attenuates the signal and leads to exploding or vanishing gradients. The <strong>renormalization trick</strong> replaces it by the same operator computed on the graph with self-loops added:</p>
+<p><span class="math display">\[
+\mathbf{I}+\mathbf{D}^{-1/2}\mathbf{A}\mathbf{D}^{-1/2}
+\;\longrightarrow\;
+\tilde{\mathbf{D}}^{-1/2}\tilde{\mathbf{A}}\tilde{\mathbf{D}}^{-1/2},
+\qquad
+\tilde{\mathbf{A}}=\mathbf{A}+\mathbf{I},
+\quad
+\tilde{\mathbf{D}}=\operatorname{diag}(\tilde{\mathbf{A}}\mathbf{1}).
+\]</span></p>
+<p>The resulting matrix has spectrum contained in <span class="math inline">\((-1,1]\)</span>, which keeps the diffusion stable. In the shorthand used in the lecture: GCN is the graph filter with <span class="math inline">\(h_1=1\)</span>, <span class="math inline">\(h_i=0\)</span> for <span class="math inline">\(i\neq1\)</span>, <span class="math inline">\(\mathbf{S}=\hat{\mathbf{A}}\)</span>, plus the self-loop trick.</p>
+<div class="definition">
+<p><strong>Definition 4 — GCN propagation rule</strong></p>
+<p><span id="eq-gcn"><span class="math display">\[
+\mathbf{H}^{(\ell+1)}
+=\sigma\!\left(
+\tilde{\mathbf{D}}^{-1/2}\tilde{\mathbf{A}}\tilde{\mathbf{D}}^{-1/2}\,
+\mathbf{H}^{(\ell)}\mathbf{W}^{(\ell)}
+\right),
+\qquad
+\mathbf{H}^{(0)}=\mathbf{X},
+\tag{2}\]</span></span></p>
+<p>where <span class="math inline">\(\mathbf{H}^{(\ell)}\)</span> collects the activations of layer <span class="math inline">\(\ell\)</span>, <span class="math inline">\(\mathbf{W}^{(\ell)}\)</span> is a trainable weight matrix, and <span class="math inline">\(\sigma(\cdot)\)</span> is an activation function.</p>
+</div>
+<p>Two readings of <a href="#eq-gcn" class="quarto-xref">Equation&nbsp;2</a> are worth keeping in mind. Reading it left to right, <span class="math inline">\(\tilde{\mathbf{D}}^{-1/2}\tilde{\mathbf{A}}\tilde{\mathbf{D}}^{-1/2}\)</span> mixes each node with its neighbors and <span class="math inline">\(\mathbf{W}^{(\ell)}\)</span> mixes the feature channels. Reading it as a degenerate case, if the propagation matrix were <span class="math inline">\(\mathbf{I}\)</span> — no graph structure at all — the layer would reduce to an ordinary fully connected layer <span class="math inline">\(\sigma(\mathbf{H}^{(\ell)}\mathbf{W}^{(\ell)})\)</span>. <strong>The graph is the only thing a GCN adds to an MLP.</strong></p>
+</section>
+<section id="shapes-and-parameters" class="level3" data-number="10.2">
+<h3 data-number="10.2" class="anchored" data-anchor-id="shapes-and-parameters"><span class="header-section-number">10.2</span> Shapes and parameters</h3>
+<div class="worked-example">
+<p><strong>Worked example — A two-layer GCN, dimension by dimension</strong></p>
+<p>Let <span class="math inline">\(N\)</span> be the number of nodes, <span class="math inline">\(F\)</span> the input feature dimension, <span class="math inline">\(H_0\)</span> the width of the hidden layer and <span class="math inline">\(C\)</span> the number of classes. In the first layer,</p>
+<p><span class="math display">\[
+\underbrace{\tilde{\mathbf{D}}^{-1/2}\tilde{\mathbf{A}}\tilde{\mathbf{D}}^{-1/2}}_{N\times N}
+\;
+\underbrace{\mathbf{X}}_{N\times F}
+\;
+\underbrace{\mathbf{W}^{(0)}}_{F\times H_0}
+\;\Longrightarrow\;
+\mathbf{H}^{(1)}\in\mathbb{R}^{N\times H_0}.
+\]</span></p>
+<p>The second layer uses <span class="math inline">\(\mathbf{W}^{(1)}\in\mathbb{R}^{H_0\times C}\)</span> and yields <span class="math inline">\(\mathbf{H}^{(2)}\in\mathbb{R}^{N\times C}\)</span>. The vanilla two-layer GCN for node classification is therefore</p>
+<p><span class="math display">\[
+\bar{\mathbf{Y}}
+=f(\mathbf{X};\mathbf{A},\boldsymbol{\Theta})
+=\operatorname{softmax}\!\left(
+\hat{\mathbf{A}}_{\mathrm{sl}}\,
+\operatorname{ReLU}\!\left(\hat{\mathbf{A}}_{\mathrm{sl}}\mathbf{X}\mathbf{W}^{(0)}\right)
+\mathbf{W}^{(1)}
+\right),
+\qquad
+\hat{\mathbf{A}}_{\mathrm{sl}}=\tilde{\mathbf{D}}^{-1/2}\tilde{\mathbf{A}}\tilde{\mathbf{D}}^{-1/2}.
+\]</span></p>
+<p>Its parameter count is <span class="math inline">\(FH_0+H_0C\)</span> — it does <strong>not</strong> contain <span class="math inline">\(N\)</span>. For Cora (<span class="math inline">\(N=2708\)</span>, <span class="math inline">\(F=1433\)</span>, <span class="math inline">\(C=7\)</span>) with <span class="math inline">\(H_0=16\)</span>, that is <span class="math inline">\(1433\times16+16\times7=23\,040\)</span> parameters, whereas a shallow embedding of the same width would need <span class="math inline">\(16\times2708=43\,328\)</span> parameters and would still be unable to classify a new node.</p>
+</div>
+<div class="figure-panel">
+<div id="fig-gcn-block" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two layers, each containing a normalized adjacency times features times weights block followed by ReLU or softmax">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-gcn-block-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/gcn-block-diagram.svg" class="img-fluid figure-img" alt="Two layers, each containing a normalized adjacency times features times weights block followed by ReLU or softmax">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gcn-block-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;14: Block diagram of the vanilla two-layer GCN for node classification. Each layer is one sparse propagation, one dense feature map, and one pointwise nonlinearity.
+</figcaption>
+</figure>
+</div>
+</div>
+</section>
+<section id="loss-function" class="level3" data-number="10.3">
+<h3 data-number="10.3" class="anchored" data-anchor-id="loss-function"><span class="header-section-number">10.3</span> Loss function</h3>
+<p>For semi-supervised node classification, let <span class="math inline">\(\mathcal{S}\subset\mathcal{V}\)</span> be the indices of the labelled training nodes, <span class="math inline">\(C\)</span> the number of classes and <span class="math inline">\(\mathbf{Y}\in\{0,1\}^{N\times C}\)</span> the one-hot label matrix. The cross-entropy loss is</p>
+<p><span class="math display">\[
+\mathcal{L}
+=-\frac{1}{|\mathcal{S}|}
+\sum_{i\in\mathcal{S}}
+\sum_{j=1}^{C}
+Y_{ij}\ln\bar{Y}_{ij}.
+\]</span></p>
+<p>Only the labelled rows enter the loss, but the forward pass uses the whole graph — that is what makes the method semi-supervised. Optimize with SGD or Adam.</p>
+</section>
+<section id="gcn-is-inductive" class="level3" data-number="10.4">
+<h3 data-number="10.4" class="anchored" data-anchor-id="gcn-is-inductive"><span class="header-section-number">10.4</span> GCN is inductive</h3>
+<div class="figure-panel">
+<div id="fig-inductive" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Top row, a transductive pipeline that recomputes the entire graph; bottom row, an inductive pipeline that reuses the trained model">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-inductive-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/inductive-vs-transductive.svg" class="img-fluid figure-img" alt="Top row, a transductive pipeline that recomputes the entire graph; bottom row, an inductive pipeline that reuses the trained model">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-inductive-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;15: A transductive model must re-solve its optimization problem whenever data arrives. A GCN applies its trained weights to a graph it has never seen, because the parameters are filter coefficients rather than per-node vectors.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>This is the decisive practical advantage over DeepWalk. The trained object is <span class="math inline">\(\{\mathbf{W}^{(\ell)}\}\)</span>, a set of matrices whose shapes depend on feature dimensions only. Give the network a different graph with the same feature dimension and it produces embeddings immediately.</p>
+</section>
+<section id="what-the-outputs-are-used-for" class="level3" data-number="10.5">
+<h3 data-number="10.5" class="anchored" data-anchor-id="what-the-outputs-are-used-for"><span class="header-section-number">10.5</span> What the outputs are used for</h3>
+<div class="figure-panel">
+<div id="fig-gnn-tasks" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A graph and its embeddings feeding three heads: node classification, graph classification, and link classification">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-gnn-tasks-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/gnn-output-tasks.svg" class="img-fluid figure-img" alt="A graph and its embeddings feeding three heads: node classification, graph classification, and link classification">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gnn-tasks-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;16: The same node embeddings <span class="math inline">\(\mathbf{H}\)</span> support node classification, graph classification through a permutation-invariant readout, and link prediction from pairs of embeddings.
+</figcaption>
+</figure>
+</div>
+</div>
+<p><span class="math display">\[
+\mathbf{z}_i=f(\mathbf{h}_i)
+\quad\text{(node)},
+\qquad
+\mathbf{z}_{\mathcal{G}}=f\!\left(\textstyle\sum_{i}\mathbf{h}_i\right)
+\quad\text{(graph)},
+\qquad
+\mathbf{z}_{ij}=f(\mathbf{h}_i,\mathbf{h}_j)
+\quad\text{(link)}.
+\]</span></p>
+<p>The graph-level readout must be permutation invariant — a sum, mean, or max over nodes — otherwise relabelling the nodes would change the prediction.</p>
+</section>
+</section>
+<section id="the-message-passing-framework" class="level2" data-number="11">
+<h2 data-number="11" class="anchored" data-anchor-id="the-message-passing-framework"><span class="header-section-number">11</span> The message-passing framework</h2>
+<p>GCN is one point in a much larger design space. The message-passing neural network framework <span class="citation" data-cites="gilmer2017neural">(<a href="#ref-gilmer2017neural" role="doc-biblioref">Gilmer et al. 2017</a>)</span> describes that space.</p>
+<div class="definition">
+<p><strong>Definition 5 — Message-passing layer</strong></p>
+<p>With <span class="math inline">\(\mathbf{H}^{(\ell)}\in\mathbb{R}^{N\times F_\ell}\)</span> and <span class="math inline">\(\mathbf{H}^{(0)}=\mathbf{X}\)</span>,</p>
+<p><span id="eq-mpnn"><span class="math display">\[
+\mathbf{h}_i^{(\ell+1)}
+=\phi_\ell\!\left(
+\mathbf{h}_i^{(\ell)},
+\sum_{j\in\mathcal{N}_i} S_{ij}\,
+\psi_\ell\!\left(\mathbf{h}_i^{(\ell)},\mathbf{h}_j^{(\ell)}\right)
+\right),
+\tag{3}\]</span></span></p>
+<p>where <span class="math inline">\(\psi_\ell:\mathbb{R}^{F_\ell}\times\mathbb{R}^{F_\ell}\to\mathbb{R}^{F'_\ell}\)</span> is a <strong>message function</strong> and <span class="math inline">\(\phi_\ell:\mathbb{R}^{F_\ell}\times\mathbb{R}^{F'_\ell}\to\mathbb{R}^{F_{\ell+1}}\)</span> is an <strong>update function</strong>.</p>
+</div>
+<div class="figure-panel">
+<div id="fig-message-passing" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A six-node graph with node 4 highlighted, beside the message and update equations">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-message-passing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/message-passing.svg" class="img-fluid figure-img" alt="A six-node graph with node 4 highlighted, beside the message and update equations">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-message-passing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;17: One message-passing step at node 4. Every neighbor emits a message; the messages are aggregated by a permutation-invariant operator; the aggregate and the node’s own state are combined by the update function.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>The aggregation must be permutation invariant — a sum here, but mean, max, or attention-weighted sums are equally valid — because a node’s neighbors carry no canonical order. The cost of one layer is <span class="math inline">\(O(|\mathcal{E}|)\)</span> messages, which is requirement 1 of Check 3.</p>
+<section id="gcn-as-a-message-passing-layer" class="level3" data-number="11.1">
+<h3 data-number="11.1" class="anchored" data-anchor-id="gcn-as-a-message-passing-layer"><span class="header-section-number">11.1</span> GCN as a message-passing layer</h3>
+<p>Expanding <a href="#eq-gcn" class="quarto-xref">Equation&nbsp;2</a> row by row gives</p>
+<p><span id="eq-gcn-mpnn"><span class="math display">\[
+\mathbf{h}_i^{(\ell+1)}
+=\sigma\!\left(
+\mathbf{W}^{\top}
+\sum_{j\in\mathcal{N}_i\cup\{i\}}
+\frac{a_{ij}}{\sqrt{(d_i+1)(d_j+1)}}\,
+\mathbf{h}_j^{(\ell)}
+\right),
+\tag{4}\]</span></span></p>
+<p>where <span class="math inline">\(d_i\)</span> is the degree of node <span class="math inline">\(i\)</span>. Reading <a href="#eq-gcn-mpnn" class="quarto-xref">Equation&nbsp;4</a> against <a href="#eq-mpnn" class="quarto-xref">Equation&nbsp;3</a>: the message function is the identity on the neighbor’s state, the aggregation is a weighted sum over the closed neighborhood <span class="math inline">\(\mathcal{N}_i\cup\{i\}\)</span> — the self-loop from the renormalization trick — and the update is a linear map followed by an activation.</p>
+<div class="checkpoint">
+<p><strong>Check 4 — Where the GCN coefficients come from</strong></p>
+<p>In <a href="#eq-gcn-mpnn" class="quarto-xref">Equation&nbsp;4</a> the weight of neighbor <span class="math inline">\(j\)</span> is <span class="math inline">\(a_{ij}/\sqrt{(d_i+1)(d_j+1)}\)</span>. It depends only on the <strong>degrees</strong> and the <strong>prescribed edge weights</strong>. Nothing in it is learned, and nothing in it depends on what the nodes contain. Two consequences follow: a high-degree neighbor is systematically down-weighted regardless of how informative it is, and edge features cannot be used at all.</p>
+</div>
+</section>
+</section>
+<section id="graph-attention-networks" class="level2" data-number="12">
+<h2 data-number="12" class="anchored" data-anchor-id="graph-attention-networks"><span class="header-section-number">12</span> Graph attention networks</h2>
+<p>GAT <span class="citation" data-cites="velickovic2018graph">(<a href="#ref-velickovic2018graph" role="doc-biblioref">Veličković et al. 2018</a>)</span> keeps the message-passing skeleton and replaces the fixed coefficient by a learned one, <span class="math inline">\(\alpha_{ij}=f(\mathbf{h}_i,\mathbf{h}_j)\)</span>.</p>
+<div class="definition">
+<p><strong>Definition 6 — Graph attention layer</strong></p>
+<p>Let <span class="math inline">\(\vec{h}_i\in\mathbb{R}^{F}\)</span> be the input features and <span class="math inline">\(\mathbf{W}\in\mathbb{R}^{F'\times F}\)</span> a shared linear map. With an attention vector <span class="math inline">\(\vec{\mathbf{a}}\in\mathbb{R}^{2F'}\)</span> and concatenation <span class="math inline">\([\cdot,\cdot]\)</span>, the attention coefficients are</p>
+<p><span id="eq-gat-alpha"><span class="math display">\[
+\alpha_{ij}
+=\frac{
+\exp\!\left(\operatorname{LeakyReLU}\!\left(\vec{\mathbf{a}}^{\top}[\mathbf{W}\vec{h}_i,\mathbf{W}\vec{h}_j]\right)\right)
+}{
+\sum_{k\in\mathcal{N}_i}
+\exp\!\left(\operatorname{LeakyReLU}\!\left(\vec{\mathbf{a}}^{\top}[\mathbf{W}\vec{h}_i,\mathbf{W}\vec{h}_k]\right)\right)
+},
+\tag{5}\]</span></span></p>
+<p>and the layer output is</p>
+<p><span class="math display">\[
+\vec{h}'_i=\sigma\!\left(\sum_{j\in\mathcal{N}_i}\alpha_{ij}\mathbf{W}\vec{h}_j\right).
+\]</span></p>
+</div>
+<p>Three points about <a href="#eq-gat-alpha" class="quarto-xref">Equation&nbsp;5</a>. The softmax runs over the neighborhood only, so the coefficients are computed on <span class="math inline">\(|\mathcal{E}|\)</span> pairs rather than <span class="math inline">\(N^2\)</span> — attention here is sparse by construction, which is what keeps the layer affordable. The neighborhood is understood to include <span class="math inline">\(i\)</span> itself, so a node can attend to its own state. And the coefficients are generally asymmetric: <span class="math inline">\(\alpha_{ij}\neq\alpha_{ji}\)</span>, because each is normalized over a different neighborhood.</p>
+<div class="figure-panel">
+<div id="fig-gcn-vs-gat" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Left, a five-node neighborhood with node degrees; right, a grouped bar chart comparing GCN and GAT coefficients">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-gcn-vs-gat-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/gcn-vs-gat-weights.svg" class="img-fluid figure-img" alt="Left, a five-node neighborhood with node degrees; right, a grouped bar chart comparing GCN and GAT coefficients">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gcn-vs-gat-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;18: The same neighborhood weighted two ways. The GCN coefficients (teal) are determined by the degrees alone and penalize the high-degree neighbor <span class="math inline">\(j=3\)</span>; the attention coefficients (coral) are computed from the node states and can concentrate on <span class="math inline">\(j=2\)</span> instead. Both sets sum to one.
+</figcaption>
+</figure>
+</div>
+</div>
+<section id="multi-head-attention" class="level3" data-number="12.1">
+<h3 data-number="12.1" class="anchored" data-anchor-id="multi-head-attention"><span class="header-section-number">12.1</span> Multi-head attention</h3>
+<p>A single attention head is unstable to train. GAT runs <span class="math inline">\(K\)</span> independent heads and combines them. In hidden layers the heads are concatenated,</p>
+<p><span class="math display">\[
+\vec{h}'_i=\Big\Vert_{k=1}^{K}
+\sigma\!\left(\sum_{j\in\mathcal{N}_i}\alpha_{ij}^{k}\mathbf{W}^{k}\vec{h}_j\right)
+\;\in\mathbb{R}^{KF'},
+\]</span></p>
+<p>whereas the final layer averages them so that the output dimension stays equal to the number of classes:</p>
+<p><span class="math display">\[
+\vec{h}'_i=\sigma\!\left(\frac{1}{K}\sum_{k=1}^{K}\sum_{j\in\mathcal{N}_i}\alpha_{ij}^{k}\mathbf{W}^{k}\vec{h}_j\right).
+\]</span></p>
+<div class="checkpoint">
+<p><strong>Check 5 — GCN or GAT?</strong></p>
+<p><strong>GCN</strong> aggregates with <strong>fixed</strong> weights read off the adjacency matrix. It is cheap, has few parameters, and is a strong default on homophilous graphs and at scale.</p>
+<p><strong>GAT</strong> aggregates with <strong>implicit</strong> weights produced by an attention mechanism. It has more capacity, can down-weight unhelpful neighbors, and accepts edge features, at the cost of more parameters and more computation per edge. It is the sensible middle ground between a GCN and a full graph transformer.</p>
+<p>Test GCN first. It is fast enough to tell you within minutes whether the graph is helping at all.</p>
+</div>
+</section>
+</section>
+<section id="limitations-of-message-passing-models" class="level2" data-number="13">
+<h2 data-number="13" class="anchored" data-anchor-id="limitations-of-message-passing-models"><span class="header-section-number">13</span> Limitations of message-passing models</h2>
+<p>Every architecture above is an approximation of the graph filter of <a href="#eq-graph-convolution" class="quarto-xref">Equation&nbsp;1</a>, and the approximation has consequences.</p>
+<section id="homophily-and-heterophily" class="level3" data-number="13.1">
+<h3 data-number="13.1" class="anchored" data-anchor-id="homophily-and-heterophily"><span class="header-section-number">13.1</span> Homophily and heterophily</h3>
+<div class="definition">
+<p><strong>Definition 7 — Node homophily index</strong></p>
+<p><span class="math display">\[
+H(\mathcal{G})=\frac{1}{|\mathcal{V}|}\sum_{i\in\mathcal{V}}\frac{|\mathcal{N}_i^{s}|}{|\mathcal{N}_i|},
+\]</span></p>
+<p>where <span class="math inline">\(\mathcal{N}_i^{s}\)</span> is the set of neighbors of <span class="math inline">\(i\)</span> carrying the same label as <span class="math inline">\(i\)</span>. If every neighbor of every node shares its label then <span class="math inline">\(H(\mathcal{G})=1\)</span>; <span class="math inline">\(H(\mathcal{G})\to0\)</span> indicates strong heterophily.</p>
+</div>
+<div class="figure-panel">
+<div id="fig-homophily" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two node-link diagrams, one with edges mostly inside classes and one with edges mostly between classes">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-homophily-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/homophily-heterophily.svg" class="img-fluid figure-img" alt="Two node-link diagrams, one with edges mostly inside classes and one with edges mostly between classes">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-homophily-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;19: Two graphs with the same number of nodes and comparable density but opposite label structure. Averaging over neighborhoods helps on the left and actively destroys the signal on the right.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>The intuition is immediate: message passing averages a node with its neighbors, which helps precisely when neighbors share the node’s label. The formal statement is spectral. A GCN layer applies <span class="math inline">\(\hat{\mathbf{A}}_{\mathrm{sl}}\)</span>, whose eigenvalues <span class="math inline">\(\mu\)</span> lie in <span class="math inline">\((-1,1]\)</span>, and <span class="math inline">\(L\)</span> layers apply <span class="math inline">\(\mu^{L}\)</span>. Since <span class="math inline">\(|\mu|&lt;1\)</span> away from the top of the spectrum, every component except the smoothest is suppressed: <strong>a stack of GCN layers is a low-pass filter</strong>.</p>
+<div class="figure-panel">
+<div id="fig-spectral" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Left, curves of mu to the power L for L equal to 1, 2, 8, and 32; right, a histogram of eigenvalues between -0.5 and 1">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-spectral-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/gcn-spectral-response.svg" class="img-fluid figure-img" alt="Left, curves of mu to the power L for L equal to 1, 2, 8, and 32; right, a histogram of eigenvalues between -0.5 and 1">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-spectral-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;20: Left, the response <span class="math inline">\(\mu^{L}\)</span> of <span class="math inline">\(L\)</span> stacked propagation steps; the shaded band is the spectrum actually attained by the graph on the right. Only eigenvalues near <span class="math inline">\(\mu=1\)</span> — the low graph frequencies — survive, and they survive more exclusively as <span class="math inline">\(L\)</span> grows. Right, the spectrum of a 120-node two-community graph, computed with <code>numpy</code>.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>A heterophilous label field is a <em>high-frequency</em> signal on the graph: it alternates between neighbors. A low-pass model cannot represent it. If your GNN underperforms a plain MLP on the same features, measure <span class="math inline">\(H(\mathcal{G})\)</span> before changing the architecture — low homophily is a common explanation.</p>
+</section>
+<section id="over-smoothing" class="level3" data-number="13.2">
+<h3 data-number="13.2" class="anchored" data-anchor-id="over-smoothing"><span class="header-section-number">13.2</span> Over-smoothing</h3>
+<p>Depth usually helps in deep learning. In GNNs it often does not, and one reason is <strong>over-smoothing</strong>: as layers are stacked, node embeddings converge to values that no longer distinguish the nodes.</p>
+<div class="figure-panel">
+<div id="fig-over-smoothing" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A log-scale decay curve beside three scatter panels in which two colored clusters shrink toward a single point">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-over-smoothing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/over-smoothing-collapse.svg" class="img-fluid figure-img" alt="A log-scale decay curve beside three scatter panels in which two colored clusters shrink toward a single point">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-over-smoothing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;21: A propagation experiment on a 140-node two-community graph. The Dirichlet energy <span class="math inline">\(\operatorname{tr}(\mathbf{H}^{\top}\mathbf{L}\mathbf{H})/\Vert\mathbf{H}\Vert^{2}\)</span> — how much neighboring embeddings differ — falls by three orders of magnitude over 40 steps. The three panels share one projection and one axis range, so the shrinking cloud is the collapse itself, not a change of scale.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>The same spectral argument explains it. Repeated application of <span class="math inline">\(\hat{\mathbf{A}}_{\mathrm{sl}}\)</span> drives every signal toward the leading eigenvector, which is the same for all nodes up to a degree-dependent scale. Equivalently, treat the graph as a Markov chain: the number of layers is the number of steps, and beyond the <strong>mixing time</strong> the chain has forgotten where it started. The discriminative information disappears with it.</p>
+</section>
+<section id="over-squashing" class="level3" data-number="13.3">
+<h3 data-number="13.3" class="anchored" data-anchor-id="over-squashing"><span class="header-section-number">13.3</span> Over-squashing</h3>
+<p>A second failure mode appears when the task needs information from far away. A <span class="math inline">\(k\)</span>-layer model reads a <span class="math inline">\(k\)</span>-hop neighborhood, and that neighborhood grows fast.</p>
+<div class="figure-panel">
+<div id="fig-receptive-field" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three curves on a logarithmic axis showing neighborhood size against hop distance">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-receptive-field-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/receptive-field-growth.svg" class="img-fluid figure-img" alt="Three curves on a logarithmic axis showing neighborhood size against hop distance">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-receptive-field-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;22: Average number of nodes within <span class="math inline">\(k\)</span> hops, measured on three graphs of comparable size. On the two irregular graphs the receptive field engulfs the entire graph within four hops; on a grid it grows only quadratically. Every node in that receptive field must be compressed into one fixed-length vector.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="figure-panel">
+<div id="fig-over-squashing" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two dense communities joined by a small number of highlighted red edges labelled bottlenecks">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-over-squashing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/over-squashing-bottleneck.svg" class="img-fluid figure-img" alt="Two dense communities joined by a small number of highlighted red edges labelled bottlenecks">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-over-squashing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;23: Long-range dependencies force messages through the few edges that join dense regions. Those edges are bottlenecks: an exponentially growing amount of information is squashed through a fixed-width channel.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>So deep GNNs face a pincer: shallow models cannot see far enough, and deep models both over-smooth and over-squash. Whether we genuinely need deep GNNs remains an open research question; the current evidence is that we need them when the task has genuine long-range interactions.</p>
+</section>
+<section id="practical-remedies" class="level3" data-number="13.4">
+<h3 data-number="13.4" class="anchored" data-anchor-id="practical-remedies"><span class="header-section-number">13.4</span> Practical remedies</h3>
+<p><strong>PairNorm</strong> <span class="citation" data-cites="zhao2019pairnorm">(<a href="#ref-zhao2019pairnorm" role="doc-biblioref">Zhao and Akoglu 2020</a>)</span> attacks over-smoothing directly by forbidding the embeddings to converge. It centers and rescales the representations between layers:</p>
+<p><span class="math display">\[
+\mathbf{x}_i^{c}=\mathbf{x}_i-\frac{1}{N}\sum_{j\in\mathcal{V}}\mathbf{x}_j
+\quad\text{(centering)},
+\qquad
+\mathbf{x}'_i=s\,\frac{\mathbf{x}_i^{c}}{\sqrt{\frac{1}{N}\sum_{j\in\mathcal{V}}\Vert\mathbf{x}_j^{c}\Vert_2^{2}}}
+\quad\text{(scaling)},
+\]</span></p>
+<p>with <span class="math inline">\(s\)</span> a scale hyperparameter. The total pairwise distance is held constant, so the cloud cannot contract to a point.</p>
+<p><strong>DropEdge</strong> <span class="citation" data-cites="rong2020dropedge">(<a href="#ref-rong2020dropedge" role="doc-biblioref">Rong et al. 2020</a>)</span> removes a random fraction of edges at every training step. It slows the mixing of the underlying chain, and as a side benefit reduces the cost of a layer, since the complexity is proportional to <span class="math inline">\(O(|\mathcal{E}|)\)</span>.</p>
+<div class="figure-panel">
+<div id="fig-remedies" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three curves on a logarithmic axis: plain propagation decaying steeply, DropEdge decaying slowly, PairNorm flat">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-remedies-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/over-smoothing-remedies.svg" class="img-fluid figure-img" alt="Three curves on a logarithmic axis: plain propagation decaying steeply, DropEdge decaying slowly, PairNorm flat">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-remedies-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;24: The same propagation experiment as <a href="#fig-over-smoothing" class="quarto-xref">Figure&nbsp;21</a>, repeated with PairNorm and with DropEdge at rate <span class="math inline">\(0.5\)</span>. Plain propagation decays geometrically; DropEdge slows the decay; PairNorm holds the energy at a constant level by construction.
+</figcaption>
+</figure>
+</div>
+</div>
+<p><strong>Rewiring</strong> attacks over-squashing instead. Topping et al. <span class="citation" data-cites="topping2022understanding">(<a href="#ref-topping2022understanding" role="doc-biblioref">Topping et al. 2022</a>)</span> relate over-squashing to the Ricci curvature of the graph: negatively curved edges are the bottlenecks, and if curvature is positive everywhere the receptive field grows polynomially rather than exponentially in the hop distance. One can therefore add edges around the most negatively curved regions.</p>
+<div class="figure-panel">
+<div id="fig-sjlr" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three panels showing candidate edges to add, a curvature improvement score, and stochastic addition and dropping during training">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-sjlr-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/sjlr-rewiring.svg" class="img-fluid figure-img" alt="Three panels showing candidate edges to add, a curvature improvement score, and stochastic addition and dropping during training">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-sjlr-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;25: SJLR <span class="citation" data-cites="giraldo2023trade">(<a href="#ref-giraldo2023trade" role="doc-biblioref">Giraldo et al. 2023</a>)</span> scores candidate edges by the average curvature improvement they produce, then stochastically adds and removes edges during training — trading over-smoothing against over-squashing rather than treating either in isolation.
+</figcaption>
+</figure>
+</div>
+</div>
+</section>
+</section>
+<section id="implementation-with-pytorch-geometric" class="level2" data-number="14">
+<h2 data-number="14" class="anchored" data-anchor-id="implementation-with-pytorch-geometric"><span class="header-section-number">14</span> Implementation with PyTorch Geometric</h2>
+<p>PyTorch Geometric (PyG) is built on PyTorch, so everything you know about <code>nn.Module</code>, autograd and optimizers carries over. A graph is a <code>Data</code> object holding <code>x</code> (the <span class="math inline">\(N\times F\)</span> feature matrix), <code>edge_index</code> (the <span class="math inline">\(2\times|\mathcal{E}|\)</span> edge list from the worked example above), and optionally <code>edge_attr</code> and <code>y</code>.</p>
+<section id="a-gcn" class="level3" data-number="14.1">
+<h3 data-number="14.1" class="anchored" data-anchor-id="a-gcn"><span class="header-section-number">14.1</span> A GCN</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> functional</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch_geometric.nn <span class="im">import</span> GCNConv</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> GCN(torch.nn.Module):</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, in_dim, out_dim, hidden, layers):</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.convs <span class="op">=</span> torch.nn.ModuleList()</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> layers <span class="op">==</span> <span class="dv">1</span>:</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.convs.append(GCNConv(in_dim, out_dim))</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.convs.append(GCNConv(in_dim, hidden))</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(layers <span class="op">-</span> <span class="dv">2</span>):</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>                <span class="va">self</span>.convs.append(GCNConv(hidden, hidden))</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.convs.append(GCNConv(hidden, out_dim))</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, data):</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>        x, edges, weights <span class="op">=</span> data.x, data.edge_index, data.edge_attr</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> conv <span class="kw">in</span> <span class="va">self</span>.convs[:<span class="op">-</span><span class="dv">1</span>]:</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>            x <span class="op">=</span> conv(x, edges, edge_weight<span class="op">=</span>weights)</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>            x <span class="op">=</span> functional.relu(x)</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.convs[<span class="op">-</span><span class="dv">1</span>](x, edges, edge_weight<span class="op">=</span>weights)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>GCNConv</code> implements exactly <a href="#eq-gcn" class="quarto-xref">Equation&nbsp;2</a>: it adds the self-loops, computes <span class="math inline">\(\tilde{\mathbf{D}}^{-1/2}\tilde{\mathbf{A}}\tilde{\mathbf{D}}^{-1/2}\)</span> from <code>edge_index</code>, and applies <span class="math inline">\(\mathbf{W}^{(\ell)}\)</span>. It never materializes an <span class="math inline">\(N\times N\)</span> matrix.</p>
+<div class="checkpoint">
+<p><strong>Check 6 — Logits, not probabilities</strong></p>
+<p>The <code>forward</code> above returns <strong>unnormalized scores</strong>. <code>torch.nn.CrossEntropyLoss</code> applies <code>log_softmax</code> internally, so it expects exactly that. Returning <code>x.softmax(dim=-1)</code> and then calling <code>CrossEntropyLoss</code> applies the softmax twice, which flattens the gradients and slows training badly.</p>
+<p>Pick one convention and hold it: return logits and use <code>CrossEntropyLoss</code>, or return <code>log_softmax(x, dim=-1)</code> and use <code>NLLLoss</code>.</p>
+</div>
+<p>A training step on a node-classification dataset then looks like:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> GCN(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    in_dim<span class="op">=</span>dataset.num_features,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    out_dim<span class="op">=</span>dataset.num_classes,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    hidden<span class="op">=</span><span class="dv">16</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    layers<span class="op">=</span><span class="dv">2</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>optimizer <span class="op">=</span> torch.optim.Adam(</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    model.parameters(), lr<span class="op">=</span><span class="fl">0.01</span>, weight_decay<span class="op">=</span><span class="fl">5e-4</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>criterion <span class="op">=</span> torch.nn.CrossEntropyLoss()</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>model.train()</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> epoch <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">200</span>):</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    optimizer.zero_grad()</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="co"># One forward pass over the whole graph ...</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    scores <span class="op">=</span> model(data)</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ... but the loss reads the labelled nodes only.</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    mask <span class="op">=</span> data.train_mask</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    loss <span class="op">=</span> criterion(scores[mask], data.y[mask])</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    loss.backward()</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    optimizer.step()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="a-gat" class="level3" data-number="14.2">
+<h3 data-number="14.2" class="anchored" data-anchor-id="a-gat"><span class="header-section-number">14.2</span> A GAT</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> functional</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch_geometric.nn <span class="im">import</span> GATConv</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> GAT(torch.nn.Module):</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, in_dim, out_dim, hidden, layers, heads<span class="op">=</span><span class="dv">2</span>):</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.convs <span class="op">=</span> torch.nn.ModuleList()</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        wide <span class="op">=</span> hidden <span class="op">*</span> heads  <span class="co"># width after concatenating the heads</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> layers <span class="op">==</span> <span class="dv">1</span>:</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.convs.append(</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>                GATConv(in_dim, out_dim, heads<span class="op">=</span>heads, concat<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Hidden layers concatenate the heads; the output layer</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>            <span class="co"># averages them, so the last dimension is the class count.</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.convs.append(</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>                GATConv(in_dim, hidden, heads<span class="op">=</span>heads, concat<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(layers <span class="op">-</span> <span class="dv">2</span>):</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>                <span class="va">self</span>.convs.append(</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>                    GATConv(wide, hidden, heads<span class="op">=</span>heads, concat<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>                )</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.convs.append(</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>                GATConv(wide, out_dim, heads<span class="op">=</span>heads, concat<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, data):</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>        x, edges <span class="op">=</span> data.x, data.edge_index</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> conv <span class="kw">in</span> <span class="va">self</span>.convs[:<span class="op">-</span><span class="dv">1</span>]:</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>            x <span class="op">=</span> functional.elu(conv(x, edges))</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.convs[<span class="op">-</span><span class="dv">1</span>](x, edges)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Note the interface difference: <code>GCNConv</code> takes scalar edge weights through <code>edge_weight</code>, whereas <code>GATConv</code> takes vector-valued edge features through <code>edge_attr</code> and requires <code>edge_dim</code> to be set at construction. The original GAT paper uses ELU rather than ReLU in the hidden layers.</p>
+</section>
+</section>
+<section id="exercises" class="level2" data-number="15">
+<h2 data-number="15" class="anchored" data-anchor-id="exercises"><span class="header-section-number">15</span> Exercises</h2>
+<section id="exercise-1-convolution-as-a-polynomial" class="level3" data-number="15.1">
+<h3 data-number="15.1" class="anchored" data-anchor-id="exercise-1-convolution-as-a-polynomial"><span class="header-section-number">15.1</span> Exercise 1 — Convolution as a polynomial</h3>
+<p>Take the directed line graph on five nodes with <span class="math inline">\(\mathbf{S}\)</span> as defined above. Compute <span class="math inline">\(\mathbf{S}^{2}\)</span> and <span class="math inline">\(\mathbf{S}^{3}\)</span>, and verify that <span class="math inline">\(\mathbf{z}=\sum_{k=0}^{2}h_k\mathbf{S}^{k}\mathbf{x}\)</span> reproduces the finite impulse response filter <span class="math inline">\(z_i=h_0x_i+h_1x_{i-1}+h_2x_{i-2}\)</span>.</p>
+</section>
+<section id="exercise-2-permutation-equivariance" class="level3" data-number="15.2">
+<h3 data-number="15.2" class="anchored" data-anchor-id="exercise-2-permutation-equivariance"><span class="header-section-number">15.2</span> Exercise 2 — Permutation equivariance</h3>
+<p>Prove that <span class="math inline">\(\mathbf{H}(\mathbf{P}\mathbf{S}\mathbf{P}^{\top})\mathbf{P}\mathbf{x}=\mathbf{P}\mathbf{H}(\mathbf{S})\mathbf{x}\)</span> for any permutation matrix <span class="math inline">\(\mathbf{P}\)</span> and any polynomial filter <span class="math inline">\(\mathbf{H}\)</span>. Where is <span class="math inline">\(\mathbf{P}^{\top}\mathbf{P}=\mathbf{I}\)</span> used?</p>
+</section>
+<section id="exercise-3-the-renormalization-trick" class="level3" data-number="15.3">
+<h3 data-number="15.3" class="anchored" data-anchor-id="exercise-3-the-renormalization-trick"><span class="header-section-number">15.3</span> Exercise 3 — The renormalization trick</h3>
+<p>Show that the eigenvalues of <span class="math inline">\(\mathbf{I}+\mathbf{D}^{-1/2}\mathbf{A}\mathbf{D}^{-1/2}\)</span> lie in <span class="math inline">\([0,2]\)</span> for a connected undirected graph, and explain in one sentence why repeatedly applying an operator with spectral radius <span class="math inline">\(2\)</span> is a problem in a deep network.</p>
+</section>
+<section id="exercise-4-counting-parameters" class="level3" data-number="15.4">
+<h3 data-number="15.4" class="anchored" data-anchor-id="exercise-4-counting-parameters"><span class="header-section-number">15.4</span> Exercise 4 — Counting parameters</h3>
+<p>A three-layer GCN is applied to a graph with <span class="math inline">\(N=10^{6}\)</span> nodes, <span class="math inline">\(F=500\)</span> input features, hidden width <span class="math inline">\(H=64\)</span> and <span class="math inline">\(C=10\)</span> classes. How many trainable parameters does it have? How many would a shallow embedding of width <span class="math inline">\(64\)</span> require? Which quantity depends on <span class="math inline">\(N\)</span>?</p>
+</section>
+<section id="exercise-5-gcn-coefficients" class="level3" data-number="15.5">
+<h3 data-number="15.5" class="anchored" data-anchor-id="exercise-5-gcn-coefficients"><span class="header-section-number">15.5</span> Exercise 5 — GCN coefficients</h3>
+<p>For the neighborhood in <a href="#fig-gcn-vs-gat" class="quarto-xref">Figure&nbsp;18</a>, verify the GCN coefficients <span class="math inline">\(a_{ij}/\sqrt{(d_i+1)(d_j+1)}\)</span> by hand using the degrees printed in the figure, and confirm that the reported values are these coefficients after normalization. Then state what would change if node <span class="math inline">\(3\)</span> gained fifty new neighbors elsewhere in the graph — under GCN, and under GAT.</p>
+</section>
+<section id="exercise-6-homophily" class="level3" data-number="15.6">
+<h3 data-number="15.6" class="anchored" data-anchor-id="exercise-6-homophily"><span class="header-section-number">15.6</span> Exercise 6 — Homophily</h3>
+<p>Construct a graph on eight nodes with two classes and <span class="math inline">\(H(\mathcal{G})=0\)</span>. Compute the output of one GCN layer with <span class="math inline">\(\mathbf{W}=\mathbf{I}\)</span> on the one-hot label signal, and explain why a classifier reading that output performs worse than one reading the raw features.</p>
+</section>
+<section id="exercise-7-over-smoothing-in-practice" class="level3" data-number="15.7">
+<h3 data-number="15.7" class="anchored" data-anchor-id="exercise-7-over-smoothing-in-practice"><span class="header-section-number">15.7</span> Exercise 7 — Over-smoothing in practice</h3>
+<p>Reproduce <a href="#fig-over-smoothing" class="quarto-xref">Figure&nbsp;21</a> with the script in <code>scripts/figures/lecture_02_figures.py</code>. Replace the propagation operator <span class="math inline">\(\tilde{\mathbf{D}}^{-1/2}\tilde{\mathbf{A}}\tilde{\mathbf{D}}^{-1/2}\)</span> by the unnormalized <span class="math inline">\(\mathbf{A}\)</span> and explain the change in the Dirichlet energy curve using the spectral radius of <span class="math inline">\(\mathbf{A}\)</span>.</p>
+</section>
+</section>
+<section id="main-takeaways" class="level2" data-number="16">
+<h2 data-number="16" class="anchored" data-anchor-id="main-takeaways"><span class="header-section-number">16</span> Main takeaways</h2>
+<ol type="1">
+<li>A convolution is a <strong>polynomial in a shift operator</strong>; time and space are just special graphs, so the definition transfers to any graph unchanged.</li>
+<li>Graph filters are <strong>local</strong>, have a <strong>fixed number of parameters</strong>, and are <strong>permutation equivariant</strong> — the three properties that shallow embeddings could not deliver.</li>
+<li>A GNN composes graph filters with pointwise nonlinearities; with a directed line graph it reduces exactly to a CNN.</li>
+<li>The exact filter is expensive, since powers of <span class="math inline">\(\mathbf{S}\)</span> fill in and the recursion cannot be parallelized. Practical architectures approximate it.</li>
+<li><strong>GCN</strong> is the cheapest such approximation: one hop, one shared weight matrix, self-loops for stability. It is inductive, costs <span class="math inline">\(O(|\mathcal{E}|)\)</span>, and should be your first baseline.</li>
+<li><strong>Message passing</strong> is the general framework; <strong>GAT</strong> stays inside it and replaces the degree-based coefficients by learned attention.</li>
+<li>Message-passing models are low-pass filters. They assume <strong>homophily</strong>, they <strong>over-smooth</strong> with depth, and they <strong>over-squash</strong> long-range information. PairNorm, DropEdge, and curvature-based rewiring mitigate these, and none of them solves the problem completely.</li>
+<li>Plenty of open problems remain — which is good news if you are looking for a research topic.</li>
+</ol>
+</section>
+<section id="references-and-provenance" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="references-and-provenance">References and provenance</h2>
+<p>This web note is adapted from the Lecture 2 slides by Jhony H. Giraldo. Notation was normalized against Lecture 1 (<span class="math inline">\(\mathbf{H}^{(0)}=\mathbf{X}\)</span> throughout), the GCN propagation rule was derived rather than stated, and several derivations, dimension counts, and code notes were added.</p>
+<p>The diagrams reproduce the original course vectors. <a href="#fig-spectral" class="quarto-xref">Figure&nbsp;20</a>, <a href="#fig-homophily" class="quarto-xref">Figure&nbsp;19</a>, <a href="#fig-over-smoothing" class="quarto-xref">Figure&nbsp;21</a>, <a href="#fig-remedies" class="quarto-xref">Figure&nbsp;24</a>, <a href="#fig-receptive-field" class="quarto-xref">Figure&nbsp;22</a>, and <a href="#fig-gcn-vs-gat" class="quarto-xref">Figure&nbsp;18</a> are new and were computed with <code>numpy</code> and <code>networkx</code>; the script that produces them is <code>scripts/figures/lecture_02_figures.py</code> in this repository, so every number in those panels can be reproduced and modified.</p>
+<div id="refs" class="references-small references csl-bib-body hanging-indent" role="list">
+<div id="ref-defferrard2016convolutional" class="csl-entry" role="listitem">
+Defferrard, Michaël, Xavier Bresson, and Pierre Vandergheynst. 2016. <span>“Convolutional Neural Networks on Graphs with Fast Localized Spectral Filtering.”</span> <em>Advances in Neural Information Processing Systems</em>.
+</div>
+<div id="ref-gilmer2017neural" class="csl-entry" role="listitem">
+Gilmer, Justin, Samuel S. Schoenholz, Patrick F. Riley, Oriol Vinyals, and George E. Dahl. 2017. <span>“Neural Message Passing for Quantum Chemistry.”</span> <em>International Conference on Machine Learning</em>.
+</div>
+<div id="ref-giraldo2023trade" class="csl-entry" role="listitem">
+Giraldo, Jhony H., Konstantinos Skianis, Thierry Bouwmans, and Fragkiskos D. Malliaros. 2023. <span>“On the Trade-Off Between over-Smoothing and over-Squashing in Deep Graph Neural Networks.”</span> <em>ACM International Conference on Information and Knowledge Management</em>. <a href="https://doi.org/10.1145/3583780.3614997">https://doi.org/10.1145/3583780.3614997</a>.
+</div>
+<div id="ref-kipf2016semi" class="csl-entry" role="listitem">
+Kipf, Thomas N., and Max Welling. 2017. <span>“Semi-Supervised Classification with Graph Convolutional Networks.”</span> <em>International Conference on Learning Representations</em>.
+</div>
+<div id="ref-rong2020dropedge" class="csl-entry" role="listitem">
+Rong, Yu, Wenbing Huang, Tingyang Xu, and Junzhou Huang. 2020. <span>“<span>DropEdge</span>: Towards Deep Graph Convolutional Networks on Node Classification.”</span> <em>International Conference on Learning Representations</em>.
+</div>
+<div id="ref-topping2022understanding" class="csl-entry" role="listitem">
+Topping, Jake, Francesco Di Giovanni, Benjamin Paul Chamberlain, Xiaowen Dong, and Michael M. Bronstein. 2022. <span>“Understanding over-Squashing and Bottlenecks on Graphs via Curvature.”</span> <em>International Conference on Learning Representations</em>.
+</div>
+<div id="ref-velickovic2018graph" class="csl-entry" role="listitem">
+Veličković, Petar, Guillem Cucurull, Arantxa Casanova, Adriana Romero, Pietro Liò, and Yoshua Bengio. 2018. <span>“Graph Attention Networks.”</span> <em>International Conference on Learning Representations</em>.
+</div>
+<div id="ref-zhao2019pairnorm" class="csl-entry" role="listitem">
+Zhao, Lingxiao, and Leman Akoglu. 2020. <span>“<span>PairNorm</span>: Tackling Oversmoothing in <span>GNNs</span>.”</span> <em>International Conference on Learning Representations</em>.
+</div>
+</div>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script src="../../assets/site.js" defer=""></script>
+
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/jhonygiraldo\.github\.io");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© 2026 Jhony H. Giraldo</p>
+</div>   
+    <div class="nav-footer-center">
+<p>Télécom Paris · Institut Polytechnique de Paris</p>
+</div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+    <a class="nav-link" href="https://orcid.org/0000-0002-0039-1270">
+<p>ORCID</p>
+</a>
+  </li>  
+    <li class="nav-item">
+    <a class="nav-link" href="mailto:jhony.giraldo@telecom-paris.fr">
+<p>Email</p>
+</a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+<script src="../../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>
