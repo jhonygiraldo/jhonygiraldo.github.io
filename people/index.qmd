@@ -1,0 +1,20 @@
+---
+title: "Team"
+description: "Researchers and students supervised by Jhony H. Giraldo."
+toc: false
+---
+
+Our work spans geometric deep learning, graph signal processing, computer vision, graph generation, and scientific applications. Dates and destinations are included to preserve an accurate record of supervision and collaboration.
+
+{{< include ../_includes/generated/people.md >}}
+
+## Join the group
+
+Potential applicants should consult the current openings before writing. When contacting me, please include a short research statement, a CV, and a clear explanation of the connection between your background and the proposed topic.
+
+```{=html}
+<div class="button-row">
+  <a class="button-link primary" href="/assets/pdf/Postdoc-Position-Geometric-Deep-Learning.pdf">Postdoctoral position</a>
+  <a class="button-link secondary" href="mailto:jhony.giraldo@telecom-paris.fr">Contact</a>
+</div>
+```

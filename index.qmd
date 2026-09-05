@@ -1,0 +1,84 @@
+---
+pagetitle: "Jhony H. Giraldo — Machine Learning on Graphs"
+description: "Assistant Professor at Télécom Paris working on graph machine learning, geometric deep learning, signal processing, and computer vision."
+body-classes: custom-title-page
+toc: false
+page-layout: full
+---
+
+```{=html}
+<section class="academic-profile" aria-labelledby="profile-title">
+  <div class="eyebrow">Machine learning · Signal processing · Relational data</div>
+  <h1 id="profile-title">Jhony H. Giraldo</h1>
+  <p class="profile-subtitle">Assistant Professor at Télécom Paris, Institut Polytechnique de Paris</p>
+  <div class="academic-profile-grid">
+    <div class="profile-copy">
+      <p>I am an Assistant Professor in Machine Learning and Computer Vision at <a href="https://www.telecom-paris.fr/en/home">Télécom Paris</a>, <a href="https://www.ip-paris.fr/en">Institut Polytechnique de Paris</a>. I work in the Information Processing and Communications Laboratory (LTCI), within the Multimedia team, and I am a member of the <a href="https://ellis.eu/">ELLIS Society</a>.</p>
+      <p>My research focuses on <strong>machine learning</strong> and <strong>signal processing</strong> for relational data, including graphs and higher-order structures. I study how mathematical structure can guide the design of scalable, stable, and interpretable learning models. I am also interested in applications in computer vision, circuit design, environmental monitoring, materials analysis, physical systems, and underwater acoustics.</p>
+      <p>I received my PhD in Applied Mathematics from La Rochelle Université in 2022. Before my doctoral studies, I worked on graph signal processing at the University of Delaware and completed my MSc and BSc degrees at Universidad de Antioquia, Colombia.</p>
+      <div class="hero-actions">
+        <a class="button-link primary" href="/research/">Research</a>
+        <a class="button-link secondary" href="/publications/">Publications</a>
+        <a class="button-link secondary" href="/assets/pdf/Jhony-Giraldo-CV.pdf">Curriculum vitae</a>
+      </div>
+    </div>
+    <figure class="portrait-card portrait-card-compact">
+      <img src="assets/images/jhony-giraldo.jpg" alt="Portrait of Jhony H. Giraldo" width="784" height="841">
+      <figcaption>Office 5D24<br>19 place Marguerite Perey<br>91120 Palaiseau, France</figcaption>
+    </figure>
+  </div>
+</section>
+```
+
+## Research interests
+
+My work lies at the intersection of learning, signal processing, and structured data. The main themes are:
+
+```{=html}
+<ul class="research-interest-list">
+  <li><strong>Machine learning on graphs and higher-order structures.</strong> Graph neural networks, continuous models, and geometric learning on graphs, hypergraphs, simplicial complexes, and cellular complexes.</li>
+  <li><strong>Graph signal processing.</strong> Learning graph structure and developing methods for reconstruction, forecasting, imputation, summarization, stability, and generalization.</li>
+  <li><strong>Scientific and engineering applications.</strong> Structured-learning methods for vision, wildlife monitoring, underwater acoustics, materials, physical simulation, image compression, and circuit design.</li>
+</ul>
+```
+
+```{=html}
+<div class="postdoc-note">
+  <strong>Postdoctoral opportunity.</strong> I am looking for a researcher interested in geometric deep learning. Applications are reviewed on a rolling basis until the position is filled. <a href="/assets/pdf/Postdoc-Position-Geometric-Deep-Learning.pdf">Read the full call</a>.
+</div>
+```
+
+## Selected publications
+
+These papers represent the three threads of the research program. The [complete publication record](/publications/) is searchable by title, author, venue, and year.
+
+{{< include _includes/generated/selected-publications.md >}}
+
+## Latest news
+
+{{< include _includes/generated/latest-news.md >}}
+
+[See all news →](/news/)
+
+## For students
+
+The teaching area is designed as a durable course library: lecture notes, equations, references, exercises, slides, and course logistics live together and remain readable on phones and laptops.
+
+```{=html}
+<section class="spotlight">
+  <div class="eyebrow">New lecture notes</div>
+  <h3>Machine Learning with Graphs</h3>
+  <p>Lecture 1 develops the language of graphs, graph machine-learning tasks, classical structural features, and the random-walk view of DeepWalk and node2vec.</p>
+  <div class="button-row">
+    <a class="button-link primary" href="/teaching/machine-learning-with-graphs/lecture-01.html">Read Lecture 1</a>
+    <a class="button-link secondary" href="/teaching/machine-learning-with-graphs/">Open the course</a>
+  </div>
+</section>
+```
+
+```{=html}
+<div class="email-note" role="note" aria-label="A note about email">
+  <strong>A note about email</strong>
+  I receive more messages than I can reliably answer. I am sorry if I am unable to reply, or if my response is delayed. For course-specific questions, please use the official course channel when one is available.
+</div>
+```

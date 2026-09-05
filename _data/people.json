@@ -1,0 +1,157 @@
+{
+  "current": [
+    {
+      "name": "Antoine Vialle",
+      "role": "PhD student",
+      "institution": "Télécom Paris",
+      "topic": "Geometric deep learning",
+      "dates": "Nov 2025–present"
+    },
+    {
+      "name": "Sarra Khaïri",
+      "role": "PhD student",
+      "institution": "Télécom Paris",
+      "topic": "Computer vision",
+      "dates": "Jun 2024–present"
+    },
+    {
+      "name": "Dorian Gailhard",
+      "role": "PhD student",
+      "institution": "Télécom Paris",
+      "topic": "Hypergraph generation",
+      "dates": "May 2024–present",
+      "url": "https://doriangailhard.github.io/"
+    },
+    {
+      "name": "Vahan Martirosyan",
+      "role": "PhD student",
+      "institution": "CentraleSupélec",
+      "topic": "Graph neural networks",
+      "dates": "Nov 2023–present"
+    },
+    {
+      "name": "Emanuele Mule",
+      "role": "Research engineer",
+      "institution": "Télécom Paris",
+      "topic": "Geometric deep learning",
+      "dates": "Sep 2026–present",
+      "url": "https://emamule.github.io/"
+    },
+    {
+      "name": "Sergei Gerasimov",
+      "role": "Research intern",
+      "institution": "Télécom Paris",
+      "topic": "Graph summarization",
+      "dates": "Apr–Sep 2026"
+    },
+    {
+      "name": "Matthieu Kaeppelin",
+      "role": "Research intern",
+      "institution": "Télécom Paris",
+      "topic": "Knowledge graphs",
+      "dates": "Apr–Sep 2026"
+    }
+  ],
+  "visitors": [
+    {
+      "name": "Zepeng Zhang",
+      "role": "Visiting PhD student",
+      "institution": "EPFL",
+      "topic": "Geometric deep learning",
+      "dates": "Apr–Aug 2025",
+      "url": "https://zepengzhang.github.io/"
+    },
+    {
+      "name": "Maria José Guerrero Muriel",
+      "role": "Visiting PhD student",
+      "institution": "Universidad de Antioquia",
+      "topic": "Learning graphs from data",
+      "dates": "Nov–Dec 2024"
+    },
+    {
+      "name": "Muhammad Rameez Ur Rahman",
+      "role": "Visiting PhD student",
+      "institution": "Sapienza University of Rome",
+      "topic": "Computer vision",
+      "dates": "Jun 2023"
+    }
+  ],
+  "alumni": [
+    {
+      "name": "Aref Einizade",
+      "former_role": "Postdoctoral researcher",
+      "dates": "2023–2026",
+      "destination": "Assistant Professor, Télécom SudParis",
+      "url": "https://arefeinizade.github.io/"
+    },
+    {
+      "name": "Gabriele Spadaro",
+      "former_role": "PhD student",
+      "dates": "2023–2025",
+      "destination": "Postdoctoral researcher, University of Turin and Institut Polytechnique de Paris"
+    },
+    {
+      "name": "Hamza Rami",
+      "former_role": "PhD student",
+      "dates": "2022–2024",
+      "destination": "Associate consultant, Headmind Partners"
+    },
+    {
+      "name": "Julian Santamaria",
+      "former_role": "Research intern",
+      "dates": "2025",
+      "url": "https://julian075.github.io/"
+    },
+    {
+      "name": "Kian Bakhtari",
+      "former_role": "Research intern",
+      "dates": "2025"
+    },
+    {
+      "name": "Antoine Vialle",
+      "former_role": "Research intern",
+      "dates": "2025",
+      "destination": "PhD student, Télécom Paris"
+    },
+    {
+      "name": "Vahan Martirosyan",
+      "former_role": "Research intern",
+      "dates": "2023",
+      "destination": "PhD student, CentraleSupélec"
+    },
+    {
+      "name": "Nicolas Dunou",
+      "former_role": "Research intern",
+      "dates": "2023"
+    },
+    {
+      "name": "Nacereddine Laddaoui",
+      "former_role": "Research intern",
+      "dates": "2023",
+      "destination": "Research engineer, Télécom Paris"
+    },
+    {
+      "name": "Nada Hammad",
+      "former_role": "Research intern",
+      "dates": "2026"
+    },
+    {
+      "name": "Bochun Jia",
+      "former_role": "Research intern",
+      "dates": "2026"
+    }
+  ],
+  "masters": [
+    "Nada Hammad (2026)",
+    "Bérénice Nghiem (2025–2026)",
+    "Carolina Brandao (2025–2026)",
+    "Nader Sadek (2025)",
+    "Lucas Li (2025)",
+    "Shifeng Xie (2024–2026)",
+    "Julian Santamaria (2024–2025)",
+    "Mouhamadou Thiaw (2024–2025)",
+    "Amadou Sangare (2023–2024)",
+    "Ayoub Benabbou (2023–2024)"
+  ]
+}
+

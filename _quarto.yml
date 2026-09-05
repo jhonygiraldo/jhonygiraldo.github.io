@@ -1,0 +1,77 @@
+project:
+  type: website
+  output-dir: _site
+  pre-render: python3 scripts/render_content.py
+  resources:
+    - assets/pdf/**
+    - assets/images/**
+    - assets/figures/**
+
+website:
+  title: "Jhony H. Giraldo"
+  site-url: "https://jhonygiraldo.github.io"
+  description: "Jhony H. Giraldo — machine learning and signal processing for graphs and higher-order structures."
+  favicon: assets/images/jhony-giraldo.jpg
+  open-graph: true
+  twitter-card: true
+  search:
+    location: navbar
+    type: overlay
+  page-navigation: true
+  back-to-top-navigation: true
+  navbar:
+    background: light
+    logo-alt: "Jhony H. Giraldo"
+    left:
+      - href: index.qmd
+        text: Home
+      - href: research/index.qmd
+        text: Research
+      - href: people/index.qmd
+        text: Team
+      - href: publications/index.qmd
+        text: Publications
+      - href: teaching/index.qmd
+        text: Teaching
+      - href: news/index.qmd
+        text: News
+    right:
+      - href: cv/index.qmd
+        text: CV
+      - icon: envelope
+        href: mailto:jhony.giraldo@telecom-paris.fr
+        aria-label: Email Jhony Giraldo
+      - icon: mortarboard-fill
+        href: https://scholar.google.com/citations?user=iwzmGKwAAAAJ
+        aria-label: Google Scholar
+      - icon: linkedin
+        href: https://www.linkedin.com/in/jhonyhgiraldo
+        aria-label: LinkedIn
+  page-footer:
+    left: "© 2026 Jhony H. Giraldo"
+    center: "Télécom Paris · Institut Polytechnique de Paris"
+    right:
+      - text: ORCID
+        href: https://orcid.org/0000-0002-0039-1270
+      - text: Email
+        href: mailto:jhony.giraldo@telecom-paris.fr
+
+format:
+  html:
+    theme:
+      - cosmo
+      - styles.scss
+    toc: true
+    toc-depth: 3
+    smooth-scroll: true
+    anchor-sections: true
+    code-copy: true
+    code-overflow: wrap
+    html-math-method: mathjax
+    include-in-header: _includes/person-schema.html
+    include-after-body: _includes/site-scripts.html
+
+execute:
+  freeze: auto
+
+lang: en

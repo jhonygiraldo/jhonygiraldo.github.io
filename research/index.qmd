@@ -1,0 +1,71 @@
+---
+title: "Research"
+description: "Research program in graph machine learning, geometric deep learning, signal processing, and scientific applications."
+toc: false
+---
+
+My research studies how **relational structure** can become a useful inductive bias. Graphs represent pairwise interactions; hypergraphs and simplicial or cellular complexes represent higher-order interactions. The goal is to build models that use this structure without sacrificing scalability, stability, or interpretability.
+
+## Research directions
+
+```{=html}
+<div class="research-grid">
+  <article class="research-card">
+    <span class="number">A</span>
+    <h3>Continuous and higher-order neural networks</h3>
+    <p>Neural architectures for product graphs, hypergraphs, and simplicial complexes, including continuous formulations that connect discrete models with geometry and differential equations.</p>
+  </article>
+  <article class="research-card">
+    <span class="number">B</span>
+    <h3>Learning and processing graph signals</h3>
+    <p>Spectral and Sobolev perspectives on reconstruction, generalization, stability, summarization, forecasting, imputation, and graph structure learning.</p>
+  </article>
+  <article class="research-card">
+    <span class="number">C</span>
+    <h3>Structured learning in applications</h3>
+    <p>Graph-based approaches to computer vision, image compression, wildlife monitoring, underwater acoustics, materials, physical systems, and hardware design.</p>
+  </article>
+</div>
+```
+
+## Active funded programs
+
+### DeSNAP — Deep Simplicial Neural Networks for Advanced Geometry Processing
+
+**ANR · Principal Investigator · 2025–2029 · €337,862**
+
+DeSNAP studies neural networks for higher-order geometric structures, with emphasis on continuous formulations, theoretical properties, and scalable learning.
+
+### SIGMA — Signal-aware Graph Summarization with GNN Guarantees
+
+**Hi! PARIS Synergy Fellowship · Co-Principal Investigator · 2026–2029 · €200,000**
+
+SIGMA connects graph summarization with signal preservation and guarantees for downstream graph-neural-network behavior.
+
+### Compressing Graph Data: From Signal Processing to Machine Learning
+
+**IMT Futur, Ruptures & Impacts · Supervisor · 2026–2029 · €155,000**
+
+This doctoral project develops principled graph compression methods across signal-processing and machine-learning perspectives.
+
+### SODA — System on Chip Design Leveraging Artificial Intelligence
+
+**ANR · Team member · 2023–2027 · €531,000 consortium funding**
+
+SODA explores how artificial intelligence can support circuit and system-on-chip design.
+
+## Translation and collaboration
+
+The program includes collaboration with academic and industrial partners, including TotalEnergies, NVIDIA, Atos, and Sisvel. Research outputs include open scientific publications as well as patent applications in privacy-preserving re-identification, vision graph neural networks, learnable image compression, and transferability estimation.
+
+## Collaboration
+
+I welcome research discussions that have a clear connection to graph machine learning, geometric deep learning, graph signal processing, or the application areas above. A short message describing the scientific question, relevant background, and intended form of collaboration is particularly helpful.
+
+```{=html}
+<div class="button-row">
+  <a class="button-link primary" href="/publications/">Publications</a>
+  <a class="button-link secondary" href="/people/">Research team</a>
+  <a class="button-link secondary" href="mailto:jhony.giraldo@telecom-paris.fr">Email</a>
+</div>
+```

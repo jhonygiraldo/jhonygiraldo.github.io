@@ -1,0 +1,20 @@
+---
+title: "Teaching"
+description: "Courses and web-based lecture notes by Jhony H. Giraldo."
+toc: false
+---
+
+These course pages are designed as durable academic resources rather than lists of slide files. Each course can contain learning objectives, notation, web notes with LaTeX equations, downloadable materials, references, and exercises.
+
+{{< include ../_includes/generated/courses.md >}}
+
+## Course communication
+
+For questions about assessment, deadlines, enrollment, or individual circumstances, use the official course channel when one is available. This helps keep answers visible and consistent for the class.
+
+```{=html}
+<div class="email-note" role="note" aria-label="A note about email">
+  <strong>A note about email</strong>
+  I receive more messages than I can reliably answer. I am sorry if I am unable to reply, or if my response is delayed. For course-specific questions, please use the official course channel when one is available.
+</div>
+```

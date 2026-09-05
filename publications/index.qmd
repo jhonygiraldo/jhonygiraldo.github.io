@@ -1,0 +1,10 @@
+---
+title: "Publications"
+description: "Journal, conference, and workshop publications by Jhony H. Giraldo and collaborators."
+toc: false
+---
+
+This list is generated from a single BibTeX file. My name is emphasized, and links to papers, code, and project pages appear whenever those fields are available. See also [Google Scholar](https://scholar.google.com/citations?user=iwzmGKwAAAAJ) and [ORCID](https://orcid.org/0000-0002-0039-1270).
+
+{{< include ../_includes/generated/publications.md >}}
+

@@ -1,0 +1,62 @@
+---
+title: "Curriculum vitae"
+description: "Academic appointments, education, funding, service, and honors for Jhony H. Giraldo."
+toc: false
+---
+
+```{=html}
+<div class="button-row">
+  <a class="button-link primary" href="/assets/pdf/Jhony-Giraldo-CV.pdf">Download the complete CV (PDF)</a>
+  <a class="button-link secondary" href="https://orcid.org/0000-0002-0039-1270">ORCID</a>
+  <a class="button-link secondary" href="https://scholar.google.com/citations?user=iwzmGKwAAAAJ">Google Scholar</a>
+</div>
+```
+
+## Profile
+
+I am an Assistant Professor in Machine Learning and Computer Vision at Télécom Paris, Institut Polytechnique de Paris. My research focuses on machine learning and signal processing for graphs and higher-order structures, with applications across computer vision, environmental monitoring, materials, underwater acoustics, and circuit design.
+
+```{=html}
+<div class="metrics-grid">
+  <div class="metric-card"><strong>€900k+</strong><span>funding as PI, co-PI, or supervisor</span></div>
+  <div class="metric-card"><strong>2022</strong><span>joined Télécom Paris as Assistant Professor</span></div>
+  <div class="metric-card"><strong>ELLIS</strong><span>Society member, Paris Unit</span></div>
+</div>
+```
+
+## Academic appointments
+
+**Assistant Professor in Machine Learning and Computer Vision**  
+Télécom Paris, Institut Polytechnique de Paris · Oct 2022–present
+
+- Visiting Professor, EPFL LTS4 laboratory, Oct–Nov 2024, supported by EuroTech.
+
+**Research Assistant in Graph Signal Processing**  
+University of Delaware · Sep 2018–Aug 2019
+
+## Education
+
+- **PhD in Applied Mathematics**, La Rochelle Université, 2019–2022. Visiting researcher at CentraleSupélec/Inria/Université Paris-Saclay and Università di Napoli Parthenope.
+- **MSc in Engineering, with honors**, Universidad de Antioquia, 2016–2018. Visiting research scholar at the University of Delaware.
+- **BSc in Electronics Engineering**, Universidad de Antioquia, 2011–2016.
+
+## Selected responsibilities
+
+- Elected substitute member, Télécom Paris Research Committee, 2025–present.
+- Course lead, **Machine Learning with Graphs**, 2024–present.
+- Member, IDS Department Council, Télécom Paris, 2023–present.
+- Responsible for PRIM Projects in AI and Data Science, 2023–present.
+- Course lead, **Deep Learning for Computer Vision**, 2023–present.
+
+## Awards and honors
+
+- Top 200 Reviewer, ICLR 2026; Gold Reviewer, ICML 2026.
+- Best Paper Award, ICCV 2023 Artificial Social Intelligence Workshop.
+- Outstanding distinction for master’s thesis, Universidad de Antioquia, 2018.
+- Best Students, SABER PRO Colombia, 2015.
+
+## Professional service
+
+Service includes area-chair, program-committee, reviewing, workshop-organization, and session-chair roles across NeurIPS, ICML, ICLR, CVPR, ICCV, AISTATS, ECCV, ECML, WACV, ICASSP, JMLR, and multiple IEEE Transactions.
+
+The downloadable CV contains the complete publication, patent, funding, supervision, committee, talk, and teaching records. **PDF updated September 2026.**

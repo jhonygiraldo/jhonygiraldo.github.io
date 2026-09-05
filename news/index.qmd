@@ -1,0 +1,9 @@
+---
+title: "News"
+description: "Research, publication, funding, and community news from Jhony H. Giraldo's group."
+toc: false
+---
+
+Research milestones, publications, awards, and group updates. Publication announcements link to the corresponding bibliographic record whenever one is available.
+
+{{< include ../_includes/generated/news.md >}}

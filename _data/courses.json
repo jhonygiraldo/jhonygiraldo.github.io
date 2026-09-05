@@ -1,0 +1,44 @@
+[
+  {
+    "code": "APM 5DS30 TP",
+    "title": "Machine Learning with Graphs",
+    "level": "MSc",
+    "institution": "Institut Polytechnique de Paris",
+    "role": "Course lead",
+    "period": "2024–present",
+    "summary": "Graph representation learning, graph neural networks, scaling, spatiotemporal learning, recommender systems, and graph generation.",
+    "url": "teaching/machine-learning-with-graphs/",
+    "featured": true
+  },
+  {
+    "code": "APM 5DA12 TP",
+    "title": "Deep Learning for Computer Vision",
+    "level": "MSc",
+    "institution": "Institut Polytechnique de Paris",
+    "role": "Course lead",
+    "period": "2023–present",
+    "summary": "Modern representation learning and deep neural architectures for visual understanding.",
+    "featured": false
+  },
+  {
+    "code": "",
+    "title": "Wavelets",
+    "level": "Graduate",
+    "institution": "Télécom Paris",
+    "role": "Lecturer",
+    "period": "2023–present",
+    "summary": "Multiscale signal representations and wavelet methods.",
+    "featured": false
+  },
+  {
+    "code": "",
+    "title": "Advanced Machine Learning",
+    "level": "Graduate",
+    "institution": "Télécom Paris",
+    "role": "Lecturer",
+    "period": "2023–present",
+    "summary": "Lectures on graph neural networks within the advanced machine learning curriculum.",
+    "featured": false
+  }
+]
+

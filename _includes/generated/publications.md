@@ -1,0 +1,521 @@
+```{=html}
+<div class="publication-tools">
+  <label><span class="visually-hidden">Search publications</span><input class="publication-search" type="search" placeholder="Search by title, author, venue, or year" data-publication-search></label>
+  <div class="publication-count" data-publication-count>56 publications</div>
+</div>
+<h2 class="publication-year" data-publication-year="2026">2026</h2>
+<article id="Gailhard2026feature" class="publication-item" data-publication-item data-year="2026">
+  <div class="publication-venue">ICML</div>
+  <div>
+    <div class="publication-title">Feature-aware (Hyper)graph Generation via Next-Scale Prediction</div>
+    <div class="publication-authors">Dorian Gailhard, Enzo Tartaglione, Lirida Naviner, and <strong>Jhony H. Giraldo</strong></div>
+    <div class="publication-meta">International Conference on Machine Learning · 2026</div>
+
+  </div>
+</article>
+<article id="Zhang2026spatiotemporal" class="publication-item" data-publication-item data-year="2026">
+  <div class="publication-venue">ICML</div>
+  <div>
+    <div class="publication-title">Spatiotemporal Imputation with Graph-Informed Flow Matching</div>
+    <div class="publication-authors">Zepeng Zhang, Aref Einizade, <strong>Jhony H. Giraldo</strong>, and Olga Fink</div>
+    <div class="publication-meta">International Conference on Machine Learning · 2026</div>
+
+  </div>
+</article>
+<article id="Martirosyan2026generalization" class="publication-item" data-publication-item data-year="2026">
+  <div class="publication-venue">AISTATS</div>
+  <div>
+    <div class="publication-title">Generalization Bounds for Spectral GNNs via Fourier Domain Analysis</div>
+    <div class="publication-authors">Vahan A. Martirosyan, Daniele Malitesta, Hugues Talbot, <strong>Jhony H. Giraldo</strong>, and Fragkiskos D. Malliaros</div>
+    <div class="publication-meta">International Conference on Artificial Intelligence and Statistics · 2026</div>
+
+  </div>
+</article>
+<article id="santamaria2026wilding" class="publication-item" data-publication-item data-year="2026">
+  <div class="publication-venue">IJCV</div>
+  <div>
+    <div class="publication-title">WildIng: A Wildlife Image Invariant Representation Model for Geographical Domain Shift</div>
+    <div class="publication-authors">Julian Santamaria, Claudia Isaza, and <strong>Jhony H. Giraldo</strong></div>
+    <div class="publication-meta">International Journal of Computer Vision · 2026</div>
+
+  </div>
+</article>
+<article id="spadaro2026calice" class="publication-item" data-publication-item data-year="2026">
+  <div class="publication-venue">ACM TOMM</div>
+  <div>
+    <div class="publication-title">CALICE: Continuous bitrate control with Adapted LIC modEl</div>
+    <div class="publication-authors">Gabriele Spadaro, Alberto Presta, <strong>Jhony H. Giraldo</strong>, Attilio Fiandrotti, Marco Grangetto, and Enzo Tartaglione</div>
+    <div class="publication-meta">ACM Transactions on Multimedia Computing Communications and Applications · 2026</div>
+
+  </div>
+</article>
+<article id="guerrero2026consistent" class="publication-item" data-publication-item data-year="2026">
+  <div class="publication-venue">IJCNN</div>
+  <div>
+    <div class="publication-title">Consistent Soundscape Connectomes via Stability-Refined Graph Learning</div>
+    <div class="publication-authors">Maria J. Guerrero, Aref Einizade, <strong>Jhony H. Giraldo</strong>, and César A. Uribe</div>
+    <div class="publication-meta">International Joint Conference on Neural Networks · 2026</div>
+
+  </div>
+</article>
+<article id="rojas2026physics" class="publication-item" data-publication-item data-year="2026">
+  <div class="publication-venue">POMA</div>
+  <div>
+    <div class="publication-title">Physics-Guided Machine Learning for Acoustic Mode Reconstruction in the Seabed Characterization Experiments</div>
+    <div class="publication-authors">Sebastian Rojas-Ortega, Mohsen Badiey, <strong>Jhony H. Giraldo</strong>, Fragkiskos D. Malliaros, Jhon A. Castro-Correa, and Christian D. Escobar-Amado</div>
+    <div class="publication-meta">Proceedings of Meetings on Acoustics · 2026</div>
+
+  </div>
+</article>
+<h2 class="publication-year" data-publication-year="2025">2025</h2>
+<article id="einizade2025cosimo" class="publication-item" data-publication-item data-year="2025">
+  <div class="publication-venue">NeurIPS</div>
+  <div>
+    <div class="publication-title">Continuous Simplicial Neural Networks</div>
+    <div class="publication-authors">Aref Einizade, Dorina Thanou, Fragkiskos D. Malliaros, and <strong>Jhony H. Giraldo</strong></div>
+    <div class="publication-meta">Advances in Neural Information Processing Systems · 2025</div>
+    <div class="publication-links"><a href="https://arxiv.org/abs/2503.12919">arXiv</a></div>
+  </div>
+</article>
+<article id="gailhard2025hygene" class="publication-item" data-publication-item data-year="2025">
+  <div class="publication-venue">AAAI</div>
+  <div>
+    <div class="publication-title">HYGENE: A Diffusion-based Hypergraph Generation Method</div>
+    <div class="publication-authors">Dorian Gailhard, Enzo Tartaglione, Lirida Naviner, and <strong>Jhony H. Giraldo</strong></div>
+    <div class="publication-meta">AAAI Conference on Artificial Intelligence · 2025</div>
+    <div class="publication-links"><a href="https://arxiv.org/abs/2408.16457">arXiv</a></div>
+  </div>
+</article>
+<article id="spadaro2025tep" class="publication-item" data-publication-item data-year="2025">
+  <div class="publication-venue">Neurocomputing</div>
+  <div>
+    <div class="publication-title">TEP-ones: A simple yet effective approach for transferability estimation of pruned backbones</div>
+    <div class="publication-authors">Gabriele Spadaro, Andrea Bragagnolo, Riccardo Renzulli, Marco Grangetto, <strong>Jhony H. Giraldo</strong>, Attilio Fiandrotti, and Enzo Tartaglione</div>
+    <div class="publication-meta">Neurocomputing · 2025</div>
+
+  </div>
+</article>
+<article id="castro-correa2025semi" class="publication-item" data-publication-item data-year="2025">
+  <div class="publication-venue">JASA</div>
+  <div>
+    <div class="publication-title">Semi-Supervised Graph Learning for Underwater Source Localization Using Ship-of-Opportunity Spectrograms</div>
+    <div class="publication-authors">Jhon A. Castro-Correa, Mohsen Badiey, <strong>Jhony H. Giraldo</strong>, and Fragkiskos D. Malliaros</div>
+    <div class="publication-meta">The Journal of the Acoustical Society of America · 2025</div>
+
+  </div>
+</article>
+<article id="Martirosyan2025Piecewise" class="publication-item" data-publication-item data-year="2025">
+  <div class="publication-venue">TMLR</div>
+  <div>
+    <div class="publication-title">Piecewise Constant Spectral Graph Neural Network</div>
+    <div class="publication-authors">Vahan Martirosyan, <strong>Jhony H. Giraldo</strong>, and Fragkiskos D. Malliaros</div>
+    <div class="publication-meta">Transactions on Machine Learning Research · 2025</div>
+
+  </div>
+</article>
+<article id="Sangare2025Fused" class="publication-item" data-publication-item data-year="2025">
+  <div class="publication-venue">TMLR</div>
+  <div>
+    <div class="publication-title">A Fused Gromov-Wasserstein Approach to Subgraph Contrastive Learning</div>
+    <div class="publication-authors">Amadou Siaka Sangare, Nicolas Dunou, <strong>Jhony H. Giraldo</strong>, and Fragkiskos D. Malliaros</div>
+    <div class="publication-meta">Transactions on Machine Learning Research · 2025</div>
+
+  </div>
+</article>
+<article id="spadaro2025pointcloud" class="publication-item" data-publication-item data-year="2025">
+  <div class="publication-venue">ECML</div>
+  <div>
+    <div class="publication-title">Subgraph Gaussian Embedding Contrast for Self-Supervised Graph Representation Learning</div>
+    <div class="publication-authors">Shifeng Xie, Aref Einizade, and <strong>Jhony H. Giraldo</strong></div>
+    <div class="publication-meta">European Conference on Machine Learning and Knowledge Discovery in Databases · 2025</div>
+
+  </div>
+</article>
+<article id="Xie2025subgraph" class="publication-item" data-publication-item data-year="2025">
+  <div class="publication-venue">ICME</div>
+  <div>
+    <div class="publication-title">Denoising Diffusion Probabilistic Model for Point Cloud Compression at Low Bit-Rates</div>
+    <div class="publication-authors">Gabriele Spadaro, Alberto Presta, <strong>Jhony H. Giraldo</strong>, Marco Grangetto, Wei Hu, Giuseppe Valenzise, Attilio Fiandrotti, and Enzo Tartaglione</div>
+    <div class="publication-meta">IEEE International Conference on Multimedia and Expo · 2025</div>
+
+  </div>
+</article>
+<article id="einizade2025second" class="publication-item" data-publication-item data-year="2025">
+  <div class="publication-venue">NeurIPS - Workshops</div>
+  <div>
+    <div class="publication-title">Second-Order Tensorial Partial Differential Equations on Graphs</div>
+    <div class="publication-authors">Aref Einizade, Fragkiskos D. Malliaros, and <strong>Jhony H. Giraldo</strong></div>
+    <div class="publication-meta">NeurIPS 2025 Workshop: New Perspectives in Advancing Graph Machine Learning · 2025</div>
+    <div class="publication-links"><a href="https://arxiv.org/abs/2503.12919">arXiv</a></div>
+  </div>
+</article>
+<article id="li2025solar" class="publication-item" data-publication-item data-year="2025">
+  <div class="publication-venue">NeurIPS - Workshops</div>
+  <div>
+    <div class="publication-title">Solar-GECO: Perovskite Solar Cell Property Prediction with Geometric-Aware Co-Attention</div>
+    <div class="publication-authors">Lucas li, Jean-Baptiste Puel, Florence Carton, Dounya Barrit, and <strong>Jhony H. Giraldo</strong></div>
+    <div class="publication-meta">NeurIPS 2025 Workshop: AI for Accelerated Materials Discovery · 2025</div>
+
+  </div>
+</article>
+<article id="guerrero2025soundscape" class="publication-item" data-publication-item data-year="2025">
+  <div class="publication-venue">NeurIPS - Workshops</div>
+  <div>
+    <div class="publication-title">Soundscape Connectomes: Unsupervised Graph-Based Approach for Soundscape Mapping</div>
+    <div class="publication-authors">Maria J. Guerrero, Aref Einizade, <strong>Jhony H. Giraldo</strong>, Victor M. Martinez-Arias, Claudia Isaza, and Cesar A Uribe</div>
+    <div class="publication-meta">NeurIPS 2025 Workshop: AI for Non-human Animal Communication · 2025</div>
+
+  </div>
+</article>
+<article id="santamaria2025catalog" class="publication-item" data-publication-item data-year="2025">
+  <div class="publication-venue">WACV</div>
+  <div>
+    <div class="publication-title">CATALOG: A Camera Trap Language-guided Contrastive Learning Model</div>
+    <div class="publication-authors">Julian Santamaria, Claudia Isaza, and <strong>Jhony H. Giraldo</strong></div>
+    <div class="publication-meta">IEEE/CVF Winter Conference on Applications of Computer Vision · 2025</div>
+    <div class="publication-links"><a href="https://arxiv.org/abs/2412.10624">arXiv</a></div>
+  </div>
+</article>
+<article id="spadaro2025wignet" class="publication-item" data-publication-item data-year="2025">
+  <div class="publication-venue">WACV</div>
+  <div>
+    <div class="publication-title">WiGNet: Windowed Vision Graph Neural Network</div>
+    <div class="publication-authors">Gabriele Spadaro, Marco Grangetto, Attilio Fiandrotti, Enzo Tartaglione, and <strong>Jhony H. Giraldo</strong></div>
+    <div class="publication-meta">IEEE/CVF Winter Conference on Applications of Computer Vision · 2025</div>
+    <div class="publication-links"><a href="https://arxiv.org/abs/2410.00807">arXiv</a></div>
+  </div>
+</article>
+<article id="kapoor2025graph" class="publication-item" data-publication-item data-year="2025">
+  <div class="publication-venue">CVIU</div>
+  <div>
+    <div class="publication-title">Graph-based Moving Object Segmentation for Underwater Videos using Semi-supervised Learning</div>
+    <div class="publication-authors">Meghna Kapoor, Wieke Prummel, <strong>Jhony H. Giraldo</strong>, Badri Narayan Subudhi, Anastasia Zakharova, Thierry Bouwmans, and Ankur Bansal</div>
+    <div class="publication-meta">Computer Vision and Image Understanding · 2025</div>
+
+  </div>
+</article>
+<h2 class="publication-year" data-publication-year="2024">2024</h2>
+<article id="einizade2024citrus" class="publication-item" data-publication-item data-year="2024">
+  <div class="publication-venue">NeurIPS</div>
+  <div>
+    <div class="publication-title">Continuous Product Graph Neural Networks</div>
+    <div class="publication-authors">Aref Einizade, Fragkiskos D. Malliaros, and <strong>Jhony H. Giraldo</strong></div>
+    <div class="publication-meta">Advances in Neural Information Processing Systems · 2024</div>
+    <div class="publication-links"><a href="https://arxiv.org/abs/2405.18877">arXiv</a></div>
+  </div>
+</article>
+<article id="rami2024privacy" class="publication-item" data-publication-item data-year="2024">
+  <div class="publication-venue">ECCV</div>
+  <div>
+    <div class="publication-title">Privacy-Preserving Adaptive Re-Identification without Image Transfer</div>
+    <div class="publication-authors">Hamza Rami, <strong>Jhony H. Giraldo</strong>, Nicolas Winckler, and Stéphane Lathuilière</div>
+    <div class="publication-meta">European Conference on Computer Vision · 2024</div>
+    <div class="publication-links"><a href="https://arxiv.org/abs/2407.12589">arXiv</a></div>
+  </div>
+</article>
+<article id="giraldo2024higherorder" class="publication-item" data-publication-item data-year="2024">
+  <div class="publication-venue">IEEE TSIPN</div>
+  <div>
+    <div class="publication-title">Higher-Order GNNs Meet Efficiency: Sparse Sobolev Graph Neural Networks</div>
+    <div class="publication-authors"><strong>Jhony H. Giraldo</strong>, Aref Einizade, Andjela Todorovic, Jhon A. Castro-Correa, Mohsen Badiey, Thierry Bouwmans, and Fragkiskos D. Malliaros</div>
+    <div class="publication-meta">IEEE Transactions on Signal and Information Processing over Networks · 2024</div>
+    <div class="publication-links"><a href="https://arxiv.org/abs/2411.04570">arXiv</a></div>
+  </div>
+</article>
+<article id="castrocorrea2024gegenbauer" class="publication-item" data-publication-item data-year="2024">
+  <div class="publication-venue">IEEE TNNLS</div>
+  <div>
+    <div class="publication-title">Gegenbauer Graph Neural Networks for Time-varying Signal Reconstruction</div>
+    <div class="publication-authors">Jhon A. Castro-Correa, <strong>Jhony H. Giraldo</strong>, Mohsen Badiey, and Fragkiskos D. Malliaros</div>
+    <div class="publication-meta">IEEE Transactions on Neural Networks and Learning Systems · 2024</div>
+    <div class="publication-links"><a href="https://arxiv.org/abs/2403.19800">arXiv</a></div>
+  </div>
+</article>
+<article id="einizade2024causal" class="publication-item" data-publication-item data-year="2024">
+  <div class="publication-venue">DSP</div>
+  <div>
+    <div class="publication-title">Estimation of a Causal Directed Acyclic Graph Process using Non-Gaussianity</div>
+    <div class="publication-authors">Aref Einizade, <strong>Jhony H. Giraldo</strong>, Fragkiskos D. Malliaros, and Sepideh Hajipour Sardouie</div>
+    <div class="publication-meta">Digital Signal Processing · 2024</div>
+
+  </div>
+</article>
+<article id="xie2024vgcl" class="publication-item" data-publication-item data-year="2024">
+  <div class="publication-venue">NeurIPS - Workshops</div>
+  <div>
+    <div class="publication-title">Variational Graph Contrastive Learning</div>
+    <div class="publication-authors">Shifeng Xie and <strong>Jhony H. Giraldo</strong></div>
+    <div class="publication-meta">NeurIPS Workshop, Self-Supervised Learning - Theory and Practice · 2024</div>
+    <div class="publication-links"><a href="https://arxiv.org/abs/2411.07150">arXiv</a></div>
+  </div>
+</article>
+<article id="rahman2024ovose" class="publication-item" data-publication-item data-year="2024">
+  <div class="publication-venue">ICPR</div>
+  <div>
+    <div class="publication-title">OVOSE: Open-Vocabulary Semantic Segmentation in Event-Based Cameras</div>
+    <div class="publication-authors">Muhammad Rameez Ur Rahman, <strong>Jhony H. Giraldo</strong>, Indro Spinelli, Stéphane Lathuilière, and Fabio Galasso</div>
+    <div class="publication-meta">International Conference on Pattern Recognition · 2024</div>
+
+  </div>
+</article>
+<article id="spadaro2024gabic" class="publication-item" data-publication-item data-year="2024">
+  <div class="publication-venue">ICIP</div>
+  <div>
+    <div class="publication-title">GABIC: Graph-based Attention Block for Image Compression</div>
+    <div class="publication-authors">Gabriele Spadaro, Alberto Presta, Enzo Tartaglione, <strong>Jhony H. Giraldo</strong>, Marco Grangetto, and Attilio Fiandrotti</div>
+    <div class="publication-meta">IEEE International Conference on Image Processing · 2024</div>
+
+  </div>
+</article>
+<article id="mnasri2024anomalous" class="publication-item" data-publication-item data-year="2024">
+  <div class="publication-venue">EUSIPCO</div>
+  <div>
+    <div class="publication-title">Anomalous Sound Detection for Road Surveillance based on Graph Signal Processing</div>
+    <div class="publication-authors">Zied Mnasri, <strong>Jhony H. Giraldo</strong>, and Thierry Bouwmans</div>
+    <div class="publication-meta">European Conference on Signal Processing · 2024</div>
+
+  </div>
+</article>
+<article id="rami2024source" class="publication-item" data-publication-item data-year="2024">
+  <div class="publication-venue">WACV</div>
+  <div>
+    <div class="publication-title">Source-Guided Similarity Preservation for Online Person Re-Identification</div>
+    <div class="publication-authors">Hamza Rami, <strong>Jhony H. Giraldo</strong>, Nicolas Winckler, and Stéphane Lathuilière</div>
+    <div class="publication-meta">IEEE/CVF Winter Conference on Applications of Computer Vision · 2024</div>
+
+  </div>
+</article>
+<h2 class="publication-year" data-publication-year="2023">2023</h2>
+<article id="giraldo2023tradeoff" class="publication-item" data-publication-item data-year="2023">
+  <div class="publication-venue">CIKM</div>
+  <div>
+    <div class="publication-title">On the Trade-off between Over-smoothing and Over-squashing in Deep Graph Neural Networks</div>
+    <div class="publication-authors"><strong>Jhony H. Giraldo</strong>, Konstantinos Skianis, Thierry Bouwmans, and Fragkiskos D. Malliaros</div>
+    <div class="publication-meta">ACM Conference on Information and Knowledge Management · 2023</div>
+    <div class="publication-links"><a href="https://arxiv.org/abs/2212.02374">arXiv</a></div>
+  </div>
+</article>
+<article id="giraldo2023higher" class="publication-item" data-publication-item data-year="2023">
+  <div class="publication-venue">ICASSP</div>
+  <div>
+    <div class="publication-title">Higher-order Sparse Convolutions in Graph Neural Networks</div>
+    <div class="publication-authors"><strong>Jhony H. Giraldo</strong>, Sajid Javed, Arif Mahmood, Fragkiskos D. Malliaros, and Thierry Bouwmans</div>
+    <div class="publication-meta">IEEE International Conference on Acoustics, Speech, and Signal Processing · 2023</div>
+    <div class="publication-links"><a href="https://arxiv.org/abs/2302.10505">arXiv</a></div>
+  </div>
+</article>
+<article id="castro2023timevarying" class="publication-item" data-publication-item data-year="2023">
+  <div class="publication-venue">ICASSP</div>
+  <div>
+    <div class="publication-title">Time-varying Signals Recovery via Graph Neural Networks</div>
+    <div class="publication-authors">Jhon A. Castro-Correa, <strong>Jhony H. Giraldo</strong>, Anindya Mondal, Mohsen Badiey, Thierry Bouwmans, and Fragkiskos D. Malliaros</div>
+    <div class="publication-meta">IEEE International Conference on Acoustics, Speech, and Signal Processing · 2023</div>
+    <div class="publication-links"><a href="https://arxiv.org/abs/2302.11313">arXiv</a></div>
+  </div>
+</article>
+<article id="rendon2023uncertainty" class="publication-item" data-publication-item data-year="2023">
+  <div class="publication-venue">EAAI</div>
+  <div>
+    <div class="publication-title">Uncertainty Clustering Internal Validity Assessment using Fréchet Distance for Unsupervised Learning</div>
+    <div class="publication-authors">Nestor Rendon, <strong>Jhony H. Giraldo</strong>, Thierry Bouwmans, Susana Rodrıguez-Buritica, Edison Ramirez, and Claudia Isaza</div>
+    <div class="publication-meta">Engineering Applications of Artificial Intelligence · 2023</div>
+
+  </div>
+</article>
+<article id="corbellini2023fewlabels" class="publication-item" data-publication-item data-year="2023">
+  <div class="publication-venue">ICCV - Workshops</div>
+  <div>
+    <div class="publication-title">Few Labels are Enough! Semi-supervised Graph Learning for Social Interaction</div>
+    <div class="publication-authors">Nicola Corbellini, <strong>Jhony H. Giraldo</strong>, Giovanna Varni, and Gualtiero Volpe</div>
+    <div class="publication-meta">IEEE/CVF International Conference on Computer Vision - Workshops · 2023</div>
+
+  </div>
+</article>
+<article id="spadaro2023shannon" class="publication-item" data-publication-item data-year="2023">
+  <div class="publication-venue">ICCV - Workshops</div>
+  <div>
+    <div class="publication-title">Shannon Strikes Again! Entropy-based Pruning in Deep Neural Networks for Transfer Learning under Extreme Memory and Computation Budgets</div>
+    <div class="publication-authors">Gabriele Spadaro, Riccardo Renzulli, Andrea Bragagnolo, <strong>Jhony H. Giraldo</strong>, Attilio Fiandrotti, Marco Grangetto, and Enzo Tartaglione</div>
+    <div class="publication-meta">IEEE/CVF International Conference on Computer Vision - Workshops · 2023</div>
+
+  </div>
+</article>
+<article id="prummel2023inductive" class="publication-item" data-publication-item data-year="2023">
+  <div class="publication-venue">ICIP</div>
+  <div>
+    <div class="publication-title">Inductive Graph Neural Networks for Moving Object Segmentation</div>
+    <div class="publication-authors">Wieke Prummel, <strong>Jhony H. Giraldo</strong>, Anastasia Zakharova, and Thierry Bouwmans</div>
+    <div class="publication-meta">IEEE International Conference on Image Processing · 2023</div>
+
+  </div>
+</article>
+<h2 class="publication-year" data-publication-year="2022">2022</h2>
+<article id="giraldo2020graphmos" class="publication-item" data-publication-item data-year="2022">
+  <div class="publication-venue">IEEE TPAMI</div>
+  <div>
+    <div class="publication-title">Graph Moving Object Segmentation</div>
+    <div class="publication-authors"><strong>Jhony H. Giraldo</strong>, Sajid Javed, and Thierry Bouwmans</div>
+    <div class="publication-meta">IEEE Transactions on Pattern Analysis and Machine Intelligence · 2022</div>
+
+  </div>
+</article>
+<article id="giraldo2022reconstruction" class="publication-item" data-publication-item data-year="2022">
+  <div class="publication-venue">IEEE TSIPN</div>
+  <div>
+    <div class="publication-title">Reconstruction of Time-varying Graph Signals via Sobolev Smoothness</div>
+    <div class="publication-authors"><strong>Jhony H. Giraldo</strong>, Arif Mahmood, Belmar Garcia-Garcia, Dorina Thanou, and Thierry Bouwmans</div>
+    <div class="publication-meta">IEEE Transactions on Signal and Information Processing over Networks · 2022</div>
+    <div class="publication-links"><a href="https://arxiv.org/abs/2207.06439">arXiv</a></div>
+  </div>
+</article>
+<article id="chendeb2022semisegsar" class="publication-item" data-publication-item data-year="2022">
+  <div class="publication-venue">IEEE GRSL</div>
+  <div>
+    <div class="publication-title">SemiSegSAR: A Semi-supervised Segmentation Algorithm for Ship SAR Images</div>
+    <div class="publication-authors">Marwa Chendeb El Rai, <strong>Jhony H. Giraldo</strong>, Mina Al-Saad, Muna Darweech, and Thierry Bouwmans</div>
+    <div class="publication-meta">IEEE Geoscience and Remote Sensing Letters · 2022</div>
+
+  </div>
+</article>
+<article id="giraldo2022hypergraph" class="publication-item" data-publication-item data-year="2022">
+  <div class="publication-venue">ICIP</div>
+  <div>
+    <div class="publication-title">Hypergraph Convolutional Networks for Weakly-supervised Semantic Segmentation</div>
+    <div class="publication-authors"><strong>Jhony H. Giraldo</strong>, Vincenzo Scarrica, Antonino Staiano, Francesco Camastra, and Thierry Bouwmans</div>
+    <div class="publication-meta">IEEE International Conference on Image Processing · 2022</div>
+
+  </div>
+</article>
+<h2 class="publication-year" data-publication-year="2021">2021</h2>
+<article id="giraldo2021graphcnn" class="publication-item" data-publication-item data-year="2021">
+  <div class="publication-venue">ICCV - Workshops</div>
+  <div>
+    <div class="publication-title">Graph CNN for Moving Object Detection in Complex Environments from Unseen Videos</div>
+    <div class="publication-authors"><strong>Jhony H. Giraldo</strong>, Sajid Javed, Naoufel Werghi, and Thierry Bouwmans</div>
+    <div class="publication-meta">IEEE/CVF International Conference on Computer Vision - Workshops · 2021</div>
+
+  </div>
+</article>
+<article id="mondal2021moving" class="publication-item" data-publication-item data-year="2021">
+  <div class="publication-venue">ICCV - Workshops</div>
+  <div>
+    <div class="publication-title">Moving Object Detection for Event-based Vision using Graph Spectral Clustering</div>
+    <div class="publication-authors">Anindya Mondal, Shashant R., <strong>Jhony H. Giraldo</strong>, Thierry Bouwmans, and Ananda S. Chowdhury</div>
+    <div class="publication-meta">IEEE/CVF International Conference on Computer Vision - Workshops · 2021</div>
+
+  </div>
+</article>
+<article id="giraldo2021emerging" class="publication-item" data-publication-item data-year="2021">
+  <div class="publication-venue">IWFCV</div>
+  <div>
+    <div class="publication-title">The Emerging Field of Graph Signal Processing for Moving Object Segmentation</div>
+    <div class="publication-authors"><strong>Jhony H. Giraldo</strong>, Sajid Javed, Maryam Sultana, Soon Ki Jung, and Thierry Bouwmans</div>
+    <div class="publication-meta">International Workshop on Frontiers of Computer Vision · 2021</div>
+
+  </div>
+</article>
+<article id="sultana2021robust" class="publication-item" data-publication-item data-year="2021">
+  <div class="publication-venue">IWFCV</div>
+  <div>
+    <div class="publication-title">Robust Foreground Segmentation in RGBD Data from Complex Scenes using Adversarial Networks</div>
+    <div class="publication-authors">Maryam Sultana, Thierry Bouwmans, <strong>Jhony H. Giraldo</strong>, and Soon Ki Jung</div>
+    <div class="publication-meta">International Workshop on Frontiers of Computer Vision · 2021</div>
+
+  </div>
+</article>
+<h2 class="publication-year" data-publication-year="2020">2020</h2>
+<article id="giraldo2020graphbgs" class="publication-item" data-publication-item data-year="2020">
+  <div class="publication-venue">ICPR</div>
+  <div>
+    <div class="publication-title">GraphBGS: Background Subtraction via Recovery of Graph Signals</div>
+    <div class="publication-authors"><strong>Jhony H. Giraldo</strong> and Thierry Bouwmans</div>
+    <div class="publication-meta">International Conference on Pattern Recognition · 2020</div>
+
+  </div>
+</article>
+<article id="giraldo2020semisupervised" class="publication-item" data-publication-item data-year="2020">
+  <div class="publication-venue">ICIP</div>
+  <div>
+    <div class="publication-title">Semi-supervised Background Subtraction of Unseen Videos: Minimization of the Total Variation of Graph Signals</div>
+    <div class="publication-authors"><strong>Jhony H. Giraldo</strong> and Thierry Bouwmans</div>
+    <div class="publication-meta">IEEE International Conference on Image Processing · 2020</div>
+
+  </div>
+</article>
+<article id="giraldo2020sobolev" class="publication-item" data-publication-item data-year="2020">
+  <div class="publication-venue">MLSP</div>
+  <div>
+    <div class="publication-title">On the Minimization of Sobolev Norms of Time-Varying Graph Signals: Estimation of New Coronavirus Disease 2019 Cases</div>
+    <div class="publication-authors"><strong>Jhony H. Giraldo</strong> and Thierry Bouwmans</div>
+    <div class="publication-meta">IEEE International Workshop on Machine Learning for Signal Processing · 2020</div>
+
+  </div>
+</article>
+<h2 class="publication-year" data-publication-year="2019">2019</h2>
+<article id="paradamayorga2019bluenoise" class="publication-item" data-publication-item data-year="2019">
+  <div class="publication-venue">IEEE TSIPN</div>
+  <div>
+    <div class="publication-title">Blue-Noise Sampling on Graphs</div>
+    <div class="publication-authors">Alejandro Parada-Mayorga, Daniel L. Lau, <strong>Jhony H. Giraldo</strong>, and Gonzalo R. Arce</div>
+    <div class="publication-meta">IEEE Transactions on Signal and Information Processing over Networks · 2019</div>
+
+  </div>
+</article>
+<article id="giraldo2019cameratrap" class="publication-item" data-publication-item data-year="2019">
+  <div class="publication-venue">TVC</div>
+  <div>
+    <div class="publication-title">Camera-trap Images Segmentation using Multi-layer Robust Principal Component Analysis</div>
+    <div class="publication-authors"><strong>Jhony H. Giraldo</strong>, Augusto Salazar, Alexander Gomez, and Angélica Diaz-Pulido</div>
+    <div class="publication-meta">The Visual Computer · 2019</div>
+
+  </div>
+</article>
+<article id="parada2019bluenoise" class="publication-item" data-publication-item data-year="2019">
+  <div class="publication-venue">SampTA</div>
+  <div>
+    <div class="publication-title">Blue-Noise Sampling of Signals on Graphs</div>
+    <div class="publication-authors">Alejandro Parada-Mayorga, Daniel L. Lau, <strong>Jhony H. Giraldo</strong>, and Gonzalo R. Arce</div>
+    <div class="publication-meta">International Conference on Sampling Theory and Applications · 2019</div>
+
+  </div>
+</article>
+<article id="parada2019sampling" class="publication-item" data-publication-item data-year="2019">
+  <div class="publication-venue">DSW</div>
+  <div>
+    <div class="publication-title">Sampling of Graph Signals with Blue Noise Dithering</div>
+    <div class="publication-authors">Alejandro Parada-Mayorga, Daniel L. Lau, <strong>Jhony H. Giraldo</strong>, and Gonzalo R. Arce</div>
+    <div class="publication-meta">IEEE Data Science Workshop · 2019</div>
+
+  </div>
+</article>
+<h2 class="publication-year" data-publication-year="2018">2018</h2>
+<article id="giraldo2018automatic" class="publication-item" data-publication-item data-year="2018">
+  <div class="publication-venue">PAA</div>
+  <div>
+    <div class="publication-title">Automatic Identification of Scenedesmus Polymorphic Microalgae from Microscopic Images</div>
+    <div class="publication-authors"><strong>Jhony H. Giraldo</strong>, Augusto Salazar, German Diez, Alexander Gomez, Tatiana Martinez, J. Francisco Vargas-Bonilla, and Mariana Vásquez-Peñuela</div>
+    <div class="publication-meta">Pattern Analysis and Applications · 2018</div>
+
+  </div>
+</article>
+<h2 class="publication-year" data-publication-year="2017">2017</h2>
+<article id="giraldo2017recognition" class="publication-item" data-publication-item data-year="2017">
+  <div class="publication-venue">ICTAI</div>
+  <div>
+    <div class="publication-title">Recognition of Mammal Genera on Camera-Trap Images Using Multi-Layer Robust Principal Component Analysis and Mixture Neural Networks</div>
+    <div class="publication-authors"><strong>Jhony H. Giraldo</strong>, Augusto Salazar, Alexander Gomez, and Angélica Diaz-Pulido</div>
+    <div class="publication-meta">IEEE International Conference on Tools with Artificial Intelligence · 2017</div>
+
+  </div>
+</article>
+<h2 class="publication-year" data-publication-year="2015">2015</h2>
+<article id="gomez2015markov" class="publication-item" data-publication-item data-year="2015">
+  <div class="publication-venue">ISVC</div>
+  <div>
+    <div class="publication-title">A Markov Random Field and Active Contour Image Segmentation Model for Animal Spots Patterns</div>
+    <div class="publication-authors">Alexander Gomez, German Diez, <strong>Jhony H. Giraldo</strong>, Augusto Salazar, and Juan M. Daza</div>
+    <div class="publication-meta">International Symposium on Visual Computing · 2015</div>
+
+  </div>
+</article>
+```

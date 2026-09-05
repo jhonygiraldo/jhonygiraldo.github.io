@@ -1,0 +1,62 @@
+---
+title: "Machine Learning with Graphs"
+subtitle: "APM 5DS30 TP · Institut Polytechnique de Paris"
+description: "Course hub for Machine Learning with Graphs, including web lecture notes, slides, references, and exercises."
+toc: false
+---
+
+This graduate course develops both the **fundamentals** and **practical use** of graph machine-learning models. It begins with graph representations and random-walk embeddings, then moves to graph neural networks, scaling, spatiotemporal learning, recommender systems, and graph generation.
+
+```{=html}
+<div class="feature-grid">
+  <article class="feature-card"><span class="number">Level</span><h3>MSc</h3><p>Master Data Science and Master Data & AI.</p></article>
+  <article class="feature-card"><span class="number">Prerequisites</span><h3>Linear algebra + deep learning</h3><p>Comfort with vectors, matrices, probability, optimization, and basic neural networks.</p></article>
+  <article class="feature-card"><span class="number">Format</span><h3>Lectures + practicals</h3><p>Conceptual development, mathematical derivations, guided exercises, and implementation.</p></article>
+</div>
+```
+
+## Learning objectives
+
+By the end of the course, students should be able to:
+
+- explain the fundamental ideas behind graph representation learning and graph neural networks;
+- select graph representations and learning tasks appropriate to an application;
+- identify scaling, generalization, and modeling challenges in graph learning;
+- use graph models for semi-supervised learning, molecular-property prediction, spatiotemporal analysis, recommendation, and graph generation;
+- evaluate assumptions, failure modes, and empirical evidence in graph-ML research.
+
+## Lecture notes
+
+### 01 · Introduction to machine learning on graphs
+
+Graphs as a modeling language; graph representations and task levels; handcrafted structural features; node embeddings; DeepWalk; node2vec.
+
+```{=html}
+<div class="button-row">
+  <a class="button-link primary" href="lecture-01.html">Read the web note</a>
+  <a class="button-link secondary" href="/assets/pdf/Lecture-01-Introduction-to-Machine-Learning-on-Graphs.pdf">Original slides (PDF)</a>
+</div>
+```
+
+## Course sequence
+
+1. Introduction to machine learning on graphs
+2. Introduction to graph neural networks
+3. Practical: graph neural networks
+4. Scaling graph neural networks
+5. Spatiotemporal analysis with graph neural networks
+6. Practical: spatiotemporal graph learning
+7. Recommender systems using graphs
+8. Graph generation
+9. Practical: graph generation
+
+## Core references
+
+- William L. Hamilton, *Graph Representation Learning*, 2020.
+- Jure Leskovec, Anand Rajaraman, and Jeffrey D. Ullman, *Mining of Massive Datasets*, 3rd ed., 2020.
+- Stanford CS224W, *Machine Learning with Graphs*.
+- University of Pennsylvania, *Graph Neural Networks*.
+
+## Academic integrity
+
+You are responsible for every argument, result, citation, and line of code that you submit. Generative systems may support learning only when their use complies with the course policy and you independently verify and understand the result. Fabricated citations, unverified claims, plagiarism, and submission of work you do not understand are academic-integrity violations.

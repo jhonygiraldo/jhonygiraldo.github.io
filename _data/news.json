@@ -1,0 +1,137 @@
+[
+  {
+    "date": "2026-06-04",
+    "title": "CALICE accepted in ACM TOMM",
+    "body": "Our paper “CALICE: Continuous bitrate control with Adapted LIC modEl” was accepted in ACM Transactions on Multimedia Computing, Communications, and Applications.",
+    "publication_key": "spadaro2026calice"
+  },
+  {
+    "date": "2026-05-15",
+    "title": "ICML 2026 Gold Reviewer",
+    "body": "I was selected as an ICML 2026 Gold Reviewer, recognizing the top 25% of reviewers."
+  },
+  {
+    "date": "2026-04-30",
+    "title": "Two papers accepted at ICML 2026",
+    "body": "The papers study feature-aware hypergraph generation and graph-informed flow matching for spatiotemporal imputation.",
+    "url": "publications/"
+  },
+  {
+    "date": "2026-04-14",
+    "title": "ICLR 2026 Top 200 Reviewer",
+    "body": "I was selected among the Top 200 Reviewers at ICLR 2026."
+  },
+  {
+    "date": "2026-03-20",
+    "title": "Soundscape Connectomes accepted at IJCNN 2026",
+    "body": "Our work on stability-refined graph learning for soundscape connectomes was accepted at IJCNN 2026.",
+    "publication_key": "guerrero2026consistent"
+  },
+  {
+    "date": "2026-01-22",
+    "title": "Spectral GNN generalization at AISTATS 2026",
+    "body": "Our paper on generalization bounds for spectral graph neural networks was accepted at AISTATS 2026.",
+    "publication_key": "Martirosyan2026generalization"
+  },
+  {
+    "date": "2026-01-03",
+    "title": "WildIng accepted in IJCV",
+    "body": "Our wildlife image representation model for geographical domain shift was accepted in the International Journal of Computer Vision.",
+    "publication_key": "santamaria2026wilding"
+  },
+  {
+    "date": "2025-11-26",
+    "title": "TEP-ones accepted in Neurocomputing",
+    "body": "Our work on transferability estimation for pruned backbones was accepted in Neurocomputing.",
+    "publication_key": "spadaro2025tep"
+  },
+  {
+    "date": "2025-11-16",
+    "title": "Four papers at NeurIPS 2025",
+    "body": "One main-track and three workshop papers cover simplicial neural networks, tensorial PDEs, materials science, and environmental applications.",
+    "url": "publications/"
+  },
+  {
+    "date": "2025-09-19",
+    "title": "Joined the ELLIS Society",
+    "body": "I became a member of the European Laboratory for Learning and Intelligent Systems Society."
+  },
+  {
+    "date": "2025-09-18",
+    "title": "Continuous Simplicial Neural Networks at NeurIPS 2025",
+    "body": "Our work on continuous neural models for simplicial complexes was accepted at NeurIPS 2025.",
+    "publication_key": "einizade2025cosimo"
+  },
+  {
+    "date": "2025-07-31",
+    "title": "Underwater source localization in JASA",
+    "body": "Our semi-supervised graph learning method for underwater source localization was accepted in the Journal of the Acoustical Society of America.",
+    "publication_key": "castro-correa2025semi"
+  },
+  {
+    "date": "2025-05-27",
+    "title": "Subgraph contrastive learning at ECML PKDD 2025",
+    "body": "Our paper on Subgraph Gaussian Embedding Contrast was accepted at ECML PKDD 2025.",
+    "publication_key": "Xie2025subgraph"
+  },
+  {
+    "date": "2025-04-08",
+    "title": "Spectral GNN paper accepted in TMLR",
+    "body": "Our Piecewise Constant Spectral Graph Neural Network paper was accepted in Transactions on Machine Learning Research.",
+    "publication_key": "Martirosyan2025Piecewise"
+  },
+  {
+    "date": "2025-03-20",
+    "title": "Point-cloud compression at ICME 2025",
+    "body": "Our diffusion model for point-cloud compression at low bit-rates was accepted at ICME 2025.",
+    "publication_key": "spadaro2025pointcloud"
+  },
+  {
+    "date": "2025-02-14",
+    "title": "Subgraph contrastive learning accepted in TMLR",
+    "body": "Our fused Gromov–Wasserstein approach to subgraph contrastive learning was accepted in TMLR.",
+    "publication_key": "Sangare2025Fused"
+  },
+  {
+    "date": "2025-01-20",
+    "title": "Two oral presentations at WACV 2025",
+    "body": "WiGNet and CATALOG were selected for oral presentation at WACV 2025.",
+    "url": "publications/"
+  },
+  {
+    "date": "2025-01-17",
+    "title": "Underwater moving-object segmentation in CVIU",
+    "body": "Our graph-based semi-supervised method was accepted in Computer Vision and Image Understanding.",
+    "publication_key": "kapoor2025graph"
+  },
+  {
+    "date": "2024-12-16",
+    "title": "NVIDIA Academic Grant",
+    "body": "We received an NVIDIA Academic Grant for research connecting foundation models and camera-trap recognition."
+  },
+  {
+    "date": "2024-12-09",
+    "title": "HYGENE accepted at AAAI 2025",
+    "body": "Our diffusion-based hypergraph generation method was accepted at AAAI 2025.",
+    "publication_key": "gailhard2025hygene"
+  },
+  {
+    "date": "2024-10-29",
+    "title": "CATALOG accepted at WACV 2025",
+    "body": "Our camera-trap language-guided contrastive learning model was accepted at WACV 2025.",
+    "publication_key": "santamaria2025catalog"
+  },
+  {
+    "date": "2024-10-06",
+    "title": "Sparse Sobolev GNNs accepted in IEEE TSIPN",
+    "body": "Our paper on efficient higher-order graph neural networks was accepted in IEEE Transactions on Signal and Information Processing over Networks.",
+    "publication_key": "giraldo2024higherorder"
+  },
+  {
+    "date": "2024-09-25",
+    "title": "Continuous Product GNNs at NeurIPS 2024",
+    "body": "Our work on continuous product graph neural networks was accepted at NeurIPS 2024.",
+    "publication_key": "einizade2024citrus"
+  }
+]
+
