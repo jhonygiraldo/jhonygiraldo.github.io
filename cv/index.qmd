@@ -57,6 +57,6 @@ University of Delaware · Sep 2018–Aug 2019
 
 ## Professional service
 
-Service includes area-chair, program-committee, reviewing, workshop-organization, and session-chair roles across NeurIPS, ICML, ICLR, CVPR, ICCV, AISTATS, ECCV, ECML, WACV, ICASSP, JMLR, and multiple IEEE Transactions.
+Service includes program-committee, reviewing, and workshop-organization roles across NeurIPS, ICML, ICLR, CVPR, ICCV, AISTATS, ECCV, ECML, WACV, ICASSP, JMLR, and multiple IEEE Transactions.
 
 The downloadable CV contains the complete publication, patent, funding, supervision, committee, talk, and teaching records. **PDF updated September 2026.**
