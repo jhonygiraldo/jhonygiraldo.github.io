@@ -205,10 +205,11 @@ What we want instead: for each user separately, positive scores above that same 
 For a user $u^*$, with rooted positive edges $\mathcal{E}(u^*)=\{(u^*,v)\in\mathcal{E}\}$ and rooted negative edges $\mathcal{E}_{\text{neg}}(u^*)=\{(u^*,v)\in\mathcal{E}_{\text{neg}}\}$,
 
 $$
-\text{Loss}(u^*)=
-\frac{1}{|\mathcal{E}(u^*)|\,|\mathcal{E}_{\text{neg}}(u^*)|}
-\sum_{(u^*,v_{\text{pos}})\in\mathcal{E}(u^*)}\ \sum_{(u^*,v_{\text{neg}})\in\mathcal{E}_{\text{neg}}(u^*)}
--\log\sigma\!\left(F_\theta(u^*,v_{\text{pos}})-F_\theta(u^*,v_{\text{neg}})\right),
+\begin{aligned}
+\text{Loss}(u^*)=\frac{1}{|\mathcal{E}(u^*)|\,|\mathcal{E}_{\text{neg}}(u^*)|}
+&\sum_{(u^*,v_{\text{pos}})\in\mathcal{E}(u^*)}\ \ \sum_{(u^*,v_{\text{neg}})\in\mathcal{E}_{\text{neg}}(u^*)}\\[4pt]
+&\quad -\log\sigma\!\left(F_\theta(u^*,v_{\text{pos}})-F_\theta(u^*,v_{\text{neg}})\right),
+\end{aligned}
 $$ {#eq-bpr}
 
 and the total loss is $\frac{1}{|\mathcal{U}|}\sum_{u^*\in\mathcal{U}}\text{Loss}(u^*)$.

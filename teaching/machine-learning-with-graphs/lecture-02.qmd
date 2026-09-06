@@ -437,15 +437,16 @@ $$
 The second layer uses $\mathbf{W}^{(1)}\in\mathbb{R}^{H_0\times C}$ and yields $\mathbf{H}^{(2)}\in\mathbb{R}^{N\times C}$. The vanilla two-layer GCN for node classification is therefore
 
 $$
+\begin{aligned}
 \bar{\mathbf{Y}}
 =f(\mathbf{X};\mathbf{A},\boldsymbol{\Theta})
-=\operatorname{softmax}\!\left(
+&=\operatorname{softmax}\!\left(
 \hat{\mathbf{A}}_{\mathrm{sl}}\,
 \operatorname{ReLU}\!\left(\hat{\mathbf{A}}_{\mathrm{sl}}\mathbf{X}\mathbf{W}^{(0)}\right)
 \mathbf{W}^{(1)}
-\right),
-\qquad
-\hat{\mathbf{A}}_{\mathrm{sl}}=\tilde{\mathbf{D}}^{-1/2}\tilde{\mathbf{A}}\tilde{\mathbf{D}}^{-1/2}.
+\right),\\[4pt]
+\hat{\mathbf{A}}_{\mathrm{sl}}&=\tilde{\mathbf{D}}^{-1/2}\tilde{\mathbf{A}}\tilde{\mathbf{D}}^{-1/2}.
+\end{aligned}
 $$
 
 Its parameter count is $FH_0+H_0C$ — it does **not** contain $N$. For Cora ($N=2708$, $F=1433$, $C=7$) with $H_0=16$, that is $1433\times16+16\times7=23\,040$ parameters, whereas a shallow embedding of the same width would need $16\times2708=43\,328$ parameters and would still be unable to classify a new node.

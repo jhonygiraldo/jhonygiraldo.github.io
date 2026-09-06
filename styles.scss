@@ -716,6 +716,23 @@ body.fullcontent #quarto-content > main.content,
   padding: 0.6rem 0;
 }
 
+/* MathJax replaces the `.math.display` span above with its own block, so the
+   rule has to be repeated on the element that actually gets rendered. Any
+   formula too wide for the text column then scrolls inside its own box
+   instead of bleeding into the margin. Prefer breaking such a formula across
+   lines in the source; this is the safety net. */
+mjx-container[display="true"] {
+  max-width: 100%;
+  /* A numbered equation carries an inline min-width from MathJax so the tag can
+     sit at the right margin; without this it would win over max-width and the
+     formula would still push past the column. */
+  min-width: 0 !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+  /* Room for the scrollbar so it never sits on top of a descender. */
+  padding: 0.25rem 0 0.45rem;
+}
+
 .references-small {
   color: var(--muted);
   font-size: 0.9rem;

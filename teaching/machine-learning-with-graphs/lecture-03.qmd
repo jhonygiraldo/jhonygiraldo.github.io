@@ -295,12 +295,13 @@ A product of linear maps is a linear map, so the whole stack of weight matrices 
 **Definition 4 — SGC**
 
 $$
+\begin{aligned}
 \bar{\mathbf{Y}}=f(\mathbf{X};\mathbf{A},\boldsymbol{\Theta})
-=\operatorname{softmax}\!\left(\hat{\mathbf{A}}^{\ell}\mathbf{X}\mathbf{W}\right),
+&=\operatorname{softmax}\!\left(\hat{\mathbf{A}}^{\ell}\mathbf{X}\mathbf{W}\right),\\[4pt]
+\hat{\mathbf{A}}&=\tilde{\mathbf{D}}^{-1/2}\tilde{\mathbf{A}}\tilde{\mathbf{D}}^{-1/2},
 \qquad
-\hat{\mathbf{A}}=\tilde{\mathbf{D}}^{-1/2}\tilde{\mathbf{A}}\tilde{\mathbf{D}}^{-1/2},
-\quad
 \tilde{\mathbf{A}}=\mathbf{A}+\mathbf{I}.
+\end{aligned}
 $$ {#eq-sgc}
 :::
 
