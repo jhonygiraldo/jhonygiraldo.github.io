@@ -4,7 +4,7 @@
     "href": "people/index.html",
     "title": "Team",
     "section": "",
-    "text": "Our work spans geometric deep learning, graph signal processing, computer vision, graph generation, and scientific applications. Dates and destinations are included to preserve an accurate record of supervision and collaboration."
+    "text": "Our work spans geometric deep learning, graph signal processing, computer vision, graph generation, and scientific applications."
   },
   {
     "objectID": "people/index.html#current-team",
@@ -277,14 +277,14 @@
     "href": "teaching/index.html",
     "title": "Teaching",
     "section": "",
-    "text": "These course pages are designed as durable academic resources rather than lists of slide files. Each course can contain learning objectives, notation, web notes with LaTeX equations, downloadable materials, references, and exercises."
+    "text": "These course pages are designed as academic resources. Each course can contain learning objectives, notation, web notes with LaTeX equations, downloadable materials, references, and exercises."
   },
   {
     "objectID": "teaching/index.html#course-communication",
     "href": "teaching/index.html#course-communication",
     "title": "Teaching",
     "section": "Course communication",
-    "text": "Course communication\nFor questions about assessment, deadlines, enrollment, or individual circumstances, use the official course channel when one is available. This helps keep answers visible and consistent for the class.\n\n  A note about email\n  I receive more messages than I can reliably answer. I am sorry if I am unable to reply, or if my response is delayed. For course-specific questions, please use the official course channel when one is available."
+    "text": "Course communication\nFor questions about assessment, deadlines, enrollment, or individual circumstances, use the official course channel when one is available.\n\n  A note about email\n  I receive more messages than I can reliably answer. I am sorry if I am unable to reply or if my response is delayed. For course-specific questions, please use [name-of-the-course] at the beginning of the subject line."
   },
   {
     "objectID": "cv/index.html",
@@ -368,7 +368,7 @@
     "href": "index.html",
     "title": "Jhony H. Giraldo",
     "section": "",
-    "text": "Machine learning · Signal processing · Relational data\n  \n  Assistant Professor at Télécom Paris, Institut Polytechnique de Paris\n  \n    \n      I am an Assistant Professor in Machine Learning and Computer Vision at Télécom Paris, Institut Polytechnique de Paris. I work in the Information Processing and Communications Laboratory (LTCI), within the Multimedia team, and I am a member of the ELLIS Society.\n      My research focuses on machine learning and signal processing for relational data, including graphs and higher-order structures. I study how mathematical structure can guide the design of scalable, stable, and interpretable learning models. I am also interested in applications in computer vision, circuit design, environmental monitoring, materials analysis, physical systems, and underwater acoustics.\n      I received my PhD in Applied Mathematics from La Rochelle Université in 2022. Before my doctoral studies, I worked on graph signal processing at the University of Delaware and completed my MSc and BSc degrees at Universidad de Antioquia, Colombia.\n      \n        Research\n        Publications\n        Curriculum vitae\n      \n    \n    \n      \n      Office 5D2419 place Marguerite Perey91120 Palaiseau, France"
+    "text": "Machine learning · Signal processing · Relational data\n  \n  Assistant Professor at Télécom Paris, Institut Polytechnique de Paris\n  \n    \n      I am an Assistant Professor in Machine Learning and Computer Vision at Télécom Paris, Institut Polytechnique de Paris. I work in the Information Processing and Communications Laboratory (LTCI), within the Multimedia team, and I am a member of the ELLIS Society.\n      My research focuses on machine learning and signal processing for relational data, including graphs and higher-order structures. I am also interested in applications in computer vision, circuit design, environmental monitoring, materials analysis, physical systems, and underwater acoustics.\n      I received my PhD in Applied Mathematics from La Rochelle Université in 2022. Before my doctoral studies, I worked on graph signal processing at the University of Delaware and completed my MSc and BSc degrees at Universidad de Antioquia, Colombia.\n      \n        Research\n        Publications\n        Curriculum vitae\n      \n    \n    \n      \n      Office 5D2419 place Marguerite Perey91120 Palaiseau, France"
   },
   {
     "objectID": "index.html#latest-news",
@@ -382,7 +382,7 @@
     "href": "index.html#for-students",
     "title": "Jhony H. Giraldo",
     "section": "For students",
-    "text": "For students\nThe teaching area is designed as a durable course library: lecture notes, equations, references, exercises, slides, and course logistics live together and remain readable on phones and laptops.\n\n  Web lecture notes\n  Machine Learning with Graphs\n  Lecture 6 · Graph generation. Properties of real-world graphs; Erdos-Renyi random graphs; deep generative models; GraphRNN; iterative local expansion by coarsening.\n  \n    Read Lecture 6\n    Open the course\n  \n  Also online: Lecture 3 · Scaling up graph neural networks, Lecture 4 · Spatiotemporal analysis with graphs, Lecture 5 · Recommender systems, and 2 more.\n\n\n  A note about email\n  I receive more messages than I can reliably answer. I am sorry if I am unable to reply, or if my response is delayed. For course-specific questions, please use the official course channel when one is available."
+    "text": "For students\nThe teaching area is designed as a course library: web-based lecture notes, references, exercises, and slides.\n\n  Web lecture notes\n  Machine Learning with Graphs\n  Lecture 6 · Graph generation. Properties of real-world graphs; Erdos-Renyi random graphs; deep generative models; GraphRNN; iterative local expansion by coarsening.\n  \n    Read Lecture 6\n    Open the course\n  \n  Also online: Lecture 3 · Scaling up graph neural networks, Lecture 4 · Spatiotemporal analysis with graphs, Lecture 5 · Recommender systems, and 2 more.\n\n\n  A note about email\n  I receive more messages than I can reliably answer. I am sorry if I am unable to reply or if my response is delayed. For course-specific questions, please use [name-of-the-course] at the beginning of the subject line."
   },
   {
     "objectID": "research/index.html",
@@ -390,13 +390,6 @@
     "title": "Research",
     "section": "",
     "text": "My research studies how relational structure can become a useful inductive bias. Graphs represent pairwise interactions; hypergraphs and simplicial or cellular complexes represent higher-order interactions. The goal is to build models that use this structure without sacrificing scalability, stability, or interpretability."
-  },
-  {
-    "objectID": "research/index.html#research-directions",
-    "href": "research/index.html#research-directions",
-    "title": "Research",
-    "section": "Research directions",
-    "text": "Research directions\n\n  \n    A\n    Continuous and higher-order neural networks\n    Neural architectures for product graphs, hypergraphs, and simplicial complexes, including continuous formulations that connect discrete models with geometry and differential equations.\n  \n  \n    B\n    Learning and processing graph signals\n    Spectral and Sobolev perspectives on reconstruction, generalization, stability, summarization, forecasting, imputation, and graph structure learning.\n  \n  \n    C\n    Structured learning in applications\n    Graph-based approaches to computer vision, image compression, wildlife monitoring, underwater acoustics, materials, physical systems, and hardware design."
   },
   {
     "objectID": "research/index.html#active-funded-programs",
@@ -410,14 +403,14 @@
     "href": "research/index.html#translation-and-collaboration",
     "title": "Research",
     "section": "Translation and collaboration",
-    "text": "Translation and collaboration\nThe program includes collaboration with academic and industrial partners, including TotalEnergies, NVIDIA, Atos, and Sisvel. Research outputs include open scientific publications as well as patent applications in privacy-preserving re-identification, vision graph neural networks, learnable image compression, and transferability estimation."
+    "text": "Translation and collaboration\nMy program includes collaboration with academic and industrial partners, including TotalEnergies and Idemia. Research outputs include open scientific publications as well as patent applications."
   },
   {
     "objectID": "research/index.html#collaboration",
     "href": "research/index.html#collaboration",
     "title": "Research",
     "section": "Collaboration",
-    "text": "Collaboration\nI welcome research discussions that have a clear connection to graph machine learning, geometric deep learning, graph signal processing, or the application areas above. A short message describing the scientific question, relevant background, and intended form of collaboration is particularly helpful.\n\n  Publications\n  Research team\n  Email"
+    "text": "Collaboration\nI welcome research discussions that have a clear connection to graph machine learning, geometric deep learning, graph signal processing, or application areas I’m interested in. A short message describing the scientific question, relevant background, and intended form of collaboration is particularly helpful.\n\n  Publications\n  Research team\n  Email"
   },
   {
     "objectID": "teaching/machine-learning-with-graphs/index.html",
