@@ -4,7 +4,7 @@ description: "Researchers and students supervised by Jhony H. Giraldo."
 toc: false
 ---
 
-Our work spans geometric deep learning, graph signal processing, computer vision, graph generation, and scientific applications. Dates and destinations are included to preserve an accurate record of supervision and collaboration.
+Our work spans geometric deep learning, graph signal processing, computer vision, graph generation, and scientific applications.
 
 {{< include ../_includes/generated/people.md >}}
 

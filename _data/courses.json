@@ -69,25 +69,5 @@
     "period": "2023–present",
     "summary": "Modern representation learning and deep neural architectures for visual understanding.",
     "featured": false
-  },
-  {
-    "code": "",
-    "title": "Wavelets",
-    "level": "Graduate",
-    "institution": "Télécom Paris",
-    "role": "Lecturer",
-    "period": "2023–present",
-    "summary": "Multiscale signal representations and wavelet methods.",
-    "featured": false
-  },
-  {
-    "code": "",
-    "title": "Advanced Machine Learning",
-    "level": "Graduate",
-    "institution": "Télécom Paris",
-    "role": "Lecturer",
-    "period": "2023–present",
-    "summary": "Lectures on graph neural networks within the advanced machine learning curriculum.",
-    "featured": false
   }
 ]
