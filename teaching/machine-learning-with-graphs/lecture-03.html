@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Web lecture note on training graph neural networks at scale: computational graphs, GraphSAGE neighbor sampling, Cluster-GCN, and SGC.">
+
+<title>Lecture 3 — Scaling Up Graph Neural Networks – Jhony H. Giraldo</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../assets/images/jhony-giraldo.jpg" rel="icon" type="image/jpeg">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-e3f251471e60ae6bf9c8e95d70d1e8a4.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Jhony H. Giraldo",
+  "jobTitle": "Assistant Professor in Machine Learning and Computer Vision",
+  "url": "https://jhonygiraldo.github.io/",
+  "image": "https://jhonygiraldo.github.io/assets/images/jhony-giraldo.jpg",
+  "email": "mailto:jhony.giraldo@telecom-paris.fr",
+  "affiliation": [
+    {"@type": "CollegeOrUniversity", "name": "Télécom Paris"},
+    {"@type": "CollegeOrUniversity", "name": "Institut Polytechnique de Paris"}
+  ],
+  "sameAs": [
+    "https://orcid.org/0000-0002-0039-1270",
+    "https://scholar.google.com/citations?user=iwzmGKwAAAAJ",
+    "https://www.linkedin.com/in/jhonyhgiraldo",
+    "https://bsky.app/profile/jhonyhgiraldo.bsky.social"
+  ],
+  "knowsAbout": [
+    "Graph machine learning",
+    "Geometric deep learning",
+    "Graph signal processing",
+    "Computer vision",
+    "Higher-order neural networks"
+  ]
+}
+</script>
+
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<meta property="og:title" content="Lecture 3 — Scaling Up Graph Neural Networks">
+<meta property="og:description" content="Web lecture note on training graph neural networks at scale: computational graphs, GraphSAGE neighbor sampling, Cluster-GCN, and SGC.">
+<meta property="og:image" content="https://jhonygiraldo.github.io/assets/figures/app-recommender-systems.svg">
+<meta property="og:site_name" content="Jhony H. Giraldo">
+<meta property="og:image:alt" content="A bipartite graph of users connected to items">
+<meta name="twitter:title" content="Lecture 3 — Scaling Up Graph Neural Networks">
+<meta name="twitter:description" content="Web lecture note on training graph neural networks at scale: computational graphs, GraphSAGE neighbor sampling, Cluster-GCN, and SGC.">
+<meta name="twitter:image" content="https://jhonygiraldo.github.io/assets/figures/app-recommender-systems.svg">
+<meta name="twitter:image:alt" content="A bipartite graph of users connected to items">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed custom-title-page lecture-page quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Jhony H. Giraldo</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../research/index.html"> 
+<span class="menu-text">Research</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../people/index.html"> 
+<span class="menu-text">Team</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../publications/index.html"> 
+<span class="menu-text">Publications</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../teaching/index.html"> 
+<span class="menu-text">Teaching</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../news/index.html"> 
+<span class="menu-text">News</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../cv/index.html"> 
+<span class="menu-text">CV</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:jhony.giraldo@telecom-paris.fr"> <i class="bi bi-envelope" role="img" aria-label="Email Jhony Giraldo">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://scholar.google.com/citations?user=iwzmGKwAAAAJ"> <i class="bi bi-mortarboard-fill" role="img" aria-label="Google Scholar">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/jhonyhgiraldo"> <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives"><span class="header-section-number">1</span> Learning objectives</a></li>
+  <li><a href="#graphs-in-modern-applications" id="toc-graphs-in-modern-applications" class="nav-link" data-scroll-target="#graphs-in-modern-applications"><span class="header-section-number">2</span> Graphs in modern applications</a></li>
+  <li><a href="#why-the-usual-training-recipe-fails" id="toc-why-the-usual-training-recipe-fails" class="nav-link" data-scroll-target="#why-the-usual-training-recipe-fails"><span class="header-section-number">3</span> Why the usual training recipe fails</a>
+  <ul class="collapse">
+  <li><a href="#why-not-just-use-the-whole-graph" id="toc-why-not-just-use-the-whole-graph" class="nav-link" data-scroll-target="#why-not-just-use-the-whole-graph"><span class="header-section-number">3.1</span> Why not just use the whole graph?</a></li>
+  </ul></li>
+  <li><a href="#the-computational-graph-of-a-node" id="toc-the-computational-graph-of-a-node" class="nav-link" data-scroll-target="#the-computational-graph-of-a-node"><span class="header-section-number">4</span> The computational graph of a node</a>
+  <ul class="collapse">
+  <li><a href="#the-catch" id="toc-the-catch" class="nav-link" data-scroll-target="#the-catch"><span class="header-section-number">4.1</span> The catch</a></li>
+  </ul></li>
+  <li><a href="#graphsage-neighbor-sampling" id="toc-graphsage-neighbor-sampling" class="nav-link" data-scroll-target="#graphsage-neighbor-sampling"><span class="header-section-number">5</span> GraphSAGE neighbor sampling</a></li>
+  <li><a href="#cluster-gcn" id="toc-cluster-gcn" class="nav-link" data-scroll-target="#cluster-gcn"><span class="header-section-number">6</span> Cluster-GCN</a>
+  <ul class="collapse">
+  <li><a href="#which-sub-graphs" id="toc-which-sub-graphs" class="nav-link" data-scroll-target="#which-sub-graphs"><span class="header-section-number">6.1</span> Which sub-graphs?</a></li>
+  <li><a href="#what-cluster-gcn-loses" id="toc-what-cluster-gcn-loses" class="nav-link" data-scroll-target="#what-cluster-gcn-loses"><span class="header-section-number">6.2</span> What Cluster-GCN loses</a></li>
+  </ul></li>
+  <li><a href="#simplifying-the-architecture-sgc" id="toc-simplifying-the-architecture-sgc" class="nav-link" data-scroll-target="#simplifying-the-architecture-sgc"><span class="header-section-number">7</span> Simplifying the architecture: SGC</a>
+  <ul class="collapse">
+  <li><a href="#unrolling-a-gcn" id="toc-unrolling-a-gcn" class="nav-link" data-scroll-target="#unrolling-a-gcn"><span class="header-section-number">7.1</span> Unrolling a GCN</a></li>
+  <li><a href="#why-this-is-so-cheap" id="toc-why-this-is-so-cheap" class="nav-link" data-scroll-target="#why-this-is-so-cheap"><span class="header-section-number">7.2</span> Why this is so cheap</a></li>
+  <li><a href="#the-price-and-why-it-is-often-small" id="toc-the-price-and-why-it-is-often-small" class="nav-link" data-scroll-target="#the-price-and-why-it-is-often-small"><span class="header-section-number">7.3</span> The price, and why it is often small</a></li>
+  </ul></li>
+  <li><a href="#choosing-among-the-three" id="toc-choosing-among-the-three" class="nav-link" data-scroll-target="#choosing-among-the-three"><span class="header-section-number">8</span> Choosing among the three</a></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">9</span> Exercises</a>
+  <ul class="collapse">
+  <li><a href="#exercise-1-the-mn2-law" id="toc-exercise-1-the-mn2-law" class="nav-link" data-scroll-target="#exercise-1-the-mn2-law"><span class="header-section-number">9.1</span> Exercise 1 — The <span class="math inline">\((M/N)^2\)</span> law</a></li>
+  <li><a href="#exercise-2-computational-graph-size" id="toc-exercise-2-computational-graph-size" class="nav-link" data-scroll-target="#exercise-2-computational-graph-size"><span class="header-section-number">9.2</span> Exercise 2 — Computational graph size</a></li>
+  <li><a href="#exercise-3-the-variance-trade-off" id="toc-exercise-3-the-variance-trade-off" class="nav-link" data-scroll-target="#exercise-3-the-variance-trade-off"><span class="header-section-number">9.3</span> Exercise 3 — The variance trade-off</a></li>
+  <li><a href="#exercise-4-cluster-gcns-bias" id="toc-exercise-4-cluster-gcns-bias" class="nav-link" data-scroll-target="#exercise-4-cluster-gcns-bias"><span class="header-section-number">9.4</span> Exercise 4 — Cluster-GCN’s bias</a></li>
+  <li><a href="#exercise-5-unrolling" id="toc-exercise-5-unrolling" class="nav-link" data-scroll-target="#exercise-5-unrolling"><span class="header-section-number">9.5</span> Exercise 5 — Unrolling</a></li>
+  <li><a href="#exercise-6-sgc-parameter-count" id="toc-exercise-6-sgc-parameter-count" class="nav-link" data-scroll-target="#exercise-6-sgc-parameter-count"><span class="header-section-number">9.6</span> Exercise 6 — SGC parameter count</a></li>
+  <li><a href="#exercise-7-when-sgc-fails" id="toc-exercise-7-when-sgc-fails" class="nav-link" data-scroll-target="#exercise-7-when-sgc-fails"><span class="header-section-number">9.7</span> Exercise 7 — When SGC fails</a></li>
+  </ul></li>
+  <li><a href="#main-takeaways" id="toc-main-takeaways" class="nav-link" data-scroll-target="#main-takeaways"><span class="header-section-number">10</span> Main takeaways</a></li>
+  <li><a href="#references-and-provenance" id="toc-references-and-provenance" class="nav-link" data-scroll-target="#references-and-provenance">References and provenance</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+</div>
+
+<div>
+  <div class="description">
+    Web lecture note on training graph neural networks at scale: computational graphs, GraphSAGE neighbor sampling, Cluster-GCN, and SGC.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    <div>
+    <div class="quarto-title-meta-heading">Modified</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date-modified">September 6, 2026</p>
+    </div>
+  </div>
+    
+  </div>
+  
+
+
+</header>
+
+
+<header class="lecture-header">
+  <div class="eyebrow">APM 5DS30 TP · Machine Learning with Graphs</div>
+  <h1>Scaling up graph neural networks</h1>
+  <p>Lecture 3 · Jhony H. Giraldo · Télécom Paris, Institut Polytechnique de Paris</p>
+  <div class="lecture-meta"><span>Original lecture: 4 February 2025</span><span>Web note revised: 6 September 2026</span><span>Mathematics rendered with MathJax</span></div>
+  <div class="button-row">
+    <a class="button-link primary" href="../../assets/pdf/Lecture-03-Scaling-Up-Graph-Neural-Networks.pdf">Download the original slides</a>
+    <a class="button-link secondary" href="../../teaching/machine-learning-with-graphs/index.html">Back to the course</a>
+  </div>
+</header>
+<p>Lecture 2 built GCN and GAT and observed that one message-passing layer costs <span class="math inline">\(O(|\mathcal{E}|)\)</span>. On a graph with a few thousand nodes that is the end of the story. On the graphs that motivate the field — a social network, a recommender system, an academic citation graph — it is the beginning of one.</p>
+<p>This note is about a single obstacle. <strong>The trick that makes deep learning scale, mini-batch stochastic gradient descent, does not transfer to graphs.</strong> We will see precisely why it fails, and then study the three standard repairs: sample the neighborhood (GraphSAGE), sample sub-graphs (Cluster-GCN), or remove the nonlinearity so that the graph work can be done once, in advance (SGC).</p>
+<section id="learning-objectives" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="learning-objectives"><span class="header-section-number">1</span> Learning objectives</h2>
+<p>After studying this note, you should be able to:</p>
+<ol class="learning-objectives">
+  <li>explain why a uniformly sampled mini-batch of nodes destroys the graph structure;</li>
+  <li>construct the computational graph of a node and state how its size grows with depth;</li>
+  <li>describe GraphSAGE neighbor sampling and the trade-off controlled by the fan-out $H$;</li>
+  <li>describe Cluster-GCN, and identify the bias it introduces by discarding between-cluster edges;</li>
+  <li>derive SGC by removing the nonlinearities from a GCN, and explain why it is so cheap;</li>
+  <li>choose between these methods for a given graph, task, and memory budget.</li>
+</ol>
+</section>
+<section id="graphs-in-modern-applications" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="graphs-in-modern-applications"><span class="header-section-number">2</span> Graphs in modern applications</h2>
+<p>The methods in this note exist because of a specific class of application.</p>
+<div class="two-figures">
+<div class="figure-panel">
+<div id="fig-app-recsys" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A bipartite graph of users connected to items">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-app-recsys-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/app-recommender-systems.svg" class="img-fluid figure-img" alt="A bipartite graph of users connected to items">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-app-recsys-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Recommender systems (Amazon, YouTube, Instagram) are user–item bipartite graphs. Recommending an item is link prediction; classifying a user or an item is node classification.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="figure-panel">
+<div id="fig-app-social" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A social network drawn as a large node-link diagram">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-app-social-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/app-social-network.svg" class="img-fluid figure-img" alt="A social network drawn as a large node-link diagram">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-app-social-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Social networks (Facebook, Bluesky, LinkedIn) support friend recommendation at the link level and user-property prediction at the node level.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="figure-panel">
+<div id="fig-app-academic" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A heterogeneous academic graph linking papers, authors, and venues">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-app-academic-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/app-academic-graph.svg" class="img-fluid figure-img" alt="A heterogeneous academic graph linking papers, authors, and venues">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-app-academic-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: An academic graph such as the Microsoft Academic Graph carries papers, authors, venues, and fields. Paper categorization is node classification; citation and collaboration recommendation are link prediction.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="checkpoint">
+<p><strong>Check 1 — What these have in common</strong></p>
+<ul>
+<li><strong>Scale.</strong> Between <span class="math inline">\(10^{7}\)</span> and <span class="math inline">\(10^{10}\)</span> nodes, and between <span class="math inline">\(10^{8}\)</span> and <span class="math inline">\(10^{11}\)</span> edges.</li>
+<li><strong>Task level.</strong> Node level (classify a user, item, or paper) and link level (recommend).</li>
+</ul>
+<p>Lecture 2’s architectures apply unchanged. What does not apply is the training procedure.</p>
+</div>
+</section>
+<section id="why-the-usual-training-recipe-fails" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="why-the-usual-training-recipe-fails"><span class="header-section-number">3</span> Why the usual training recipe fails</h2>
+<p>Recall how a deep model is trained on a large dataset — a CNN on ImageNet, say. The objective is an average over <span class="math inline">\(N\)</span> samples,</p>
+<p><span class="math display">\[
+\mathcal{L}(\boldsymbol{\Theta})=\frac{1}{N}\sum_{i=0}^{N-1}\mathcal{L}_i(\boldsymbol{\Theta}),
+\]</span></p>
+<p>and stochastic gradient descent replaces it with an estimate from a mini-batch: sample <span class="math inline">\(M\ll N\)</span> points, compute the loss on those <span class="math inline">\(M\)</span>, take a gradient step. This works because <span class="math inline">\(\mathcal{L}_i\)</span> depends on sample <span class="math inline">\(i\)</span> <strong>and nothing else</strong>.</p>
+<p>On a graph, that assumption is exactly what fails.</p>
+<div class="figure-panel">
+<div id="fig-naive-minibatch" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A large network with a small number of widely scattered sampled nodes highlighted in red">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-naive-minibatch-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/naive-minibatch-isolated.svg" class="img-fluid figure-img" alt="A large network with a small number of widely scattered sampled nodes highlighted in red">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-naive-minibatch-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: Sampling <span class="math inline">\(M\)</span> nodes uniformly from a large graph. The sampled nodes (red) are scattered across the graph and are almost never adjacent to one another, so the induced sub-graph has essentially no edges.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>A GNN computes <span class="math inline">\(\mathbf{h}_i\)</span> by aggregating over <span class="math inline">\(\mathcal{N}_i\)</span>. If none of node <span class="math inline">\(i\)</span>’s neighbors is in the batch, there is nothing to aggregate, and the layer degenerates into a per-node linear map. The graph — the entire reason for using a GNN — has been sampled away.</p>
+<p>This is not a qualitative worry; it is arithmetic. A uniform sample of <span class="math inline">\(M\)</span> out of <span class="math inline">\(N\)</span> nodes retains an edge only when <strong>both</strong> of its endpoints are drawn, which happens with probability roughly <span class="math inline">\((M/N)^2\)</span>.</p>
+<div class="figure-panel">
+<div id="fig-minibatch-loss" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two plots: fraction of retained edges falling quadratically with batch size, and percentage of isolated nodes falling from 95% to 0">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-minibatch-loss-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/minibatch-edge-loss.svg" class="img-fluid figure-img" alt="Two plots: fraction of retained edges falling quadratically with batch size, and percentage of isolated nodes falling from 95% to 0">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-minibatch-loss-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5: Measured on a 4000-node graph with 19 960 edges. Left: the fraction of edges surviving inside a uniform mini-batch, against the <span class="math inline">\((M/N)^2\)</span> prediction. Right: the percentage of sampled nodes with no neighbor in the batch. At <span class="math inline">\(M=64\)</span> — a perfectly ordinary batch size — about 87% of the batch is isolated and 99.97% of the edges are gone.
+</figcaption>
+</figure>
+</div>
+</div>
+<section id="why-not-just-use-the-whole-graph" class="level3" data-number="3.1">
+<h3 data-number="3.1" class="anchored" data-anchor-id="why-not-just-use-the-whole-graph"><span class="header-section-number">3.1</span> Why not just use the whole graph?</h3>
+<p>Full-batch training is the obvious alternative, and Lecture 2 showed that a GCN layer is cheap. The problem is memory, not arithmetic.</p>
+<div class="worked-example">
+<p><strong>Worked example — The memory wall</strong></p>
+<p>Lecture 2 computed that a graph with <span class="math inline">\(N=25\,000\,000\)</span> nodes and <span class="math inline">\(300\)</span> neighbors per node needs about <span class="math inline">\(120\)</span> GB as an edge list. A server CPU can hold that.</p>
+<p>Training needs a <strong>GPU</strong>. Current top-end accelerators carry <span class="math inline">\(40\)</span>–<span class="math inline">\(80\)</span> GB, and the model, activations, and optimizer state must fit alongside the graph. A single GPU cannot hold the graph, let alone a full-batch forward and backward pass over it.</p>
+<p>And <span class="math inline">\(25\)</span> million nodes is modest: a European customer graph at Amazon scale is larger.</p>
+</div>
+<p>So: uniform mini-batches destroy the structure, and full batches do not fit. Everything below is a way out of that squeeze.</p>
+</section>
+</section>
+<section id="the-computational-graph-of-a-node" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="the-computational-graph-of-a-node"><span class="header-section-number">4</span> The computational graph of a node</h2>
+<p>The way out starts with a change of perspective. Instead of asking <em>which nodes are in the batch</em>, ask <strong>what a single node’s embedding actually depends on</strong>.</p>
+<div class="figure-panel">
+<div id="fig-computational-graph" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A graph with one-hop and two-hop neighborhoods circled, beside the corresponding two-level aggregation tree">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-computational-graph-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/computational-graph.svg" class="img-fluid figure-img" alt="A graph with one-hop and two-hop neighborhoods circled, beside the corresponding two-level aggregation tree">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-computational-graph-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6: A two-layer GNN at node 1. Layer 1 aggregates the two-hop neighbors into the one-hop neighbors; layer 2 aggregates the one-hop neighbors into node 1. Unrolling the message passing this way produces a tree — the node’s <em>computational graph</em>.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="definition">
+<p><strong>Definition 1 — Computational graph</strong></p>
+<p>The computational graph of node <span class="math inline">\(v\)</span> for a <span class="math inline">\(K\)</span>-layer message-passing model is the tree obtained by unrolling the recursion: the root is <span class="math inline">\(v\)</span>, its children are <span class="math inline">\(\mathcal{N}_v\)</span>, their children are their neighbors, and so on to depth <span class="math inline">\(K\)</span>. The same trainable weights are shared at every node of every level.</p>
+</div>
+<div class="figure-panel">
+<div id="fig-comp-graph-khop" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A graph with nested one-hop and two-hop neighborhoods and the matching aggregation tree">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-comp-graph-khop-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/computational-graph-k-hop.svg" class="img-fluid figure-img" alt="A graph with nested one-hop and two-hop neighborhoods and the matching aggregation tree">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-comp-graph-khop-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7: The observation that drives the whole lecture: a <span class="math inline">\(K\)</span>-layer GNN computes the embedding of a node from its <span class="math inline">\(K\)</span>-hop neighborhood structure and features — and from nothing else.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>This is a genuine escape route. A node’s embedding needs its <span class="math inline">\(K\)</span>-hop neighborhood, <strong>not</strong> the whole graph. So we can build one computational graph per node in the batch and evaluate them in parallel on a GPU.</p>
+<div class="figure-panel">
+<div id="fig-minibatch-comp" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three separate aggregation trees, one per sampled node, drawn side by side">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-minibatch-comp-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/minibatch-computational-graphs.svg" class="img-fluid figure-img" alt="Three separate aggregation trees, one per sampled node, drawn side by side">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-minibatch-comp-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8: Given <span class="math inline">\(M\)</span> nodes in a mini-batch, build <span class="math inline">\(M\)</span> computational graphs and process them together. The batch now carries the structure each node needs.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>The stochastic training loop becomes:</p>
+<ol type="1">
+<li>sample <span class="math inline">\(M\ll N\)</span> nodes;</li>
+<li>for each sampled node, extract its <span class="math inline">\(K\)</span>-hop neighborhood and build the computational graph;</li>
+<li>run message passing on those graphs to obtain the <span class="math inline">\(M\)</span> embeddings;</li>
+<li>average the loss over the <span class="math inline">\(M\)</span> nodes and take a gradient step.</li>
+</ol>
+<section id="the-catch" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="the-catch"><span class="header-section-number">4.1</span> The catch</h3>
+<div class="two-figures">
+<div class="figure-panel">
+<div id="fig-exponential" class="quarto-float quarto-figure quarto-figure-center anchored" alt="An aggregation tree whose width doubles at each level, annotated exponential growth">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-exponential-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/computational-graph-exponential.svg" class="img-fluid figure-img" alt="An aggregation tree whose width doubles at each level, annotated exponential growth">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-exponential-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;9: The computational graph grows exponentially in the number of layers: each additional layer multiplies the number of leaves by the average degree.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="figure-panel">
+<div id="fig-hub" class="quarto-float quarto-figure quarto-figure-center anchored" alt="An aggregation tree with one very high-degree node marked in red">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-hub-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/computational-graph-hub.svg" class="img-fluid figure-img" alt="An aggregation tree with one very high-degree node marked in red">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-hub-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;10: It is worse than exponential in practice. One <strong>hub node</strong> — a celebrity account, a canonical reference — drags in a huge fraction of the graph in a single hop.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Aggregating a large fraction of the graph to produce a single node’s embedding defeats the purpose. Both problems have the same cure: <strong>do not use the whole neighborhood</strong>.</p>
+</section>
+</section>
+<section id="graphsage-neighbor-sampling" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="graphsage-neighbor-sampling"><span class="header-section-number">5</span> GraphSAGE neighbor sampling</h2>
+<div class="definition">
+<p><strong>Definition 2 — Neighbor sampling</strong></p>
+<p>Construct the computational graph by sampling <strong>at most <span class="math inline">\(H\)</span> neighbors</strong> at each hop, rather than all of them. <span class="math inline">\(H\)</span> is the <em>fan-out</em>.</p>
+</div>
+<div class="figure-panel">
+<div id="fig-neighbor-sampling" class="quarto-float quarto-figure quarto-figure-center anchored" alt="An aggregation tree in which two of the available neighbors are kept at each level and the rest are greyed out">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-neighbor-sampling-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/neighbor-sampling.svg" class="img-fluid figure-img" alt="An aggregation tree in which two of the available neighbors are kept at each level and the rest are greyed out">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-neighbor-sampling-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;11: Neighbor sampling with <span class="math inline">\(H=2\)</span>, applied from the root toward the leaves. At each level a subset of the available neighbors is kept (dark) and the rest are dropped (faded). Message passing then runs on the pruned tree.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>Four remarks matter in practice.</p>
+<div class="checkpoint">
+<p><strong>Check 2 — Reading the fan-out</strong></p>
+<ol type="1">
+<li><strong>Size bound.</strong> A <span class="math inline">\(K\)</span>-layer GNN touches at most <span class="math inline">\(H^{K}\)</span> leaves, and <span class="math inline">\(\sum_{k=0}^{K}H^{k}\)</span> nodes in total. The hub problem is gone: <span class="math inline">\(H\)</span> caps the fan-out no matter how large a degree the sampler encounters.</li>
+<li><strong>Variance trade-off.</strong> A small <span class="math inline">\(H\)</span> is cheap but makes the neighborhood aggregate noisy, which destabilizes training. A large <span class="math inline">\(H\)</span> is stable and expensive. <span class="math inline">\(H\)</span> is the knob.</li>
+<li><strong>Still exponential.</strong> <span class="math inline">\(H^{K}\)</span> is bounded but it is bounded by an exponential. Adding one layer multiplies the cost by <span class="math inline">\(H\)</span>.</li>
+<li><strong>Sampling uniformly is not optimal.</strong> Uniform sampling is fast but often picks uninformative neighbors. Sampling proportionally to the random-walk matrix <span class="math inline">\(\mathbf{D}^{-1}\mathbf{A}\)</span> — the transition matrix from Lecture 1 — concentrates on structurally relevant neighbors and works better in practice.</li>
+</ol>
+</div>
+<div class="figure-panel">
+<div id="fig-comp-growth" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Log-scale plot of computational graph size against number of layers, with the measured curve saturating at N and three straight sampling bounds">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-comp-growth-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/computational-graph-growth.svg" class="img-fluid figure-img" alt="Log-scale plot of computational graph size against number of layers, with the measured curve saturating at N and three straight sampling bounds">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-comp-growth-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;12: Measured on a 4000-node graph. The red curve is the true <span class="math inline">\(K\)</span>-hop neighborhood, which reaches the entire graph by <span class="math inline">\(K=4\)</span>. Sampling replaces it with <span class="math inline">\(\sum_k H^{k}\)</span>, which is far smaller at every depth — but note the log axis: all four curves are straight lines, so the growth in <span class="math inline">\(K\)</span> remains exponential. At <span class="math inline">\(H=10\)</span> the bound already exceeds the graph itself by <span class="math inline">\(K=4\)</span>, and the sampler is doing no work.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="checkpoint">
+<p><strong>Check 3 — Neighbor sampling in one paragraph</strong></p>
+<p>Build one computational graph per node in the mini-batch; prune it by keeping at most <span class="math inline">\(H\)</span> neighbors per hop; run message passing on the pruned tree. The batch now contains structure, the hub problem is capped, and the cost per node is bounded by <span class="math inline">\(\sum_k H^k\)</span> — which is still exponential in the depth. Whether we need deep GNNs at all remains, as Lecture 2 noted, an open question.</p>
+</div>
+</section>
+<section id="cluster-gcn" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="cluster-gcn"><span class="header-section-number">6</span> Cluster-GCN</h2>
+<p>Neighbor sampling has a second weakness, and it is a subtle one: <strong>it recomputes the same thing over and over</strong>.</p>
+<div class="figure-panel">
+<div id="fig-redundant" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A graph and two nearly identical aggregation trees, with the shared portion boxed in green">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-redundant-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/redundant-computation.svg" class="img-fluid figure-img" alt="A graph and two nearly identical aggregation trees, with the shared portion boxed in green">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-redundant-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13: Two nodes in the same mini-batch, with their computational graphs beside them. The two trees share most of their content — the same neighbors are visited, and the same aggregations are performed twice.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>Compare this with full-batch training, which has the opposite profile.</p>
+<div class="figure-panel">
+<div id="fig-full-batch" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A small graph with red arrows along every edge in both directions, showing simultaneous layer-wise updates">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-full-batch-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/full-batch-gnn.svg" class="img-fluid figure-img" alt="A small graph with red arrows along every edge in both directions, showing simultaneous layer-wise updates">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-full-batch-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;14: Full-batch training updates every node embedding at once, layer by layer. Each layer passes <span class="math inline">\(2|\mathcal{E}|\)</span> messages on an undirected graph, so a <span class="math inline">\(K\)</span>-layer model costs <span class="math inline">\(2|\mathcal{E}|K\)</span> messages in total — linear in both, and with no redundancy at all, because layer <span class="math inline">\(\ell\)</span>’s output is computed once and reused by every node in layer <span class="math inline">\(\ell+1\)</span>.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="checkpoint">
+<p><strong>Check 4 — The tension</strong></p>
+<p><strong>Neighbor sampling</strong> fits in memory but recomputes shared neighborhoods once per target node. <strong>Full-batch</strong> has no redundancy but does not fit in memory.</p>
+<p>Cluster-GCN takes the layer-wise update from full-batch training and applies it to a piece of the graph small enough to fit.</p>
+</div>
+<section id="which-sub-graphs" class="level3" data-number="6.1">
+<h3 data-number="6.1" class="anchored" data-anchor-id="which-sub-graphs"><span class="header-section-number">6.1</span> Which sub-graphs?</h3>
+<div class="figure-panel">
+<div id="fig-subgraph" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A large community-structured network with one community extracted as a sub-graph">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-subgraph-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/subgraph-sampling.svg" class="img-fluid figure-img" alt="A large community-structured network with one community extracted as a sub-graph">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-subgraph-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;15: Take a sub-graph of the full graph and run full-batch message passing inside it.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>Not every sub-graph will do. A GNN passes messages along edges, so a sub-graph is useful to the extent that it <strong>retains the edges of the original graph</strong>. The closer the retained connectivity, the closer the embeddings computed on the sub-graph are to the embeddings computed on the whole graph.</p>
+<div class="figure-panel">
+<div id="fig-good-subgraph" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A large network beside two four-node candidate sub-graphs, one sparse and disconnected, one densely connected">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-good-subgraph-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/good-vs-bad-subgraph.svg" class="img-fluid figure-img" alt="A large network beside two four-node candidate sub-graphs, one sparse and disconnected, one densely connected">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-good-subgraph-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;16: Two candidate sub-graphs on four nodes. Candidate 1 drops most of the connectivity and even isolates a node — the GNN can learn almost nothing from it. Candidate 2 keeps the community structure intact, and message passing inside it approximates message passing in the full graph.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>The observation that makes this practical is that real graphs are not homogeneous: social networks, recommender systems, and citation graphs all have <strong>community structure</strong>.</p>
+<div class="figure-panel">
+<div id="fig-community" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A network drawn with five clearly separated colored communities">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-community-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/community-structure.svg" class="img-fluid figure-img" alt="A network drawn with five clearly separated colored communities">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-community-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;17: A large graph decomposed into communities. Edges are dense inside a community and sparse between communities, so a community is exactly the kind of sub-graph that retains local connectivity.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="definition">
+<p><strong>Definition 3 — Cluster-GCN</strong></p>
+<p><strong>Pre-processing.</strong> Partition <span class="math inline">\(\mathcal{V}\)</span> into <span class="math inline">\(C\)</span> groups <span class="math inline">\(\mathcal{V}_1,\dots,\mathcal{V}_C\)</span> with <span class="math inline">\(\bigcup_{i}\mathcal{V}_i=\mathcal{V}\)</span>, chosen to respect community structure. Each <span class="math inline">\(\mathcal{V}_i\)</span> induces a sub-graph <span class="math inline">\(\mathcal{G}_i=(\mathcal{V}_i,\mathcal{E}_i)\)</span>.</p>
+<p><strong>Training.</strong> Treat each <span class="math inline">\(\mathcal{G}_i\)</span> as a mini-batch: run the ordinary layer-wise update inside it, compute the loss on its nodes, and take a gradient step.</p>
+<p>Note that in general <span class="math inline">\(\bigcup_i\mathcal{E}_i\neq\mathcal{E}\)</span>, because <strong>between-group edges belong to no sub-graph</strong> <span class="citation" data-cites="chiang2019cluster">(<a href="#ref-chiang2019cluster" role="doc-biblioref">Chiang et al. 2019</a>)</span>.</p>
+</div>
+<div class="figure-panel">
+<div id="fig-cluster-partition" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A community-structured network with its communities separated into distinct colored groups">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-cluster-partition-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/cluster-gcn-partition.svg" class="img-fluid figure-img" alt="A community-structured network with its communities separated into distinct colored groups">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cluster-partition-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;18: The graph partitioned into induced sub-graphs. Each becomes a mini-batch on which full-batch message passing is affordable.
+</figcaption>
+</figure>
+</div>
+</div>
+</section>
+<section id="what-cluster-gcn-loses" class="level3" data-number="6.2">
+<h3 data-number="6.2" class="anchored" data-anchor-id="what-cluster-gcn-loses"><span class="header-section-number">6.2</span> What Cluster-GCN loses</h3>
+<div class="figure-panel">
+<div id="fig-cluster-issues" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two views of a partitioned network, the right one highlighting messages that fail to cross between communities">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-cluster-issues-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/cluster-gcn-missing-messages.svg" class="img-fluid figure-img" alt="Two views of a partitioned network, the right one highlighting messages that fail to cross between communities">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cluster-issues-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;19: The between-group edges are discarded, so the messages that would have crossed them never arrive. A node whose informative neighbors sit in another cluster is trained on an incomplete neighborhood.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="figure-panel">
+<div id="fig-cluster-loss" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Percentage of edges kept against number of partitions, with a community curve well above a random-partition curve">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-cluster-loss-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/cluster-partition-edge-loss.svg" class="img-fluid figure-img" alt="Percentage of edges kept against number of partitions, with a community curve well above a random-partition curve">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cluster-loss-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;20: Measured on a 1500-node graph with 7461 edges. Partitioning by community (teal) retains far more edges than a random partition into groups of the same sizes (coral) — at <span class="math inline">\(C=12\)</span>, roughly 50% against 8%. But “far more” is not “all”: the fraction lost grows steadily with <span class="math inline">\(C\)</span>, and <span class="math inline">\(C\)</span> has to grow for the sub-graphs to fit in memory.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>There is a second, less visible cost. The nodes in one cluster are similar to each other by construction, so a cluster is <strong>not a representative sample</strong> of the graph. The gradient computed on it points in a systematically particular direction; from batch to batch the gradient fluctuates widely, and this high variance slows SGD’s convergence.</p>
+<div class="checkpoint">
+<p><strong>Check 5 — Cluster-GCN in one paragraph</strong></p>
+<p>Partition the nodes into community-aligned groups, treat each induced sub-graph as a mini-batch, and run ordinary layer-wise message passing inside it. This removes the redundancy of neighbor sampling and is markedly more efficient for deep models. The price is a <strong>systematically biased gradient</strong>: cross-community edges are never traversed, and each batch sees an unrepresentative slice of the graph.</p>
+</div>
+</section>
+</section>
+<section id="simplifying-the-architecture-sgc" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="simplifying-the-architecture-sgc"><span class="header-section-number">7</span> Simplifying the architecture: SGC</h2>
+<p>The two methods above keep the model and change the training. The third approach does the opposite: <strong>change the model so the expensive part can be done once, in advance</strong>.</p>
+<section id="unrolling-a-gcn" class="level3" data-number="7.1">
+<h3 data-number="7.1" class="anchored" data-anchor-id="unrolling-a-gcn"><span class="header-section-number">7.1</span> Unrolling a GCN</h3>
+<p>Write the GCN propagation rule from Lecture 2 with <span class="math inline">\(\hat{\mathbf{A}}\)</span> standing for the normalized adjacency with self-loops:</p>
+<p><span class="math display">\[
+\mathbf{H}^{(\ell+1)}=\sigma\!\left(\hat{\mathbf{A}}\mathbf{H}^{(\ell)}\mathbf{W}^{(\ell)}\right).
+\]</span></p>
+<p>Unrolling <span class="math inline">\(\ell\)</span> layers gives a nest of alternating propagations and nonlinearities:</p>
+<p><span class="math display">\[
+\mathbf{H}^{(\ell+1)}
+=\sigma\!\Big(\hat{\mathbf{A}}\,\sigma\big(\hat{\mathbf{A}}\,\sigma(\hat{\mathbf{A}}\cdots\mathbf{X}\mathbf{W}^{(0)}\cdots)\mathbf{W}^{(\ell-1)}\big)\mathbf{W}^{(\ell)}\Big).
+\]</span></p>
+<p>Now <strong>delete every intermediate <span class="math inline">\(\sigma\)</span></strong> <span class="citation" data-cites="wu2019simplifying">(<a href="#ref-wu2019simplifying" role="doc-biblioref">Wu et al. 2019</a>)</span>. The expression collapses:</p>
+<p><span class="math display">\[
+\mathbf{H}^{(\ell+1)}
+=\hat{\mathbf{A}}\big(\hat{\mathbf{A}}(\hat{\mathbf{A}}\cdots\mathbf{X}\mathbf{W}^{(0)}\cdots)\mathbf{W}^{(\ell-1)}\big)\mathbf{W}^{(\ell)}
+=\hat{\mathbf{A}}^{\ell}\,\mathbf{X}\,\underbrace{\mathbf{W}^{(0)}\cdots\mathbf{W}^{(\ell)}}_{\textstyle =\ \mathbf{W}}.
+\]</span></p>
+<p>A product of linear maps is a linear map, so the whole stack of weight matrices collapses into a single <span class="math inline">\(\mathbf{W}\)</span>. Keeping only the final activation gives the <strong>Simple Graph Convolution</strong>:</p>
+<div class="definition">
+<p><strong>Definition 4 — SGC</strong></p>
+<p><span id="eq-sgc"><span class="math display">\[
+\bar{\mathbf{Y}}=f(\mathbf{X};\mathbf{A},\boldsymbol{\Theta})
+=\operatorname{softmax}\!\left(\hat{\mathbf{A}}^{\ell}\mathbf{X}\mathbf{W}\right),
+\qquad
+\hat{\mathbf{A}}=\tilde{\mathbf{D}}^{-1/2}\tilde{\mathbf{A}}\tilde{\mathbf{D}}^{-1/2},
+\quad
+\tilde{\mathbf{A}}=\mathbf{A}+\mathbf{I}.
+\tag{1}\]</span></span></p>
+</div>
+</section>
+<section id="why-this-is-so-cheap" class="level3" data-number="7.2">
+<h3 data-number="7.2" class="anchored" data-anchor-id="why-this-is-so-cheap"><span class="header-section-number">7.2</span> Why this is so cheap</h3>
+<p>The term <span class="math inline">\(\hat{\mathbf{A}}^{\ell}\mathbf{X}\)</span> is the <strong>diffusion sequence</strong> from Lecture 2, evaluated on the input features.</p>
+<div class="figure-panel">
+<div id="fig-sgc-diffusion" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A sensor network with an impulse spreading over successive diffusion steps">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-sgc-diffusion-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/graph-diffusion-sequence.svg" class="img-fluid figure-img" alt="A sensor network with an impulse spreading over successive diffusion steps">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-sgc-diffusion-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;21: The diffusion sequence again. In SGC it is applied to <span class="math inline">\(\mathbf{X}\)</span> once, before training ever starts.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>Compute it exactly as Lecture 2 insisted: recursively, never by forming a matrix power.</p>
+<p><span class="math display">\[
+\mathbf{X}\leftarrow\hat{\mathbf{A}}\mathbf{X},
+\qquad
+\text{repeated } \ell \text{ times.}
+\]</span></p>
+<p>Each step is one sparse matrix product costing <span class="math inline">\(O(|\mathcal{E}|F)\)</span>. And here is the decisive point: <strong><span class="math inline">\(\mathbf{X}\)</span> is data, not a parameter.</strong> Nothing in <span class="math inline">\(\hat{\mathbf{A}}^{\ell}\mathbf{X}\)</span> depends on <span class="math inline">\(\mathbf{W}\)</span>, so it does not change during training. It is computed <strong>once</strong>, as pre-processing, and it can be computed on a CPU.</p>
+<div class="checkpoint">
+<p><strong>Check 6 — What is left after pre-processing</strong></p>
+<p>Let <span class="math inline">\(\tilde{\mathbf{X}}=\hat{\mathbf{A}}^{\ell}\mathbf{X}\)</span>, with row <span class="math inline">\(i\)</span> the pre-processed feature vector of node <span class="math inline">\(i\)</span>. Then <a href="#eq-sgc" class="quarto-xref">Equation&nbsp;1</a> reads</p>
+<p><span class="math display">\[
+\bar{\mathbf{Y}}=\operatorname{softmax}(\tilde{\mathbf{X}}\mathbf{W}),
+\]</span></p>
+<p>which is <strong>ordinary multiclass classification on the rows of a feature matrix</strong>. The graph has left the model entirely; it survives only inside <span class="math inline">\(\tilde{\mathbf{X}}\)</span>.</p>
+<p>Three things follow. Any scalable classifier can be used — linear model, MLP, gradient boosting. Ordinary mini-batch SGD applies, because the rows really are independent now. And retrieving a node’s representation is a <strong>row lookup in constant time</strong>: no computational graph, no sampling.</p>
+</div>
+</section>
+<section id="the-price-and-why-it-is-often-small" class="level3" data-number="7.3">
+<h3 data-number="7.3" class="anchored" data-anchor-id="the-price-and-why-it-is-often-small"><span class="header-section-number">7.3</span> The price, and why it is often small</h3>
+<p>SGC has no nonlinearity between propagations, so it is strictly less expressive than a GCN. Yet on standard node-classification benchmarks it performs comparably. Why?</p>
+<p>The answer is <strong>homophily</strong>, from Lecture 2. The pre-processing <span class="math inline">\(\mathbf{X}\leftarrow\hat{\mathbf{A}}\mathbf{X}\)</span> repeatedly averages each node with its neighbors, so adjacent nodes end up with similar rows of <span class="math inline">\(\tilde{\mathbf{X}}\)</span>, so a linear classifier on <span class="math inline">\(\tilde{\mathbf{X}}\)</span> tends to give adjacent nodes the same label. That is a strong prior — and on a homophilous graph it is the <em>correct</em> prior. Citation networks (a paper shares its citations’ category) and social recommendation (friends like the same films) satisfy it well.</p>
+<div class="figure-panel">
+<div id="fig-sgc-homophily" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Four curves of class separability against diffusion steps; one rises steeply then falls, three stay flat near zero">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-sgc-homophily-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/sgc-homophily.svg" class="img-fluid figure-img" alt="Four curves of class separability against diffusion steps; one rises steeply then falls, three stay flat near zero">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-sgc-homophily-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;22: The mechanism, measured. Four graphs of identical size and density but different homophily; the vertical axis is how separable the two classes are in <span class="math inline">\(\hat{\mathbf{A}}^{\ell}\mathbf{X}\)</span> (between-class distance over within-class spread), which is essentially how easy a linear classifier’s job is. At <span class="math inline">\(H(\mathcal{G})\approx0.95\)</span> diffusion improves separability by a factor of about 18 before over-smoothing sets in. Below <span class="math inline">\(H(\mathcal{G})\approx0.5\)</span> it never helps at all — diffusion mixes the classes together instead of separating them.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>Note the two failure modes in that figure. Too many diffusion steps over-smooth even a homophilous graph — the same collapse Lecture 2 measured. And on a heterophilous graph the pre-processing is not merely unhelpful; it actively destroys the signal, which is why <span class="math inline">\(\ell\)</span> must be tuned and why <span class="math inline">\(H(\mathcal{G})\)</span> is worth measuring first.</p>
+<div class="checkpoint">
+<p><strong>Check 7 — SGC in one paragraph</strong></p>
+<p>Remove the nonlinearities from a GCN and it collapses to a fixed feature transformation <span class="math inline">\(\tilde{\mathbf{X}}=\hat{\mathbf{A}}^{\ell}\mathbf{X}\)</span> followed by a linear classifier. The graph work becomes a one-off pre-processing step, and everything after it is standard machine learning. It works well when the graph is homophilous, and it is the natural first thing to try on a graph too large for anything else. The same idea, under the name LightGCN, is used at scale in industrial recommender systems <span class="citation" data-cites="he2020lightgcn">(<a href="#ref-he2020lightgcn" role="doc-biblioref">He et al. 2020</a>)</span>.</p>
+</div>
+</section>
+</section>
+<section id="choosing-among-the-three" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="choosing-among-the-three"><span class="header-section-number">8</span> Choosing among the three</h2>
+<div class="checkpoint">
+<p><strong>Check 8 — A decision rule</strong></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>keeps structure</th>
+<th>memory</th>
+<th>redundancy</th>
+<th>gradient</th>
+<th>depth cost</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Neighbor sampling</strong></td>
+<td>pruned neighborhood</td>
+<td><span class="math inline">\(O(H^{K})\)</span> per node</td>
+<td>high</td>
+<td>unbiased-ish, higher variance for small <span class="math inline">\(H\)</span></td>
+<td><span class="math inline">\(\times H\)</span> per layer</td>
+</tr>
+<tr class="even">
+<td><strong>Cluster-GCN</strong></td>
+<td>within-cluster only</td>
+<td>one sub-graph</td>
+<td>none</td>
+<td><strong>biased</strong> (missing cross edges)</td>
+<td>linear</td>
+</tr>
+<tr class="odd">
+<td><strong>SGC</strong></td>
+<td>all of it, once</td>
+<td>trivial after pre-processing</td>
+<td>none</td>
+<td>exact</td>
+<td>one extra sparse product</td>
+</tr>
+</tbody>
+</table>
+<p>Start with <strong>SGC</strong>: it is a few lines, it runs on a CPU, and it tells you within minutes whether the graph carries usable signal. Reach for <strong>neighbor sampling</strong> when you need a genuinely nonlinear model and inductive behavior on unseen nodes. Reach for <strong>Cluster-GCN</strong> when the model is deep, the graph has strong community structure, and neighbor sampling’s redundancy has become the bottleneck.</p>
+</div>
+</section>
+<section id="exercises" class="level2" data-number="9">
+<h2 data-number="9" class="anchored" data-anchor-id="exercises"><span class="header-section-number">9</span> Exercises</h2>
+<section id="exercise-1-the-mn2-law" class="level3" data-number="9.1">
+<h3 data-number="9.1" class="anchored" data-anchor-id="exercise-1-the-mn2-law"><span class="header-section-number">9.1</span> Exercise 1 — The <span class="math inline">\((M/N)^2\)</span> law</h3>
+<p>Derive the probability that a given edge survives a uniform sample of <span class="math inline">\(M\)</span> nodes from <span class="math inline">\(N\)</span>, without replacement, and show it is <span class="math inline">\(\frac{M(M-1)}{N(N-1)}\)</span>. Compare with <a href="#fig-minibatch-loss" class="quarto-xref">Figure&nbsp;5</a> and explain why the approximation <span class="math inline">\((M/N)^2\)</span> is adequate.</p>
+</section>
+<section id="exercise-2-computational-graph-size" class="level3" data-number="9.2">
+<h3 data-number="9.2" class="anchored" data-anchor-id="exercise-2-computational-graph-size"><span class="header-section-number">9.2</span> Exercise 2 — Computational graph size</h3>
+<p>A graph has average degree <span class="math inline">\(\bar{d}=25\)</span>. Estimate the number of nodes in a 3-layer computational graph without sampling, and with <span class="math inline">\(H=5\)</span>. What fan-out would you need for a 4-layer model to stay under 2000 nodes?</p>
+</section>
+<section id="exercise-3-the-variance-trade-off" class="level3" data-number="9.3">
+<h3 data-number="9.3" class="anchored" data-anchor-id="exercise-3-the-variance-trade-off"><span class="header-section-number">9.3</span> Exercise 3 — The variance trade-off</h3>
+<p>Let a node have <span class="math inline">\(d\)</span> neighbors with feature values <span class="math inline">\(x_1,\dots,x_d\)</span>. The exact mean aggregate is <span class="math inline">\(\bar{x}\)</span>. Compute the variance of the aggregate estimated from <span class="math inline">\(H\)</span> uniformly sampled neighbors, and use it to justify Remark 2 in Check 2.</p>
+</section>
+<section id="exercise-4-cluster-gcns-bias" class="level3" data-number="9.4">
+<h3 data-number="9.4" class="anchored" data-anchor-id="exercise-4-cluster-gcns-bias"><span class="header-section-number">9.4</span> Exercise 4 — Cluster-GCN’s bias</h3>
+<p>Take a graph with two communities joined by a single edge, and a node incident to that edge. Write the embedding this node receives under full-batch message passing and under Cluster-GCN with the two communities as clusters. Explain in one sentence why the difference is a <em>bias</em> and not merely <em>noise</em>.</p>
+</section>
+<section id="exercise-5-unrolling" class="level3" data-number="9.5">
+<h3 data-number="9.5" class="anchored" data-anchor-id="exercise-5-unrolling"><span class="header-section-number">9.5</span> Exercise 5 — Unrolling</h3>
+<p>Verify the SGC collapse explicitly for <span class="math inline">\(\ell=2\)</span>: expand <span class="math inline">\(\mathbf{H}^{(2)}\)</span> with and without the intermediate <span class="math inline">\(\sigma\)</span>, and identify precisely which step fails when <span class="math inline">\(\sigma\)</span> is present.</p>
+</section>
+<section id="exercise-6-sgc-parameter-count" class="level3" data-number="9.6">
+<h3 data-number="9.6" class="anchored" data-anchor-id="exercise-6-sgc-parameter-count"><span class="header-section-number">9.6</span> Exercise 6 — SGC parameter count</h3>
+<p>For a graph with <span class="math inline">\(N=10^{6}\)</span>, <span class="math inline">\(F=500\)</span> features, <span class="math inline">\(C=10\)</span> classes and <span class="math inline">\(\ell=2\)</span>, count the parameters of SGC and of a two-layer GCN with hidden width <span class="math inline">\(64\)</span>. Then count the <em>floating-point operations per training epoch</em> for each, and explain where SGC’s advantage actually comes from — it is not the parameter count.</p>
+</section>
+<section id="exercise-7-when-sgc-fails" class="level3" data-number="9.7">
+<h3 data-number="9.7" class="anchored" data-anchor-id="exercise-7-when-sgc-fails"><span class="header-section-number">9.7</span> Exercise 7 — When SGC fails</h3>
+<p>Reproduce <a href="#fig-sgc-homophily" class="quarto-xref">Figure&nbsp;22</a> with <code>scripts/figures/lecture_03_figures.py</code>. Add a curve at <span class="math inline">\(H(\mathcal{G})=0.05\)</span> (strong heterophily) and explain, using Lecture 2’s spectral argument, why the separability does not recover for any <span class="math inline">\(\ell\)</span>.</p>
+</section>
+</section>
+<section id="main-takeaways" class="level2" data-number="10">
+<h2 data-number="10" class="anchored" data-anchor-id="main-takeaways"><span class="header-section-number">10</span> Main takeaways</h2>
+<ol type="1">
+<li>The graphs that motivate graph ML are large enough that <strong>training</strong>, not the architecture, is the binding constraint.</li>
+<li>Uniform mini-batching fails on graphs: retained edges scale as <span class="math inline">\((M/N)^2\)</span>, so an ordinary batch is a set of isolated nodes.</li>
+<li>A <span class="math inline">\(K\)</span>-layer GNN needs only a node’s <strong><span class="math inline">\(K\)</span>-hop neighborhood</strong>. Unrolling that into a per-node computational graph makes stochastic training possible.</li>
+<li>Computational graphs grow exponentially in <span class="math inline">\(K\)</span> and explode at hub nodes. <strong>Neighbor sampling</strong> caps the fan-out at <span class="math inline">\(H\)</span>, trading variance for cost.</li>
+<li>Neighbor sampling recomputes shared neighborhoods. <strong>Cluster-GCN</strong> recovers full-batch efficiency inside community-aligned sub-graphs, at the cost of discarding cross-community edges and biasing the gradient.</li>
+<li><strong>SGC</strong> removes the nonlinearities, collapsing the GCN into a one-off diffusion of the features followed by a linear classifier. It is extremely cheap and surprisingly strong.</li>
+<li>SGC’s accuracy rests on the <strong>homophily assumption</strong>. Measure <span class="math inline">\(H(\mathcal{G})\)</span> before relying on it.</li>
+</ol>
+</section>
+<section id="references-and-provenance" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="references-and-provenance">References and provenance</h2>
+<p>This web note is adapted from the Lecture 3 slides by Jhony H. Giraldo. The SGC collapse is derived step by step, the memory and complexity arguments are made explicit, and the qualitative claims about mini-batching, computational-graph growth, clustering, and homophily are replaced by measurements.</p>
+<p>The diagrams reproduce the original course vectors. <a href="#fig-minibatch-loss" class="quarto-xref">Figure&nbsp;5</a>, <a href="#fig-comp-growth" class="quarto-xref">Figure&nbsp;12</a>, <a href="#fig-cluster-loss" class="quarto-xref">Figure&nbsp;20</a>, and <a href="#fig-sgc-homophily" class="quarto-xref">Figure&nbsp;22</a> are new and were computed with <code>numpy</code> and <code>networkx</code>; the script that produces them is <code>scripts/figures/lecture_03_figures.py</code> in this repository.</p>
+<div id="refs" class="references-small references csl-bib-body hanging-indent" role="list">
+<div id="ref-chiang2019cluster" class="csl-entry" role="listitem">
+Chiang, Wei-Lin, Xuanqing Liu, Si Si, Yang Li, Samy Bengio, and Cho-Jui Hsieh. 2019. <span>“<span>Cluster-GCN</span>: An Efficient Algorithm for Training Deep and Large Graph Convolutional Networks.”</span> <em>Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining</em>. <a href="https://doi.org/10.1145/3292500.3330925">https://doi.org/10.1145/3292500.3330925</a>.
+</div>
+<div id="ref-he2020lightgcn" class="csl-entry" role="listitem">
+He, Xiangnan, Kuan Deng, Xiang Wang, Yan Li, Yongdong Zhang, and Meng Wang. 2020. <span>“<span>LightGCN</span>: Simplifying and Powering Graph Convolution Network for Recommendation.”</span> <em>International ACM SIGIR Conference on Research and Development in Information Retrieval</em>. <a href="https://doi.org/10.1145/3397271.3401063">https://doi.org/10.1145/3397271.3401063</a>.
+</div>
+<div id="ref-wu2019simplifying" class="csl-entry" role="listitem">
+Wu, Felix, Amauri Souza, Tianyi Zhang, Christopher Fifty, Tao Yu, and Kilian Weinberger. 2019. <span>“Simplifying Graph Convolutional Networks.”</span> <em>International Conference on Machine Learning</em>.
+</div>
+</div>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script src="../../assets/site.js" defer=""></script>
+
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/jhonygiraldo\.github\.io");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© 2026 Jhony H. Giraldo</p>
+</div>   
+    <div class="nav-footer-center">
+<p>Télécom Paris · Institut Polytechnique de Paris</p>
+</div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+    <a class="nav-link" href="https://orcid.org/0000-0002-0039-1270">
+<p>ORCID</p>
+</a>
+  </li>  
+    <li class="nav-item">
+    <a class="nav-link" href="mailto:jhony.giraldo@telecom-paris.fr">
+<p>Email</p>
+</a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+<script src="../../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Web lecture note on generating graphs: properties of real networks, Erdős–Rényi random graphs, deep generative models, GraphRNN, and iterative local expansion.">
+
+<title>Lecture 6 — Graph Generation – Jhony H. Giraldo</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../assets/images/jhony-giraldo.jpg" rel="icon" type="image/jpeg">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-e3f251471e60ae6bf9c8e95d70d1e8a4.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Jhony H. Giraldo",
+  "jobTitle": "Assistant Professor in Machine Learning and Computer Vision",
+  "url": "https://jhonygiraldo.github.io/",
+  "image": "https://jhonygiraldo.github.io/assets/images/jhony-giraldo.jpg",
+  "email": "mailto:jhony.giraldo@telecom-paris.fr",
+  "affiliation": [
+    {"@type": "CollegeOrUniversity", "name": "Télécom Paris"},
+    {"@type": "CollegeOrUniversity", "name": "Institut Polytechnique de Paris"}
+  ],
+  "sameAs": [
+    "https://orcid.org/0000-0002-0039-1270",
+    "https://scholar.google.com/citations?user=iwzmGKwAAAAJ",
+    "https://www.linkedin.com/in/jhonyhgiraldo",
+    "https://bsky.app/profile/jhonyhgiraldo.bsky.social"
+  ],
+  "knowsAbout": [
+    "Graph machine learning",
+    "Geometric deep learning",
+    "Graph signal processing",
+    "Computer vision",
+    "Higher-order neural networks"
+  ]
+}
+</script>
+
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<meta property="og:title" content="Lecture 6 — Graph Generation">
+<meta property="og:description" content="Web lecture note on generating graphs: properties of real networks, Erdős–Rényi random graphs, deep generative models, GraphRNN, and iterative local expansion.">
+<meta property="og:image" content="https://jhonygiraldo.github.io/assets/figures/graph-encoders-so-far.svg">
+<meta property="og:site_name" content="Jhony H. Giraldo">
+<meta property="og:image:alt" content="A graph feeding into an encoder that produces node embeddings">
+<meta name="twitter:title" content="Lecture 6 — Graph Generation">
+<meta name="twitter:description" content="Web lecture note on generating graphs: properties of real networks, Erdős–Rényi random graphs, deep generative models, GraphRNN, and iterative local expansion.">
+<meta name="twitter:image" content="https://jhonygiraldo.github.io/assets/figures/graph-encoders-so-far.svg">
+<meta name="twitter:image:alt" content="A graph feeding into an encoder that produces node embeddings">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed custom-title-page lecture-page quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Jhony H. Giraldo</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../research/index.html"> 
+<span class="menu-text">Research</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../people/index.html"> 
+<span class="menu-text">Team</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../publications/index.html"> 
+<span class="menu-text">Publications</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../teaching/index.html"> 
+<span class="menu-text">Teaching</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../news/index.html"> 
+<span class="menu-text">News</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../cv/index.html"> 
+<span class="menu-text">CV</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:jhony.giraldo@telecom-paris.fr"> <i class="bi bi-envelope" role="img" aria-label="Email Jhony Giraldo">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://scholar.google.com/citations?user=iwzmGKwAAAAJ"> <i class="bi bi-mortarboard-fill" role="img" aria-label="Google Scholar">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/jhonyhgiraldo"> <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives"><span class="header-section-number">1</span> Learning objectives</a></li>
+  <li><a href="#why-generate-graphs" id="toc-why-generate-graphs" class="nav-link" data-scroll-target="#why-generate-graphs"><span class="header-section-number">2</span> Why generate graphs?</a></li>
+  <li><a href="#properties-of-real-world-graphs" id="toc-properties-of-real-world-graphs" class="nav-link" data-scroll-target="#properties-of-real-world-graphs"><span class="header-section-number">3</span> Properties of real-world graphs</a>
+  <ul class="collapse">
+  <li><a href="#degree-distribution" id="toc-degree-distribution" class="nav-link" data-scroll-target="#degree-distribution"><span class="header-section-number">3.1</span> Degree distribution</a></li>
+  <li><a href="#clustering-coefficient" id="toc-clustering-coefficient" class="nav-link" data-scroll-target="#clustering-coefficient"><span class="header-section-number">3.2</span> Clustering coefficient</a></li>
+  <li><a href="#connectivity" id="toc-connectivity" class="nav-link" data-scroll-target="#connectivity"><span class="header-section-number">3.3</span> Connectivity</a></li>
+  <li><a href="#path-length" id="toc-path-length" class="nav-link" data-scroll-target="#path-length"><span class="header-section-number">3.4</span> Path length</a></li>
+  <li><a href="#a-real-network-to-calibrate-against" id="toc-a-real-network-to-calibrate-against" class="nav-link" data-scroll-target="#a-real-network-to-calibrate-against"><span class="header-section-number">3.5</span> A real network to calibrate against</a></li>
+  </ul></li>
+  <li><a href="#erdősrényi-random-graphs" id="toc-erdősrényi-random-graphs" class="nav-link" data-scroll-target="#erdősrényi-random-graphs"><span class="header-section-number">4</span> Erdős–Rényi random graphs</a>
+  <ul class="collapse">
+  <li><a href="#its-clustering-coefficient" id="toc-its-clustering-coefficient" class="nav-link" data-scroll-target="#its-clustering-coefficient"><span class="header-section-number">4.1</span> Its clustering coefficient</a></li>
+  <li><a href="#its-giant-component" id="toc-its-giant-component" class="nav-link" data-scroll-target="#its-giant-component"><span class="header-section-number">4.2</span> Its giant component</a></li>
+  <li><a href="#path-length-1" id="toc-path-length-1" class="nav-link" data-scroll-target="#path-length-1"><span class="header-section-number">4.3</span> Path length</a></li>
+  <li><a href="#the-verdict" id="toc-the-verdict" class="nav-link" data-scroll-target="#the-verdict"><span class="header-section-number">4.4</span> The verdict</a></li>
+  </ul></li>
+  <li><a href="#deep-generative-models" id="toc-deep-generative-models" class="nav-link" data-scroll-target="#deep-generative-models"><span class="header-section-number">5</span> Deep generative models</a>
+  <ul class="collapse">
+  <li><a href="#density-estimation-by-maximum-likelihood" id="toc-density-estimation-by-maximum-likelihood" class="nav-link" data-scroll-target="#density-estimation-by-maximum-likelihood"><span class="header-section-number">5.1</span> Density estimation by maximum likelihood</a></li>
+  <li><a href="#sampling" id="toc-sampling" class="nav-link" data-scroll-target="#sampling"><span class="header-section-number">5.2</span> Sampling</a></li>
+  <li><a href="#auto-regressive-models" id="toc-auto-regressive-models" class="nav-link" data-scroll-target="#auto-regressive-models"><span class="header-section-number">5.3</span> Auto-regressive models</a></li>
+  </ul></li>
+  <li><a href="#graphrnn" id="toc-graphrnn" class="nav-link" data-scroll-target="#graphrnn"><span class="header-section-number">6</span> GraphRNN</a>
+  <ul class="collapse">
+  <li><a href="#a-graph-as-a-sequence-of-sequences" id="toc-a-graph-as-a-sequence-of-sequences" class="nav-link" data-scroll-target="#a-graph-as-a-sequence-of-sequences"><span class="header-section-number">6.1</span> A graph as a sequence of sequences</a></li>
+  <li><a href="#recurrent-neural-networks-briefly" id="toc-recurrent-neural-networks-briefly" class="nav-link" data-scroll-target="#recurrent-neural-networks-briefly"><span class="header-section-number">6.2</span> Recurrent neural networks, briefly</a></li>
+  <li><a href="#two-levels-of-rnn" id="toc-two-levels-of-rnn" class="nav-link" data-scroll-target="#two-levels-of-rnn"><span class="header-section-number">6.3</span> Two levels of RNN</a></li>
+  <li><a href="#making-it-stochastic" id="toc-making-it-stochastic" class="nav-link" data-scroll-target="#making-it-stochastic"><span class="header-section-number">6.4</span> Making it stochastic</a></li>
+  <li><a href="#training" id="toc-training" class="nav-link" data-scroll-target="#training"><span class="header-section-number">6.5</span> Training</a></li>
+  </ul></li>
+  <li><a href="#sec-limits" id="toc-sec-limits" class="nav-link" data-scroll-target="#sec-limits"><span class="header-section-number">7</span> What GraphRNN costs</a></li>
+  <li><a href="#efficient-generation-by-local-expansion" id="toc-efficient-generation-by-local-expansion" class="nav-link" data-scroll-target="#efficient-generation-by-local-expansion"><span class="header-section-number">8</span> Efficient generation by local expansion</a>
+  <ul class="collapse">
+  <li><a href="#the-analogy-with-images" id="toc-the-analogy-with-images" class="nav-link" data-scroll-target="#the-analogy-with-images"><span class="header-section-number">8.1</span> The analogy with images</a></li>
+  </ul></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">9</span> Exercises</a>
+  <ul class="collapse">
+  <li><a href="#exercise-1-clustering-by-hand" id="toc-exercise-1-clustering-by-hand" class="nav-link" data-scroll-target="#exercise-1-clustering-by-hand"><span class="header-section-number">9.1</span> Exercise 1 — Clustering by hand</a></li>
+  <li><a href="#exercise-2-the-g_np-clustering-derivation" id="toc-exercise-2-the-g_np-clustering-derivation" class="nav-link" data-scroll-target="#exercise-2-the-g_np-clustering-derivation"><span class="header-section-number">9.2</span> Exercise 2 — The <span class="math inline">\(G_{np}\)</span> clustering derivation</a></li>
+  <li><a href="#exercise-3-degree-distribution" id="toc-exercise-3-degree-distribution" class="nav-link" data-scroll-target="#exercise-3-degree-distribution"><span class="header-section-number">9.3</span> Exercise 3 — Degree distribution</a></li>
+  <li><a href="#exercise-4-the-phase-transition" id="toc-exercise-4-the-phase-transition" class="nav-link" data-scroll-target="#exercise-4-the-phase-transition"><span class="header-section-number">9.4</span> Exercise 4 — The phase transition</a></li>
+  <li><a href="#exercise-5-orderings" id="toc-exercise-5-orderings" class="nav-link" data-scroll-target="#exercise-5-orderings"><span class="header-section-number">9.5</span> Exercise 5 — Orderings</a></li>
+  <li><a href="#exercise-6-counting-decisions" id="toc-exercise-6-counting-decisions" class="nav-link" data-scroll-target="#exercise-6-counting-decisions"><span class="header-section-number">9.6</span> Exercise 6 — Counting decisions</a></li>
+  <li><a href="#exercise-7-comparing-the-two-approaches" id="toc-exercise-7-comparing-the-two-approaches" class="nav-link" data-scroll-target="#exercise-7-comparing-the-two-approaches"><span class="header-section-number">9.7</span> Exercise 7 — Comparing the two approaches</a></li>
+  </ul></li>
+  <li><a href="#main-takeaways" id="toc-main-takeaways" class="nav-link" data-scroll-target="#main-takeaways"><span class="header-section-number">10</span> Main takeaways</a></li>
+  <li><a href="#references-and-provenance" id="toc-references-and-provenance" class="nav-link" data-scroll-target="#references-and-provenance">References and provenance</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+</div>
+
+<div>
+  <div class="description">
+    Web lecture note on generating graphs: properties of real networks, Erdős–Rényi random graphs, deep generative models, GraphRNN, and iterative local expansion.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    <div>
+    <div class="quarto-title-meta-heading">Modified</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date-modified">September 6, 2026</p>
+    </div>
+  </div>
+    
+  </div>
+  
+
+
+</header>
+
+
+<header class="lecture-header">
+  <div class="eyebrow">APM 5DS30 TP · Machine Learning with Graphs</div>
+  <h1>Graph generation</h1>
+  <p>Lecture 6 · Jhony H. Giraldo · Télécom Paris, Institut Polytechnique de Paris</p>
+  <div class="lecture-meta"><span>Original lecture: 11 March 2025</span><span>Web note revised: 6 September 2026</span><span>Mathematics rendered with MathJax</span></div>
+  <div class="button-row">
+    <a class="button-link primary" href="../../assets/pdf/Lecture-06-Graph-Generation.pdf">Download the original slides</a>
+    <a class="button-link secondary" href="../../teaching/machine-learning-with-graphs/index.html">Back to the course</a>
+  </div>
+</header>
+<p>Every lecture so far has <em>learned from</em> graphs. The graph was given, and we predicted something about it — a node label, a missing value, a future edge. This note reverses the arrow and asks where the graphs come from.</p>
+<div class="figure-panel">
+<div id="fig-encoders" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A graph feeding into an encoder that produces node embeddings">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-encoders-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/graph-encoders-so-far.svg" class="img-fluid figure-img" alt="A graph feeding into an encoder that produces node embeddings">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-encoders-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Until now the graph was an input and the output was an embedding.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="figure-panel">
+<div id="fig-generation-today" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A model producing a graph structure as its output">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-generation-today-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/graph-generation-today.svg" class="img-fluid figure-img" alt="A model producing a graph structure as its output">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-generation-today-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Today the output <em>is</em> a graph.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>The route has three steps: first characterize what real graphs look like, then see how far a classical random-graph model gets, and finally learn the generation process from data.</p>
+<section id="learning-objectives" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="learning-objectives"><span class="header-section-number">1</span> Learning objectives</h2>
+<p>After studying this note, you should be able to:</p>
+<ol class="learning-objectives">
+  <li>characterize a graph by its degree distribution, clustering coefficient, connectivity, and path length;</li>
+  <li>define the Erdős–Rényi models $G_{np}$ and $G_{nm}$ and derive their clustering coefficient;</li>
+  <li>state which properties of real networks $G_{np}$ reproduces and which it cannot;</li>
+  <li>formulate graph generation as density estimation plus sampling;</li>
+  <li>explain how GraphRNN turns a graph into a sequence of sequences, and why that costs $\mathcal{O}(N^2)$;</li>
+  <li>explain how coarsening-based local expansion avoids both the ordering problem and the quadratic cost.</li>
+</ol>
+</section>
+<section id="why-generate-graphs" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="why-generate-graphs"><span class="header-section-number">2</span> Why generate graphs?</h2>
+<div class="figure-panel">
+<div id="fig-problem" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A graph generative model producing a synthetic graph beside a real graph for comparison">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-problem-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/graph-generation-problem.svg" class="img-fluid figure-img" alt="A graph generative model producing a synthetic graph beside a real graph for comparison">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-problem-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: The problem: learn a model that produces synthetic graphs statistically similar to a given set of real ones.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>There are four distinct reasons to want this.</p>
+<ul>
+<li><strong>Insight.</strong> A model that reproduces a network tells us something about how the network formed.</li>
+<li><strong>Prediction.</strong> A generative process can be run forward to say how a graph will evolve.</li>
+<li><strong>Simulation.</strong> Novel instances can be produced for testing, benchmarking, or design.</li>
+<li><strong>Anomaly detection.</strong> A model of normal graphs is a detector for abnormal ones.</li>
+</ul>
+<div class="figure-panel">
+<div id="fig-drug" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A generative model producing a molecular graph optimizing a property score of 0.95">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-drug-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/goal-directed-generation.svg" class="img-fluid figure-img" alt="A generative model producing a molecular graph optimizing a property score of 0.95">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-drug-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: The flagship application is <strong>goal-directed</strong> generation: produce molecules that are valid, realistic, <em>and</em> optimize a property score such as drug likeness. We do not cover the goal-directed case here, but it is the reason the field is funded.
+</figcaption>
+</figure>
+</div>
+</div>
+</section>
+<section id="properties-of-real-world-graphs" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="properties-of-real-world-graphs"><span class="header-section-number">3</span> Properties of real-world graphs</h2>
+<p>A generative model is only as good as the properties it reproduces, so we need to fix what we measure. The lecture uses four.</p>
+<section id="degree-distribution" class="level3" data-number="3.1">
+<h3 data-number="3.1" class="anchored" data-anchor-id="degree-distribution"><span class="header-section-number">3.1</span> Degree distribution</h3>
+<div class="definition">
+<p><strong>Definition 1 — Degree distribution</strong></p>
+<p><span class="math inline">\(P(k)\)</span> is the probability that a randomly chosen node has degree <span class="math inline">\(k\)</span>, computed as the normalized histogram</p>
+<p><span class="math display">\[
+P(k)=\frac{N_k}{N},
+\]</span></p>
+<p>where <span class="math inline">\(N_k\)</span> is the number of nodes of degree <span class="math inline">\(k\)</span>.</p>
+</div>
+<div class="figure-panel">
+<div id="fig-degree-distribution" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A small network beside a bar chart of P(k) against k">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-degree-distribution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/degree-distribution-schematic.svg" class="img-fluid figure-img" alt="A small network beside a bar chart of P(k) against k">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-degree-distribution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5: A graph and its degree distribution.
+</figcaption>
+</figure>
+</div>
+</div>
+</section>
+<section id="clustering-coefficient" class="level3" data-number="3.2">
+<h3 data-number="3.2" class="anchored" data-anchor-id="clustering-coefficient"><span class="header-section-number">3.2</span> Clustering coefficient</h3>
+<div class="definition">
+<p><strong>Definition 2 — Clustering coefficient</strong></p>
+<p>For a node <span class="math inline">\(i\)</span> of degree <span class="math inline">\(k_i\)</span>,</p>
+<p><span class="math display">\[
+C_i=\frac{2e_i}{k_i(k_i-1)},
+\]</span></p>
+<p>where <span class="math inline">\(e_i\)</span> is the number of edges among the neighbors of <span class="math inline">\(i\)</span>. The graph coefficient is the average <span class="math inline">\(C=\frac{1}{N}\sum_{i=1}^{N}C_i\)</span>.</p>
+</div>
+<div class="figure-panel">
+<div id="fig-clustering" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three copies of a five-node neighborhood with clustering coefficient 1, one half, and 0">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-clustering-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/clustering-coefficient-schematic.svg" class="img-fluid figure-img" alt="Three copies of a five-node neighborhood with clustering coefficient 1, one half, and 0">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-clustering-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6: <span class="math inline">\(C_i\)</span> measures how completely a node’s neighbors are connected to one another: <span class="math inline">\(1\)</span> when the neighborhood is a clique, <span class="math inline">\(0\)</span> when the neighbors are mutually unconnected.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>This is the same quantity as in Lecture 1 — now used to <em>judge a generative model</em> rather than to describe a node.</p>
+</section>
+<section id="connectivity" class="level3" data-number="3.3">
+<h3 data-number="3.3" class="anchored" data-anchor-id="connectivity"><span class="header-section-number">3.3</span> Connectivity</h3>
+<div class="figure-panel">
+<div id="fig-connectivity" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A network with several disconnected pieces, the largest highlighted">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-connectivity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/connected-components-schematic.svg" class="img-fluid figure-img" alt="A network with several disconnected pieces, the largest highlighted">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-connectivity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7: The size of the largest connected component. When it contains a substantial fraction of the graph it is called the <strong>giant component</strong>. Finding components is a BFS from an unvisited node, repeated until every node is labelled.
+</figcaption>
+</figure>
+</div>
+</div>
+</section>
+<section id="path-length" class="level3" data-number="3.4">
+<h3 data-number="3.4" class="anchored" data-anchor-id="path-length"><span class="header-section-number">3.4</span> Path length</h3>
+<div class="definition">
+<p><strong>Definition 3 — Diameter and average path length</strong></p>
+<p>The <strong>diameter</strong> is the maximum shortest-path distance between any pair of nodes. It is fragile: a single long tail attached anywhere inflates it.</p>
+<p>The <strong>average shortest path length</strong> is more robust,</p>
+<p><span class="math display">\[
+\bar{h}=\frac{1}{E_{\max}}\sum_{i,j\neq i}h_{ij},
+\qquad
+E_{\max}=N(N-1),
+\]</span></p>
+<p>with <span class="math inline">\(h_{ij}\)</span> the distance from <span class="math inline">\(i\)</span> to <span class="math inline">\(j\)</span>. In practice the average is taken over connected pairs only, so that infinite distances do not swallow the result.</p>
+</div>
+</section>
+<section id="a-real-network-to-calibrate-against" class="level3" data-number="3.5">
+<h3 data-number="3.5" class="anchored" data-anchor-id="a-real-network-to-calibrate-against"><span class="header-section-number">3.5</span> A real network to calibrate against</h3>
+<p>The lecture’s reference is the <strong>MSN Messenger</strong> communication graph: one month of activity, 245 million users logged in, 180 million in conversations, more than 30 billion conversations and 255 billion messages. Two people are connected if they exchanged at least one message, giving 180 million nodes and 1.3 billion edges.</p>
+<p>Its four measured properties:</p>
+<div class="feature-grid">
+  <article class="feature-card"><span class="number">Degree distribution</span><h3 class="anchored">Heavily skewed</h3><p>Average degree 14.4, with a long tail of very high-degree nodes.</p></article>
+  <article class="feature-card"><span class="number">Clustering</span><h3 class="anchored">C = 0.11</h3><p>Your contacts are substantially likely to know one another.</p></article>
+  <article class="feature-card"><span class="number">Connectivity</span><h3 class="anchored">Giant component</h3><p>About 99% of nodes lie in a single component.</p></article>
+  <article class="feature-card"><span class="number">Path length</span><h3 class="anchored">h̄ = 6.6</h3><p>The famous "six degrees of separation", measured.</p></article>
+</div>
+</section>
+</section>
+<section id="erdősrényi-random-graphs" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="erdősrényi-random-graphs"><span class="header-section-number">4</span> Erdős–Rényi random graphs</h2>
+<div class="definition">
+<p><strong>Definition 4 — The two Erdős–Rényi models</strong></p>
+<p><span class="math inline">\(G_{np}\)</span>: an undirected graph on <span class="math inline">\(N\)</span> nodes in which each edge <span class="math inline">\((i,j)\)</span> appears independently with probability <span class="math inline">\(p\)</span>.</p>
+<p><span class="math inline">\(G_{nm}\)</span>: an undirected graph on <span class="math inline">\(N\)</span> nodes with <span class="math inline">\(m\)</span> edges chosen uniformly at random <span class="citation" data-cites="erdos1959random">(<a href="#ref-erdos1959random" role="doc-biblioref">Erdős and Rényi 1959</a>)</span>.</p>
+</div>
+<div class="figure-panel">
+<div id="fig-er-realizations" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three different random graphs generated with the same number of nodes and edge probability">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-er-realizations-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/er-graph-realizations.svg" class="img-fluid figure-img" alt="Three different random graphs generated with the same number of nodes and edge probability">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-er-realizations-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8: <span class="math inline">\(n\)</span> and <span class="math inline">\(p\)</span> do <strong>not</strong> determine the graph — they determine a distribution over graphs. These are three realizations of the same <span class="math inline">\(G_{np}\)</span>.
+</figcaption>
+</figure>
+</div>
+</div>
+<section id="its-clustering-coefficient" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="its-clustering-coefficient"><span class="header-section-number">4.1</span> Its clustering coefficient</h3>
+<p>This one is worth deriving, because the answer is what condemns the model.</p>
+<div class="worked-example">
+<p><strong>Worked example — <span class="math inline">\(\mathbb{E}[C_i]\)</span> for <span class="math inline">\(G_{np}\)</span></strong></p>
+<p>Node <span class="math inline">\(i\)</span> has degree <span class="math inline">\(k_i\)</span>, so its neighbors form <span class="math inline">\(\frac{k_i(k_i-1)}{2}\)</span> distinct pairs. Each such pair is connected independently with probability <span class="math inline">\(p\)</span>, so the expected number of edges among the neighbors is</p>
+<p><span class="math display">\[
+\mathbb{E}[e_i]=p\,\frac{k_i(k_i-1)}{2}.
+\]</span></p>
+<p>Substituting into Definition 2,</p>
+<p><span class="math display">\[
+\mathbb{E}[C_i]=\frac{2}{k_i(k_i-1)}\cdot p\,\frac{k_i(k_i-1)}{2}=p=\frac{\bar{k}}{N-1}\approx\frac{\bar{k}}{N}.
+\]</span></p>
+<p>Read the result: if we hold the average degree <span class="math inline">\(\bar{k}\)</span> fixed and grow the graph, <strong>the clustering coefficient goes to zero</strong>. A large random graph has no local structure at all.</p>
+</div>
+</section>
+<section id="its-giant-component" class="level3" data-number="4.2">
+<h3 data-number="4.2" class="anchored" data-anchor-id="its-giant-component"><span class="header-section-number">4.2</span> Its giant component</h3>
+<p>The other classical result is a phase transition: the giant component appears exactly when the average degree reaches <span class="math inline">\(1\)</span>, that is <span class="math inline">\(p=1/(N-1)\)</span> — the point at which each node has, in expectation, at least one edge.</p>
+<div class="figure-panel">
+<div id="fig-er-properties" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Left, a sharp rise in giant component size at average degree one; right, two decreasing lines far below a horizontal line at 0.11">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-er-properties-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/erdos-renyi-properties.svg" class="img-fluid figure-img" alt="Left, a sharp rise in giant component size at average degree one; right, two decreasing lines far below a horizontal line at 0.11">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-er-properties-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;9: Both results, simulated. Left: the largest component against average degree on 2000-node <span class="math inline">\(G_{np}\)</span> graphs; the transition at <span class="math inline">\(\bar{k}=1\)</span> is sharp. Right: <span class="math inline">\(\mathbb{E}[C]=\bar{k}/N\)</span> against <span class="math inline">\(N\)</span> for two fixed average degrees, with MSN’s measured <span class="math inline">\(C=0.11\)</span> marked. At MSN’s scale, <span class="math inline">\(\bar{k}=14.4\)</span> over <span class="math inline">\(1.8\times10^{8}\)</span> nodes predicts <span class="math inline">\(C\approx8\times10^{-8}\)</span> — six orders of magnitude too small.
+</figcaption>
+</figure>
+</div>
+</div>
+</section>
+<section id="path-length-1" class="level3" data-number="4.3">
+<h3 data-number="4.3" class="anchored" data-anchor-id="path-length-1"><span class="header-section-number">4.3</span> Path length</h3>
+<p>For <span class="math inline">\(G_{np}\)</span> the diameter scales as <span class="math inline">\(\mathcal{O}\!\left(\log N/\log(pN)\right)\)</span>. Random graphs are good expanders, so a BFS reaches everything in a logarithmic number of steps: they can be enormous and still have every node a few hops from every other.</p>
+</section>
+<section id="the-verdict" class="level3" data-number="4.4">
+<h3 data-number="4.4" class="anchored" data-anchor-id="the-verdict"><span class="header-section-number">4.4</span> The verdict</h3>
+<div class="figure-panel">
+<div id="fig-real-vs-random" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Left, three complementary CDF curves with the random graph dropping sharply; right, grouped bars where clustering differs and path length and component size match">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-real-vs-random-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/real-vs-random-graphs.svg" class="img-fluid figure-img" alt="Left, three complementary CDF curves with the random graph dropping sharply; right, grouped bars where clustering differs and path length and component size match">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-real-vs-random-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;10: The comparison, measured. Left: the complementary CDF <span class="math inline">\(P(K\geq k)\)</span> — the readable way to compare tails. A preferential-attachment graph and the real Les Misérables network keep mass out to high degree; the size-matched <span class="math inline">\(G_{np}\)</span> falls off a cliff at <span class="math inline">\(k\approx15\)</span>. Right: with <span class="math inline">\(N\)</span> and average degree held equal, path length and connectivity agree closely, and clustering differs by more than two orders of magnitude.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="checkpoint">
+<p><strong>Check 1 — Are real networks random?</strong></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>property</th>
+<th><span class="math inline">\(G_{np}\)</span> reproduces it?</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Giant connected component</td>
+<td>✔</td>
+</tr>
+<tr class="even">
+<td>Average path length</td>
+<td>✔</td>
+</tr>
+<tr class="odd">
+<td>Clustering coefficient</td>
+<td>✘</td>
+</tr>
+<tr class="even">
+<td>Degree distribution</td>
+<td>✘</td>
+</tr>
+</tbody>
+</table>
+<p>Two out of four, and the two failures are the interesting ones. The degree distribution is binomial rather than heavily skewed, there is no local structure, and the giant component in most real networks does not emerge through a sharp phase transition at all.</p>
+<p>So: <strong>no, real networks are not random graphs.</strong> <span class="math inline">\(G_{np}\)</span> nonetheless remains valuable as the reference point — the null model you compare against before claiming that a structure is meaningful, and the standard setting for analyzing the cost and stability of graph algorithms.</p>
+</div>
+<p>Other classical models improve on parts of this. The <strong>small-world model</strong> recovers a realistic clustering coefficient; the <strong>Kronecker graph model</strong> approximates several real properties at once. Both are left for self-study.</p>
+<div class="checkpoint">
+<p><strong>Check 2 — Why classical models are not enough</strong></p>
+<p>They rely on <strong>strong assumptions</strong> about how graphs form, which limits their flexibility. They use <strong>predefined rules</strong> rather than learning from data, so they cannot capture patterns nobody thought to encode. And they generalize poorly across domains, requiring manual tuning for each application.</p>
+<p>Deep generative models instead <strong>learn</strong> the formation rules from examples, which is what the rest of this note is about.</p>
+</div>
+</section>
+</section>
+<section id="deep-generative-models" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="deep-generative-models"><span class="header-section-number">5</span> Deep generative models</h2>
+<div class="definition">
+<p><strong>Definition 5 — The generation problem</strong></p>
+<p>Given graphs sampled from an unknown real distribution <span class="math inline">\(p_{\text{data}}(G)\)</span>:</p>
+<ol type="1">
+<li><strong>Density estimation</strong> — learn a model <span class="math inline">\(p_{\text{model}}(G;\boldsymbol{\theta})\)</span> close to <span class="math inline">\(p_{\text{data}}\)</span>;</li>
+<li><strong>Sampling</strong> — be able to draw from <span class="math inline">\(p_{\text{model}}\)</span>.</li>
+</ol>
+</div>
+<div class="figure-panel">
+<div id="fig-generative-problem" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Samples from a data distribution feeding a model distribution which produces new graph samples">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-generative-problem-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/generative-model-problem.svg" class="img-fluid figure-img" alt="Samples from a data distribution feeding a model distribution which produces new graph samples">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-generative-problem-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;11: Learn a model distribution from samples of the data distribution, then sample from the model to obtain new graphs.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>The lecture treats <strong>realistic</strong> graph generation — produce graphs similar to a given set. The <strong>goal-directed</strong> variant, generating graphs that optimize an objective under constraints, is not covered.</p>
+<section id="density-estimation-by-maximum-likelihood" class="level3" data-number="5.1">
+<h3 data-number="5.1" class="anchored" data-anchor-id="density-estimation-by-maximum-likelihood"><span class="header-section-number">5.1</span> Density estimation by maximum likelihood</h3>
+<p>The standard principle: choose</p>
+<p><span class="math display">\[
+\boldsymbol{\theta}^{*}=\arg\max_{\boldsymbol{\theta}}\ \sum_{i}\log p_{\text{model}}(\mathbf{x}_i;\boldsymbol{\theta}),
+\]</span></p>
+<p>the parameters under which the observed data is most probable.</p>
+</section>
+<section id="sampling" class="level3" data-number="5.2">
+<h3 data-number="5.2" class="anchored" data-anchor-id="sampling"><span class="header-section-number">5.2</span> Sampling</h3>
+<p>The usual recipe is to transform noise. Draw <span class="math inline">\(\mathbf{z}_i\sim\mathcal{N}(0,\mathbf{I})\)</span> and set <span class="math inline">\(\mathbf{x}_i=f(\mathbf{z}_i;\boldsymbol{\theta})\)</span>; if <span class="math inline">\(f\)</span> is expressive enough, <span class="math inline">\(\mathbf{x}_i\)</span> follows a complex distribution. We design <span class="math inline">\(f\)</span> as a deep network and fit it to data.</p>
+</section>
+<section id="auto-regressive-models" class="level3" data-number="5.3">
+<h3 data-number="5.3" class="anchored" data-anchor-id="auto-regressive-models"><span class="header-section-number">5.3</span> Auto-regressive models</h3>
+<div class="definition">
+<p><strong>Definition 6 — Auto-regressive factorization</strong></p>
+<p>Apply the chain rule to write the joint distribution as a product of conditionals:</p>
+<p><span class="math display">\[
+p_{\text{model}}(\mathbf{x};\boldsymbol{\theta})=\prod_{t=1}^{n}p_{\text{model}}(x_t\mid x_1,\ldots,x_{t-1};\boldsymbol{\theta}).
+\]</span></p>
+<p>For graphs, <span class="math inline">\(x_t\)</span> is the <span class="math inline">\(t\)</span>-th <strong>action</strong>: add a node, or add an edge.</p>
+</div>
+<p>Auto-regressive models are attractive here because a single model serves <strong>both</strong> roles — density estimation and sampling — whereas a VAE or a GAN needs two or more components, each playing one part.</p>
+<div class="checkpoint">
+<p><strong>Check 3 — Lecture 4 called, it wants its idea back</strong></p>
+<p>This is the same auto-regressive principle as the forecasting model in Lecture 4: factor a complex joint object into a chain of conditionals, and learn one shared model for the conditional. There it was a time series; here it is a construction sequence.</p>
+</div>
+</section>
+</section>
+<section id="graphrnn" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="graphrnn"><span class="header-section-number">6</span> GraphRNN</h2>
+<p>The idea <span class="citation" data-cites="you2018graphrnn">(<a href="#ref-you2018graphrnn" role="doc-biblioref">You et al. 2018</a>)</span>: <strong>generate a graph by sequentially adding nodes and edges.</strong></p>
+<div class="figure-panel">
+<div id="fig-graphrnn-process" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A five-node graph built up in five steps, with each newly added node and its edges in red">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-graphrnn-process-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/graphrnn-generation-process.svg" class="img-fluid figure-img" alt="A five-node graph built up in five steps, with each newly added node and its edges in red">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-graphrnn-process-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;12: The generation process. Add node 1, add node 2 and its edges, add node 3 and its edges, and so on until the graph is complete.
+</figcaption>
+</figure>
+</div>
+</div>
+<section id="a-graph-as-a-sequence-of-sequences" class="level3" data-number="6.1">
+<h3 data-number="6.1" class="anchored" data-anchor-id="a-graph-as-a-sequence-of-sequences"><span class="header-section-number">6.1</span> A graph as a sequence of sequences</h3>
+<div class="figure-panel">
+<div id="fig-graphrnn-sequences" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A graph with node ordering mapped to a sequence of partial graphs and back">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-graphrnn-sequences-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/graphrnn-sequences.svg" class="img-fluid figure-img" alt="A graph with node ordering mapped to a sequence of partial graphs and back">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-graphrnn-sequences-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13: A graph plus a <strong>node ordering</strong> <span class="math inline">\(\pi\)</span> maps to a sequence <span class="math inline">\(S^{\pi}\)</span>, and the sequence maps back to the graph. The ordering is chosen at random.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>Each element <span class="math inline">\(S^{\pi}_i\)</span> of that sequence is itself a sequence: the edges the new node forms with the nodes already present. Reading the adjacency matrix makes this concrete.</p>
+<div class="figure-panel">
+<div id="fig-graphrnn-two-level" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A graph beside its adjacency matrix with a horizontal node-level arrow and a vertical edge-level arrow">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-graphrnn-two-level-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/graphrnn-two-level-sequence.svg" class="img-fluid figure-img" alt="A graph beside its adjacency matrix with a horizontal node-level arrow and a vertical edge-level arrow">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-graphrnn-two-level-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;14: The two levels laid over the adjacency matrix. Moving across rows is the <strong>node-level</strong> sequence — one step per new node. Moving down a column is the <strong>edge-level</strong> sequence — one binary decision per previously added node.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="checkpoint">
+<p><strong>Check 4 — What we have achieved, and what it cost</strong></p>
+<p>Graph generation is now <strong>sequence generation</strong>, a problem with well-developed tools. Two processes must be modelled: generate a state for a new node (node level), and generate that node’s edges given the state (edge level).</p>
+<p>The cost is that we introduced a node ordering that the graph itself does not have. A graph with <span class="math inline">\(N\)</span> nodes has up to <span class="math inline">\(N!\)</span> orderings, all describing the same object. GraphRNN samples one at random; that choice will come back in <a href="#sec-limits" class="quarto-xref">Section&nbsp;7</a>.</p>
+</div>
+</section>
+<section id="recurrent-neural-networks-briefly" class="level3" data-number="6.2">
+<h3 data-number="6.2" class="anchored" data-anchor-id="recurrent-neural-networks-briefly"><span class="header-section-number">6.2</span> Recurrent neural networks, briefly</h3>
+<div class="figure-panel">
+<div id="fig-rnn" class="quarto-float quarto-figure quarto-figure-center anchored" alt="An unrolled recurrent neural network with input, hidden state, and output at each step">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-rnn-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/rnn-recap.svg" class="img-fluid figure-img" alt="An unrolled recurrent neural network with input, hidden state, and output at each step">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-rnn-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;15: An RNN consumes an input sequence, updating a hidden state that summarizes everything seen so far, and emits an output at each step through a shared cell.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>With <span class="math inline">\(s_t\)</span> the state, <span class="math inline">\(x_t\)</span> the input and <span class="math inline">\(y_t\)</span> the output at step <span class="math inline">\(t\)</span>, and trainable <span class="math inline">\(\mathbf{W},\mathbf{U},\mathbf{V}\)</span>:</p>
+<p><span class="math display">\[
+s_t=\sigma\!\left(x_t\mathbf{W}+s_{t-1}\mathbf{U}\right),
+\qquad
+y_t=s_t\mathbf{V}.
+\]</span></p>
+<p>More expressive cells — GRU, LSTM — slot in unchanged, and so do Transformers.</p>
+</section>
+<section id="two-levels-of-rnn" class="level3" data-number="6.3">
+<h3 data-number="6.3" class="anchored" data-anchor-id="two-levels-of-rnn"><span class="header-section-number">6.3</span> Two levels of RNN</h3>
+<p>GraphRNN uses a <strong>node-level RNN</strong> and an <strong>edge-level RNN</strong>:</p>
+<ul>
+<li>the node-level RNN generates the initial state for the edge-level RNN;</li>
+<li>the edge-level RNN sequentially predicts whether the new node connects to each previous node;</li>
+<li>the last hidden state of the edge-level RNN is fed back to advance the node-level RNN.</li>
+</ul>
+</section>
+<section id="making-it-stochastic" class="level3" data-number="6.4">
+<h3 data-number="6.4" class="anchored" data-anchor-id="making-it-stochastic"><span class="header-section-number">6.4</span> Making it stochastic</h3>
+<div class="figure-panel">
+<div id="fig-rnn-generation" class="quarto-float quarto-figure quarto-figure-center anchored" alt="An unrolled RNN with outputs fed back as inputs, starting from a start-of-sequence token">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-rnn-generation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/rnn-sequence-generation.svg" class="img-fluid figure-img" alt="An unrolled RNN with outputs fed back as inputs, starting from a start-of-sequence token">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-rnn-generation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;16: The naive way to generate with an RNN — feed the previous output back as the next input, <span class="math inline">\(x_{t+1}=y_t\)</span>, starting from an SOS token and stopping at an EOS token — is <strong>deterministic</strong>. Same start, same graph, every time.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>The fix is to treat each output as a <strong>distribution</strong> and sample from it. We want to model <span class="math inline">\(\prod_t p_{\text{model}}(x_t\mid x_1,\ldots,x_{t-1};\boldsymbol{\theta})\)</span>; so let <span class="math inline">\(y_t=p_{\text{model}}(x_{t+1}\mid x_1,\ldots,x_t;\boldsymbol{\theta})\)</span> and draw <span class="math inline">\(x_{t+1}\sim y_t\)</span>.</p>
+<div class="figure-panel">
+<div id="fig-edge-rnn" class="quarto-float quarto-figure quarto-figure-center anchored" alt="An unrolled RNN whose outputs 0.9, 0.4 and 0.7 are sampled into binary values fed to the next step">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-edge-rnn-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/graphrnn-edge-level-rnn.svg" class="img-fluid figure-img" alt="An unrolled RNN whose outputs 0.9, 0.4 and 0.7 are sampled into binary values fed to the next step">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-edge-rnn-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;17: At the edge level, <span class="math inline">\(y_t\)</span> is a <strong>scalar</strong> parameterizing a Bernoulli: the value <span class="math inline">\(1\)</span> (edge present) has probability <span class="math inline">\(p\)</span>, and <span class="math inline">\(0\)</span> has probability <span class="math inline">\(1-p\)</span>. Each step samples an edge and feeds the sample forward.
+</figcaption>
+</figure>
+</div>
+</div>
+</section>
+<section id="training" class="level3" data-number="6.5">
+<h3 data-number="6.5" class="anchored" data-anchor-id="training"><span class="header-section-number">6.5</span> Training</h3>
+<div class="figure-panel">
+<div id="fig-teacher-forcing" class="quarto-float quarto-figure quarto-figure-center anchored" alt="An unrolled RNN with the ground-truth sequence supplied at every input and compared at every output">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-teacher-forcing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/graphrnn-teacher-forcing.svg" class="img-fluid figure-img" alt="An unrolled RNN with the ground-truth sequence supplied at every input and compared at every output">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-teacher-forcing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;18: <strong>Teacher forcing.</strong> At training time the observed edge sequence <span class="math inline">\(y^{*}=[0,0,1,\ldots]\)</span> replaces both the inputs and the outputs, so each step is conditioned on the true prefix rather than on the model’s own samples.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>The loss is binary cross-entropy:</p>
+<p><span class="math display">\[
+\mathcal{L}=-\sum_{t}\left[y^{*}_t\log y_t+(1-y^{*}_t)\log(1-y_t)\right].
+\]</span></p>
+<p>If <span class="math inline">\(y^{*}_1=1\)</span> we minimize <span class="math inline">\(-\log y_1\)</span>, pushing <span class="math inline">\(y_1\)</span> up; if <span class="math inline">\(y^{*}_1=0\)</span> we minimize <span class="math inline">\(-\log(1-y_1)\)</span>, pushing it down. So <span class="math inline">\(y_1\)</span> fits the data.</p>
+<div class="checkpoint">
+<p><strong>Check 5 — The whole algorithm</strong></p>
+<ol type="1">
+<li><strong>Add a node.</strong> Run the node-level RNN one step; use its output to initialize the edge-level RNN.</li>
+<li><strong>Add its edges.</strong> Run the edge-level RNN to decide, one at a time, whether the new node connects to each previous node.</li>
+<li><strong>Continue.</strong> Feed the edge-level RNN’s last hidden state back to advance the node-level RNN.</li>
+<li><strong>Stop.</strong> If the edge-level RNN outputs all zeros — an isolated node — generation ends (EOS).</li>
+</ol>
+<p>At <strong>training</strong> time, teacher forcing supplies the true sequences. At <strong>test</strong> time, the model’s own samples are fed back.</p>
+</div>
+<div class="figure-panel">
+<div id="fig-graphrnn-testing" class="quarto-float quarto-figure quarto-figure-center anchored" alt="The two-level RNN at test time with sampled values propagated forward">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-graphrnn-testing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/graphrnn-testing.svg" class="img-fluid figure-img" alt="The two-level RNN at test time with sampled values propagated forward">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-graphrnn-testing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;19: Test time: no ground truth, so each sampled edge decision becomes the next input, and the graph is built from the model’s own choices.
+</figcaption>
+</figure>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-limits" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="sec-limits"><span class="header-section-number">7</span> What GraphRNN costs</h2>
+<div class="figure-panel">
+<div id="fig-graphrnn-limitation" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A graph being built where a newly added node must be checked against every previously added node">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-graphrnn-limitation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/graphrnn-limitation.svg" class="img-fluid figure-img" alt="A graph being built where a newly added node must be checked against every previously added node">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-graphrnn-limitation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;20: The structural problem: <strong>any node can connect to any prior node</strong>, so adding node <span class="math inline">\(i\)</span> requires <span class="math inline">\(i-1\)</span> separate binary decisions, and long-range dependencies must be carried through the recurrence.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>The authors mitigate the ordering problem with a <strong>BFS ordering</strong>, which bounds how far back a new node can plausibly connect. The cost problem remains:</p>
+<p><span class="math display">\[
+\mathcal{O}\!\left(\sum_{i=1}^{N}i\right)=\mathcal{O}\!\left(\frac{N(N+1)}{2}\right).
+\]</span></p>
+<div class="figure-panel">
+<div id="fig-generation-cost" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Log-log plot with a steep quadratic line for GraphRNN above a shallower sub-quadratic line">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-generation-cost-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/graph-generation-cost.svg" class="img-fluid figure-img" alt="Log-log plot with a steep quadratic line for GraphRNN above a shallower sub-quadratic line">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-generation-cost-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;21: Sequential edge generation in numbers. At <span class="math inline">\(N=100\)</span> a graph takes about 5000 decisions; at <span class="math inline">\(N=1000\)</span>, about half a million. The dashed line marks a sub-quadratic alternative for comparison — the point is the slope, not the constant.
+</figcaption>
+</figure>
+</div>
+</div>
+</section>
+<section id="efficient-generation-by-local-expansion" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="efficient-generation-by-local-expansion"><span class="header-section-number">8</span> Efficient generation by local expansion</h2>
+<p>A more recent approach <span class="citation" data-cites="bergmeister2024efficient">(<a href="#ref-bergmeister2024efficient" role="doc-biblioref">Bergmeister et al. 2024</a>)</span> replaces the node ordering with <strong>coarsening</strong>.</p>
+<div class="figure-panel">
+<div id="fig-coarsening" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A graph progressively reduced by merging adjacent nodes down to one node">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-coarsening-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/graph-coarsening.svg" class="img-fluid figure-img" alt="A graph progressively reduced by merging adjacent nodes down to one node">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-coarsening-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;22: Coarsening: repeatedly merge pairs of adjacent nodes, reducing the graph until a single node remains.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="figure-panel">
+<div id="fig-expansion" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A single node progressively expanded into a larger graph">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-expansion-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/graph-expansion.svg" class="img-fluid figure-img" alt="A single node progressively expanded into a larger graph">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-expansion-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;23: Generation is the <strong>reverse</strong> of that sequence: start from one node and learn to expand and refine, step by step, back to a full graph.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="checkpoint">
+<p><strong>Check 6 — Why merging preserves the right thing</strong></p>
+<p>Each merge is chosen so that the <strong>spectral properties of the graph Laplacian</strong> are preserved as well as possible <span class="citation" data-cites="loukas2019graph">(<a href="#ref-loukas2019graph" role="doc-biblioref">Loukas 2019</a>)</span>.</p>
+<p>That criterion is not arbitrary. Lecture 4 established that the Laplacian spectrum is where a graph’s structure lives — the eigenvalues are its frequencies, and smooth structure sits at the low end. Preserving the spectrum is the formal version of “keep as much of the graph as possible” while shrinking it.</p>
+</div>
+<section id="the-analogy-with-images" class="level3" data-number="8.1">
+<h3 data-number="8.1" class="anchored" data-anchor-id="the-analogy-with-images"><span class="header-section-number">8.1</span> The analogy with images</h3>
+<p>Auto-regressive image generation has moved the same way: rather than emitting pixels in raster order, generate a coarse image and refine it. Graph generation from one side to the other has the same weakness raster order does — the model must commit to fine detail before the global structure exists.</p>
+<div class="figure-panel">
+<div id="fig-local-expansion" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A coarse graph whose nodes are duplicated and then pruned to produce a refined graph">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-local-expansion-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/iterative-local-expansion.svg" class="img-fluid figure-img" alt="A coarse graph whose nodes are duplicated and then pruned to produce a refined graph">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-local-expansion-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;24: One expansion step. The model first decides <strong>which nodes to duplicate</strong>, then the graph is expanded, then a second model decides <strong>which of the new edges to keep</strong>.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="checkpoint">
+<p><strong>Check 7 — What this buys</strong></p>
+<ul>
+<li><strong>No node ordering.</strong> Nothing depends on an arbitrary permutation, so the <span class="math inline">\(N!\)</span> problem disappears.</li>
+<li><strong>Global structure first.</strong> The model establishes the coarse shape and then refines locally, instead of committing to fine detail from step one.</li>
+<li><strong>Sub-quadratic cost.</strong> A new node’s edges are decided only within its local expansion set, not against every previously generated node — so the joint distribution over all node pairs is never modelled.</li>
+</ul>
+<p>The denoising within each step is performed by a GNN, so the machinery is the message passing of Lecture 2 applied inside a generative loop.</p>
+</div>
+</section>
+</section>
+<section id="exercises" class="level2" data-number="9">
+<h2 data-number="9" class="anchored" data-anchor-id="exercises"><span class="header-section-number">9</span> Exercises</h2>
+<section id="exercise-1-clustering-by-hand" class="level3" data-number="9.1">
+<h3 data-number="9.1" class="anchored" data-anchor-id="exercise-1-clustering-by-hand"><span class="header-section-number">9.1</span> Exercise 1 — Clustering by hand</h3>
+<p>Compute <span class="math inline">\(C_i\)</span> for the centre node of a star <span class="math inline">\(K_{1,5}\)</span>, and for a node in a triangle. Then compute the graph coefficient <span class="math inline">\(C\)</span> for a path on 5 nodes, being careful with degree-1 nodes.</p>
+</section>
+<section id="exercise-2-the-g_np-clustering-derivation" class="level3" data-number="9.2">
+<h3 data-number="9.2" class="anchored" data-anchor-id="exercise-2-the-g_np-clustering-derivation"><span class="header-section-number">9.2</span> Exercise 2 — The <span class="math inline">\(G_{np}\)</span> clustering derivation</h3>
+<p>Reproduce the worked example, then evaluate <span class="math inline">\(\mathbb{E}[C]\)</span> for MSN’s parameters (<span class="math inline">\(N=1.8\times10^{8}\)</span>, <span class="math inline">\(\bar{k}=14.4\)</span>) and compare with the measured <span class="math inline">\(0.11\)</span>. By what factor is the model wrong?</p>
+</section>
+<section id="exercise-3-degree-distribution" class="level3" data-number="9.3">
+<h3 data-number="9.3" class="anchored" data-anchor-id="exercise-3-degree-distribution"><span class="header-section-number">9.3</span> Exercise 3 — Degree distribution</h3>
+<p>Show that the degree distribution of <span class="math inline">\(G_{np}\)</span> is binomial, <span class="math inline">\(P(k)=\binom{N-1}{k}p^{k}(1-p)^{N-1-k}\)</span>, and that it approaches a Poisson distribution for large <span class="math inline">\(N\)</span> with <span class="math inline">\(\bar{k}\)</span> fixed. Explain in one sentence why a Poisson tail cannot look like <a href="#fig-real-vs-random" class="quarto-xref">Figure&nbsp;10</a>.</p>
+</section>
+<section id="exercise-4-the-phase-transition" class="level3" data-number="9.4">
+<h3 data-number="9.4" class="anchored" data-anchor-id="exercise-4-the-phase-transition"><span class="header-section-number">9.4</span> Exercise 4 — The phase transition</h3>
+<p>Reproduce the left panel of <a href="#fig-er-properties" class="quarto-xref">Figure&nbsp;9</a> with <code>scripts/figures/lecture_06_figures.py</code>. Vary <span class="math inline">\(N\)</span> over <span class="math inline">\(\{500, 2000, 10000\}\)</span> and describe what happens to the sharpness of the transition at <span class="math inline">\(\bar{k}=1\)</span>.</p>
+</section>
+<section id="exercise-5-orderings" class="level3" data-number="9.5">
+<h3 data-number="9.5" class="anchored" data-anchor-id="exercise-5-orderings"><span class="header-section-number">9.5</span> Exercise 5 — Orderings</h3>
+<p>A graph with <span class="math inline">\(N\)</span> nodes admits up to <span class="math inline">\(N!\)</span> node orderings. For <span class="math inline">\(N=10\)</span>, how many is that? Explain why GraphRNN’s random ordering makes the likelihood it maximizes a lower bound rather than the true likelihood, and what the BFS ordering does about it.</p>
+</section>
+<section id="exercise-6-counting-decisions" class="level3" data-number="9.6">
+<h3 data-number="9.6" class="anchored" data-anchor-id="exercise-6-counting-decisions"><span class="header-section-number">9.6</span> Exercise 6 — Counting decisions</h3>
+<p>Count the edge-level decisions GraphRNN makes to generate a graph with <span class="math inline">\(N=500\)</span>. If each decision costs one RNN step at 10 μs, how long does one graph take? Repeat for <span class="math inline">\(N=5000\)</span> and comment on the practical ceiling.</p>
+</section>
+<section id="exercise-7-comparing-the-two-approaches" class="level3" data-number="9.7">
+<h3 data-number="9.7" class="anchored" data-anchor-id="exercise-7-comparing-the-two-approaches"><span class="header-section-number">9.7</span> Exercise 7 — Comparing the two approaches</h3>
+<p>For each of GraphRNN and local expansion, state (a) what the generation order is, (b) what the model must decide at each step, and (c) the dominant cost. Then give one scenario where GraphRNN would still be the better choice.</p>
+</section>
+</section>
+<section id="main-takeaways" class="level2" data-number="10">
+<h2 data-number="10" class="anchored" data-anchor-id="main-takeaways"><span class="header-section-number">10</span> Main takeaways</h2>
+<ol type="1">
+<li>Many problems — drug discovery, material design, network modelling — require <strong>generating</strong> graphs, not just learning from them.</li>
+<li>A generative model is judged on whether it reproduces real graphs’ <strong>degree distribution, clustering, connectivity, and path length</strong>.</li>
+<li><strong>Erdős–Rényi</strong> graphs get connectivity and path length right and clustering and degree distribution badly wrong: <span class="math inline">\(\mathbb{E}[C]=\bar{k}/N\to0\)</span>, and the degree distribution is binomial rather than skewed.</li>
+<li><span class="math inline">\(G_{np}\)</span> remains the indispensable <strong>null model</strong> and the standard setting for analyzing algorithms — just not a model of how real networks form.</li>
+<li>Classical models encode <strong>predefined rules</strong>; deep generative models <strong>learn</strong> the formation process from data.</li>
+<li><strong>GraphRNN</strong> turns a graph plus an ordering into a sequence of sequences, and models both levels with RNNs trained by teacher forcing under binary cross-entropy.</li>
+<li>GraphRNN pays <span class="math inline">\(\mathcal{O}(N^2/2)\)</span> edge decisions and inherits an arbitrary node ordering.</li>
+<li><strong>Iterative local expansion</strong> inverts a spectrum-preserving coarsening instead: no ordering, global structure first, and sub-quadratic cost.</li>
+</ol>
+</section>
+<section id="references-and-provenance" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="references-and-provenance">References and provenance</h2>
+<p>This web note is adapted from the Lecture 6 slides by Jhony H. Giraldo. The <span class="math inline">\(G_{np}\)</span> clustering result is derived rather than quoted, and the lecture’s qualitative comparison between real and random graphs is replaced by measurements.</p>
+<p>The diagrams reproduce the original course vectors. <a href="#fig-real-vs-random" class="quarto-xref">Figure&nbsp;10</a>, <a href="#fig-er-properties" class="quarto-xref">Figure&nbsp;9</a>, and <a href="#fig-generation-cost" class="quarto-xref">Figure&nbsp;21</a> are new and were computed with <code>numpy</code> and <code>networkx</code>; the script that produces them is <code>scripts/figures/lecture_06_figures.py</code> in this repository. The MSN Messenger statistics quoted above are taken from the lecture slides, which credit Leskovec’s Stanford lectures; the corresponding slide images are not reproduced here.</p>
+<div id="refs" class="references-small references csl-bib-body hanging-indent" role="list">
+<div id="ref-bergmeister2024efficient" class="csl-entry" role="listitem">
+Bergmeister, Andreas, Karolis Martinkus, Nathanaël Perraudin, and Roger Wattenhofer. 2024. <span>“Efficient and Scalable Graph Generation Through Iterative Local Expansion.”</span> <em>International Conference on Learning Representations</em>.
+</div>
+<div id="ref-erdos1959random" class="csl-entry" role="listitem">
+Erdős, Paul, and Alfréd Rényi. 1959. <span>“On Random Graphs i.”</span> <em>Publicationes Mathematicae Debrecen</em> 6: 290–97.
+</div>
+<div id="ref-loukas2019graph" class="csl-entry" role="listitem">
+Loukas, Andreas. 2019. <span>“Graph Reduction with Spectral and Cut Guarantees.”</span> <em>Journal of Machine Learning Research</em> 20 (116): 1–42.
+</div>
+<div id="ref-you2018graphrnn" class="csl-entry" role="listitem">
+You, Jiaxuan, Rex Ying, Xiang Ren, William L. Hamilton, and Jure Leskovec. 2018. <span>“<span>GraphRNN</span>: Generating Realistic Graphs with Deep Auto-Regressive Models.”</span> <em>International Conference on Machine Learning</em>.
+</div>
+</div>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script src="../../assets/site.js" defer=""></script>
+
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/jhonygiraldo\.github\.io");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© 2026 Jhony H. Giraldo</p>
+</div>   
+    <div class="nav-footer-center">
+<p>Télécom Paris · Institut Polytechnique de Paris</p>
+</div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+    <a class="nav-link" href="https://orcid.org/0000-0002-0039-1270">
+<p>ORCID</p>
+</a>
+  </li>  
+    <li class="nav-item">
+    <a class="nav-link" href="mailto:jhony.giraldo@telecom-paris.fr">
+<p>Email</p>
+</a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+<script src="../../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

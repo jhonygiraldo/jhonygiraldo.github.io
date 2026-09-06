@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Web lecture note on graph-based recommendation: bipartite graphs, Recall@k, the BPR loss, collaborative filtering, NGCF, and LightGCN.">
+
+<title>Lecture 5 — Recommender Systems – Jhony H. Giraldo</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../assets/images/jhony-giraldo.jpg" rel="icon" type="image/jpeg">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-e3f251471e60ae6bf9c8e95d70d1e8a4.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Jhony H. Giraldo",
+  "jobTitle": "Assistant Professor in Machine Learning and Computer Vision",
+  "url": "https://jhonygiraldo.github.io/",
+  "image": "https://jhonygiraldo.github.io/assets/images/jhony-giraldo.jpg",
+  "email": "mailto:jhony.giraldo@telecom-paris.fr",
+  "affiliation": [
+    {"@type": "CollegeOrUniversity", "name": "Télécom Paris"},
+    {"@type": "CollegeOrUniversity", "name": "Institut Polytechnique de Paris"}
+  ],
+  "sameAs": [
+    "https://orcid.org/0000-0002-0039-1270",
+    "https://scholar.google.com/citations?user=iwzmGKwAAAAJ",
+    "https://www.linkedin.com/in/jhonyhgiraldo",
+    "https://bsky.app/profile/jhonyhgiraldo.bsky.social"
+  ],
+  "knowsAbout": [
+    "Graph machine learning",
+    "Geometric deep learning",
+    "Graph signal processing",
+    "Computer vision",
+    "Higher-order neural networks"
+  ]
+}
+</script>
+
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<meta property="og:title" content="Lecture 5 — Recommender Systems">
+<meta property="og:description" content="Web lecture note on graph-based recommendation: bipartite graphs, Recall@k, the BPR loss, collaborative filtering, NGCF, and LightGCN.">
+<meta property="og:image" content="https://jhonygiraldo.github.io/assets/figures/recsys-bipartite-graph.svg">
+<meta property="og:site_name" content="Jhony H. Giraldo">
+<meta property="og:image:alt" content="Four users on the left connected by colored edges to four items on the right">
+<meta name="twitter:title" content="Lecture 5 — Recommender Systems">
+<meta name="twitter:description" content="Web lecture note on graph-based recommendation: bipartite graphs, Recall@k, the BPR loss, collaborative filtering, NGCF, and LightGCN.">
+<meta name="twitter:image" content="https://jhonygiraldo.github.io/assets/figures/recsys-bipartite-graph.svg">
+<meta name="twitter:image:alt" content="Four users on the left connected by colored edges to four items on the right">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed custom-title-page lecture-page quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Jhony H. Giraldo</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../research/index.html"> 
+<span class="menu-text">Research</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../people/index.html"> 
+<span class="menu-text">Team</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../publications/index.html"> 
+<span class="menu-text">Publications</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../teaching/index.html"> 
+<span class="menu-text">Teaching</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../news/index.html"> 
+<span class="menu-text">News</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../cv/index.html"> 
+<span class="menu-text">CV</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:jhony.giraldo@telecom-paris.fr"> <i class="bi bi-envelope" role="img" aria-label="Email Jhony Giraldo">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://scholar.google.com/citations?user=iwzmGKwAAAAJ"> <i class="bi bi-mortarboard-fill" role="img" aria-label="Google Scholar">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/jhonyhgiraldo"> <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives"><span class="header-section-number">1</span> Learning objectives</a></li>
+  <li><a href="#recommendation-as-a-graph-problem" id="toc-recommendation-as-a-graph-problem" class="nav-link" data-scroll-target="#recommendation-as-a-graph-problem"><span class="header-section-number">2</span> Recommendation as a graph problem</a>
+  <ul class="collapse">
+  <li><a href="#top-k-recommendation" id="toc-top-k-recommendation" class="nav-link" data-scroll-target="#top-k-recommendation"><span class="header-section-number">2.1</span> Top-<span class="math inline">\(k\)</span> recommendation</a></li>
+  <li><a href="#recallk" id="toc-recallk" class="nav-link" data-scroll-target="#recallk"><span class="header-section-number">2.2</span> Recall@<span class="math inline">\(k\)</span></a></li>
+  <li><a href="#how-a-deployed-system-is-actually-built" id="toc-how-a-deployed-system-is-actually-built" class="nav-link" data-scroll-target="#how-a-deployed-system-is-actually-built"><span class="header-section-number">2.3</span> How a deployed system is actually built</a></li>
+  <li><a href="#a-word-about-what-these-systems-optimize" id="toc-a-word-about-what-these-systems-optimize" class="nav-link" data-scroll-target="#a-word-about-what-these-systems-optimize"><span class="header-section-number">2.4</span> A word about what these systems optimize</a></li>
+  </ul></li>
+  <li><a href="#embedding-based-models" id="toc-embedding-based-models" class="nav-link" data-scroll-target="#embedding-based-models"><span class="header-section-number">3</span> Embedding-based models</a></li>
+  <li><a href="#sec-losses" id="toc-sec-losses" class="nav-link" data-scroll-target="#sec-losses"><span class="header-section-number">4</span> Surrogate losses</a>
+  <ul class="collapse">
+  <li><a href="#the-binary-loss" id="toc-the-binary-loss" class="nav-link" data-scroll-target="#the-binary-loss"><span class="header-section-number">4.1</span> The binary loss</a></li>
+  <li><a href="#the-bpr-loss" id="toc-the-bpr-loss" class="nav-link" data-scroll-target="#the-bpr-loss"><span class="header-section-number">4.2</span> The BPR loss</a></li>
+  </ul></li>
+  <li><a href="#why-embeddings-work-at-all" id="toc-why-embeddings-work-at-all" class="nav-link" data-scroll-target="#why-embeddings-work-at-all"><span class="header-section-number">5</span> Why embeddings work at all</a></li>
+  <li><a href="#neural-graph-collaborative-filtering" id="toc-neural-graph-collaborative-filtering" class="nav-link" data-scroll-target="#neural-graph-collaborative-filtering"><span class="header-section-number">6</span> Neural graph collaborative filtering</a></li>
+  <li><a href="#lightgcn" id="toc-lightgcn" class="nav-link" data-scroll-target="#lightgcn"><span class="header-section-number">7</span> LightGCN</a>
+  <ul class="collapse">
+  <li><a href="#the-bipartite-adjacency" id="toc-the-bipartite-adjacency" class="nav-link" data-scroll-target="#the-bipartite-adjacency"><span class="header-section-number">7.1</span> The bipartite adjacency</a></li>
+  <li><a href="#deriving-the-model" id="toc-deriving-the-model" class="nav-link" data-scroll-target="#deriving-the-model"><span class="header-section-number">7.2</span> Deriving the model</a></li>
+  <li><a href="#multi-scale-diffusion" id="toc-multi-scale-diffusion" class="nav-link" data-scroll-target="#multi-scale-diffusion"><span class="header-section-number">7.3</span> Multi-scale diffusion</a></li>
+  <li><a href="#the-model-end-to-end" id="toc-the-model-end-to-end" class="nav-link" data-scroll-target="#the-model-end-to-end"><span class="header-section-number">7.4</span> The model end to end</a></li>
+  </ul></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">8</span> Exercises</a>
+  <ul class="collapse">
+  <li><a href="#exercise-1-recallk-by-hand" id="toc-exercise-1-recallk-by-hand" class="nav-link" data-scroll-target="#exercise-1-recallk-by-hand"><span class="header-section-number">8.1</span> Exercise 1 — Recall@<span class="math inline">\(k\)</span> by hand</a></li>
+  <li><a href="#exercise-2-the-counterexample-generalized" id="toc-exercise-2-the-counterexample-generalized" class="nav-link" data-scroll-target="#exercise-2-the-counterexample-generalized"><span class="header-section-number">8.2</span> Exercise 2 — The counterexample, generalized</a></li>
+  <li><a href="#exercise-3-invariance" id="toc-exercise-3-invariance" class="nav-link" data-scroll-target="#exercise-3-invariance"><span class="header-section-number">8.3</span> Exercise 3 — Invariance</a></li>
+  <li><a href="#exercise-4-gradient-of-the-bpr-loss" id="toc-exercise-4-gradient-of-the-bpr-loss" class="nav-link" data-scroll-target="#exercise-4-gradient-of-the-bpr-loss"><span class="header-section-number">8.4</span> Exercise 4 — Gradient of the BPR loss</a></li>
+  <li><a href="#exercise-5-the-collapse" id="toc-exercise-5-the-collapse" class="nav-link" data-scroll-target="#exercise-5-the-collapse"><span class="header-section-number">8.5</span> Exercise 5 — The collapse</a></li>
+  <li><a href="#exercise-6-diffusion-depth" id="toc-exercise-6-diffusion-depth" class="nav-link" data-scroll-target="#exercise-6-diffusion-depth"><span class="header-section-number">8.6</span> Exercise 6 — Diffusion depth</a></li>
+  <li><a href="#exercise-7-parameter-counts" id="toc-exercise-7-parameter-counts" class="nav-link" data-scroll-target="#exercise-7-parameter-counts"><span class="header-section-number">8.7</span> Exercise 7 — Parameter counts</a></li>
+  </ul></li>
+  <li><a href="#main-takeaways" id="toc-main-takeaways" class="nav-link" data-scroll-target="#main-takeaways"><span class="header-section-number">9</span> Main takeaways</a></li>
+  <li><a href="#references-and-provenance" id="toc-references-and-provenance" class="nav-link" data-scroll-target="#references-and-provenance">References and provenance</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+</div>
+
+<div>
+  <div class="description">
+    Web lecture note on graph-based recommendation: bipartite graphs, Recall@k, the BPR loss, collaborative filtering, NGCF, and LightGCN.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    <div>
+    <div class="quarto-title-meta-heading">Modified</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date-modified">September 6, 2026</p>
+    </div>
+  </div>
+    
+  </div>
+  
+
+
+</header>
+
+
+<header class="lecture-header">
+  <div class="eyebrow">APM 5DS30 TP · Machine Learning with Graphs</div>
+  <h1>Recommender systems</h1>
+  <p>Lecture 5 · Jhony H. Giraldo · Télécom Paris, Institut Polytechnique de Paris</p>
+  <div class="lecture-meta"><span>Original lecture: 21 November 2025</span><span>Web note revised: 6 September 2026</span><span>Mathematics rendered with MathJax</span></div>
+  <div class="button-row">
+    <a class="button-link primary" href="../../assets/pdf/Lecture-05-Recommender-Systems.pdf">Download the original slides</a>
+    <a class="button-link secondary" href="../../teaching/machine-learning-with-graphs/index.html">Back to the course</a>
+  </div>
+</header>
+<p>Netflix carries more than ten thousand films. Amazon lists twelve million products directly and some 350 million on its marketplace. Spotify holds seventy million tracks, YouTube more than ten billion videos, Pinterest more than two hundred billion images. No user can explore a catalogue of that size, so <strong>personalized recommendation</strong> — surfacing a handful of interesting items for each individual — is what makes such a platform usable at all.</p>
+<p>This note treats recommendation as a graph problem. The data is a bipartite user–item graph; the task is link prediction on it; and the two architectures we study, NGCF and LightGCN, are the machinery of Lectures 2 and 3 applied to that graph. But the interesting part is not the architecture. It is that the <strong>metric we care about is not differentiable</strong>, and almost everything in the design follows from what we do about that.</p>
+<section id="learning-objectives" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="learning-objectives"><span class="header-section-number">1</span> Learning objectives</h2>
+<p>After studying this note, you should be able to:</p>
+<ol class="learning-objectives">
+  <li>model a recommender system as a bipartite graph and cast recommendation as link prediction;</li>
+  <li>define Recall@$k$ and explain why it cannot be optimized directly;</li>
+  <li>show by counterexample why the binary loss is misaligned with Recall@$k$, and how the BPR loss fixes it;</li>
+  <li>explain collaborative filtering and why low-dimensional embeddings capture it;</li>
+  <li>describe NGCF's message passing over the user–item graph;</li>
+  <li>derive LightGCN from a GCN and explain what its multi-scale average does.</li>
+</ol>
+</section>
+<section id="recommendation-as-a-graph-problem" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="recommendation-as-a-graph-problem"><span class="header-section-number">2</span> Recommendation as a graph problem</h2>
+<div class="figure-panel">
+<div id="fig-bipartite" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Four users on the left connected by colored edges to four items on the right">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-bipartite-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/recsys-bipartite-graph.svg" class="img-fluid figure-img" alt="Four users on the left connected by colored edges to four items on the right">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bipartite-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: A recommender system is naturally a <strong>bipartite graph</strong>: two node types, users <span class="math inline">\(\mathcal{U}\)</span> and items <span class="math inline">\(\mathcal{V}\)</span>, with edges only between the two sets. An edge records an interaction — a click, a purchase, a review — and usually carries a timestamp.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="definition">
+<p><strong>Definition 1 — Notation</strong></p>
+<p><span class="math inline">\(\mathcal{U}\)</span> is the set of users, <span class="math inline">\(\mathcal{V}\)</span> the set of items, and</p>
+<p><span class="math display">\[
+\mathcal{E}=\{(u,v)\ \vert\ u\in\mathcal{U},\ v\in\mathcal{V},\ u \text{ interacted with } v\}
+\]</span></p>
+<p>the set of observed interactions.</p>
+</div>
+<p>The bipartite view is a good first model, not the whole story: real systems also carry knowledge graphs over the items, user attributes, session structure, and time. But it is enough to state the task.</p>
+<div class="figure-panel">
+<div id="fig-link-prediction" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A bipartite graph with existing edges in solid lines and predicted future edges dashed">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-link-prediction-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/recsys-link-prediction.svg" class="img-fluid figure-img" alt="A bipartite graph with existing edges in solid lines and predicted future edges dashed">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-link-prediction-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: <strong>Input:</strong> past user–item interactions. <strong>Task:</strong> predict which new items each user will interact with. This is exactly link prediction — predict new edges given the observed ones.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>For every pair <span class="math inline">\(u\in\mathcal{U}\)</span>, <span class="math inline">\(v\in\mathcal{V}\)</span> we need a real-valued score <span class="math inline">\(f(u,v)\)</span>, and we recommend the highest-scoring items the user has not already seen.</p>
+<section id="top-k-recommendation" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="top-k-recommendation"><span class="header-section-number">2.1</span> Top-<span class="math inline">\(k\)</span> recommendation</h3>
+<p>For a recommendation to be useful, <span class="math inline">\(k\)</span> must be far smaller than the catalogue — typically <span class="math inline">\(10\)</span> to <span class="math inline">\(100\)</span> against up to billions of items. The goal is to fit as many <strong>positive items</strong> (items the user will actually interact with in the future) as possible into that short list.</p>
+</section>
+<section id="recallk" class="level3" data-number="2.2">
+<h3 data-number="2.2" class="anchored" data-anchor-id="recallk"><span class="header-section-number">2.2</span> Recall@<span class="math inline">\(k\)</span></h3>
+<div class="definition">
+<p><strong>Definition 2 — Recall@<span class="math inline">\(k\)</span></strong></p>
+<p>For each user <span class="math inline">\(u\)</span>, let <span class="math inline">\(P_u\)</span> be the set of positive items the user will interact with in the future and <span class="math inline">\(R_u\)</span> the set of items the model recommends, with <span class="math inline">\(|R_u|=k\)</span> and items already interacted with excluded. Then</p>
+<p><span class="math display">\[
+\text{Recall@}k(u)=\frac{|P_u\cap R_u|}{|P_u|},
+\]</span></p>
+<p>and the reported figure is the average over all users.</p>
+</div>
+<div class="two-figures">
+<div class="figure-panel">
+<div id="fig-recall-sets" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two overlapping ellipses labelled positive items and recommended items">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-recall-sets-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/recall-at-k-sets.svg" class="img-fluid figure-img" alt="Two overlapping ellipses labelled positive items and recommended items">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-recall-sets-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: <span class="math inline">\(P_u\)</span>, the future positives, and <span class="math inline">\(R_u\)</span>, the top-<span class="math inline">\(k\)</span> recommendations.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="figure-panel">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../../assets/figures/recall-at-k-formula.svg" class="img-fluid figure-img" alt="The same two ellipses with the intersection region highlighted"></p>
+<figcaption>Recall@<span class="math inline">\(k\)</span> is the fraction of <span class="math inline">\(P_u\)</span> recovered inside the intersection.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="checkpoint">
+<p><strong>Check 1 — Recall@<span class="math inline">\(k\)</span> is personalized</strong></p>
+<p>Read the definition again: it is computed <strong>per user</strong> and only then averaged. Nothing in it compares one user’s scores against another’s. That sounds like a technicality; <a href="#sec-losses" class="quarto-xref">Section&nbsp;4</a> shows it is the single most consequential fact in the lecture.</p>
+</div>
+</section>
+<section id="how-a-deployed-system-is-actually-built" class="level3" data-number="2.3">
+<h3 data-number="2.3" class="anchored" data-anchor-id="how-a-deployed-system-is-actually-built"><span class="header-section-number">2.3</span> How a deployed system is actually built</h3>
+<p>We cannot evaluate <span class="math inline">\(f(u,v)\)</span> for every pair: <span class="math inline">\(|\mathcal{U}|\times|\mathcal{V}|\)</span> is astronomically large. Production systems therefore split the work in two.</p>
+<div class="figure-panel">
+<div id="fig-two-stage" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Five boxes in a row: all items, candidate generation, candidates, ranking, top-k">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-two-stage-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/two-stage-recommender.svg" class="img-fluid figure-img" alt="Five boxes in a row: all items, candidate generation, candidates, ranking, top-k">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-two-stage-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: Candidate generation is cheap and approximate — typically an approximate nearest-neighbor lookup in embedding space — and reduces billions of items to about a thousand. Ranking is expensive and accurate, and is applied only to those.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>Everything in this note concerns the embeddings that make the first stage possible.</p>
+</section>
+<section id="a-word-about-what-these-systems-optimize" class="level3" data-number="2.4">
+<h3 data-number="2.4" class="anchored" data-anchor-id="a-word-about-what-these-systems-optimize"><span class="header-section-number">2.4</span> A word about what these systems optimize</h3>
+<div class="checkpoint">
+<p><strong>Check 2 — Societal risk is a consequence of the objective</strong></p>
+<p>How many times have you opened TikTok, Instagram, or YouTube “just for five minutes” and lost half an hour?</p>
+<p>That is not an accident. It is a direct consequence of the objective functions in this note. Recommender systems are trained on engagement — clicks, watch time, interactions — and Recall@<span class="math inline">\(k\)</span> rewards giving users exactly what they are most likely to engage with. If a user’s history shows a pull toward content that is harmful or addictive, a system optimizing this objective will <strong>amplify</strong> it, because amplifying it is what the metric rewards.</p>
+<p>Going further is outside this course, but there are active research communities on fairness, diversity, filter bubbles, and engagement-versus-wellbeing objectives. Know that the metric you optimize is a choice, and that this one has consequences.</p>
+</div>
+</section>
+</section>
+<section id="embedding-based-models" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="embedding-based-models"><span class="header-section-number">3</span> Embedding-based models</h2>
+<div class="figure-panel">
+<div id="fig-score-function" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A bipartite graph with numeric scores annotated on the edges from user u2">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-score-function-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/recsys-score-function.svg" class="img-fluid figure-img" alt="A bipartite graph with numeric scores annotated on the edges from user u2">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-score-function-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5: The score function ranks items for a user. Here, for <span class="math inline">\(k=2\)</span>, user <span class="math inline">\(u_2\)</span> would be recommended <span class="math inline">\(\{v_1, v_4\}\)</span> — the two highest-scoring items among those not already interacted with.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="definition">
+<p><strong>Definition 3 — Embedding-based model</strong></p>
+<p>Give every user <span class="math inline">\(u\)</span> an embedding <span class="math inline">\(\mathbf{u}\in\mathbb{R}^{D}\)</span> and every item <span class="math inline">\(v\)</span> an embedding <span class="math inline">\(\mathbf{v}\in\mathbb{R}^{D}\)</span>, and let <span class="math inline">\(F_{\theta}:\mathbb{R}^{D}\times\mathbb{R}^{D}\to\mathbb{R}\)</span> be a parameterized function. Then</p>
+<p><span class="math display">\[
+\operatorname{score}(u,v):=F_{\theta}(\mathbf{u},\mathbf{v}).
+\]</span></p>
+</div>
+<div class="figure-panel">
+<div id="fig-embedding-model" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A bipartite graph where each node carries an embedding vector, with the score function annotated between two of them">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-embedding-model-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/recsys-embedding-model.svg" class="img-fluid figure-img" alt="A bipartite graph where each node carries an embedding vector, with the score function annotated between two of them">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-embedding-model-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6: The model has three sets of parameters: a user encoder, an item encoder, and the score function.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>The training objective is to achieve high Recall@<span class="math inline">\(k\)</span> on the observed interactions, in the hope that this transfers to the unseen ones.</p>
+</section>
+<section id="sec-losses" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="sec-losses"><span class="header-section-number">4</span> Surrogate losses</h2>
+<p>Here is the problem. <strong>Recall@<span class="math inline">\(k\)</span> is not differentiable.</strong> It depends on the model only through a sort and a set intersection, both piecewise constant, so its gradient is zero wherever it exists. Gradient-based optimization has nothing to work with.</p>
+<p>We therefore need a <strong>surrogate</strong>: a differentiable loss that is aligned with the metric we actually want. Two are standard.</p>
+<section id="the-binary-loss" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="the-binary-loss"><span class="header-section-number">4.1</span> The binary loss</h3>
+<div class="definition">
+<p><strong>Definition 4 — Binary loss</strong></p>
+<p>Let <span class="math inline">\(\mathcal{E}\)</span> be the observed (positive) edges and</p>
+<p><span class="math display">\[
+\mathcal{E}_{\text{neg}}=\{(u,v)\ \vert\ (u,v)\notin\mathcal{E},\ u\in\mathcal{U},\ v\in\mathcal{V}\}
+\]</span></p>
+<p>the negative ones. The binary loss classifies edges as positive or negative using <span class="math inline">\(\sigma(F_\theta(\mathbf{u},\mathbf{v}))\)</span>:</p>
+<p><span class="math display">\[
+-\frac{1}{|\mathcal{E}|}\sum_{(u,v)\in\mathcal{E}}\log\sigma\!\left(F_\theta(\mathbf{u},\mathbf{v})\right)
+-\frac{1}{|\mathcal{E}_{\text{neg}}|}\sum_{(u,v)\in\mathcal{E}_{\text{neg}}}\log\!\left(1-\sigma\!\left(F_\theta(\mathbf{u},\mathbf{v})\right)\right).
+\]</span></p>
+</div>
+<p>This pushes positive-edge scores up and negative-edge scores down, which sounds exactly right — positives are what we want recalled. But look at what “up” and “down” mean here: <strong>all</strong> positives above <strong>all</strong> negatives, across the entire dataset at once.</p>
+<div class="figure-panel">
+<div id="fig-binary-counterexample" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two users connected to two items, annotated with scores 1.0, -1.0, 2.0, and 4.0, with positive edges solid and negative edges dashed">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-binary-counterexample-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/binary-loss-counterexample.svg" class="img-fluid figure-img" alt="Two users connected to two items, annotated with scores 1.0, -1.0, 2.0, and 4.0, with positive edges solid and negative edges dashed">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-binary-counterexample-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7: Two users, two items, and the model’s scores. Recall@1 is <span class="math inline">\(1.0\)</span> — a perfect score: <span class="math inline">\(v_1\)</span> is correctly the top recommendation for <span class="math inline">\(u_1\)</span>, and <span class="math inline">\(v_2\)</span> for <span class="math inline">\(u_2\)</span>. Yet the binary loss still penalizes this model, because the negative edge <span class="math inline">\((u_2,v_1)\)</span> scores <span class="math inline">\(2.0\)</span>, higher than the positive edge <span class="math inline">\((u_1,v_1)\)</span> at <span class="math inline">\(1.0\)</span>.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="checkpoint">
+<p><strong>Check 3 — Read the counterexample carefully</strong></p>
+<p>The model in <a href="#fig-binary-counterexample" class="quarto-xref">Figure&nbsp;7</a> is <strong>perfect</strong> by the metric we care about, and the loss punishes it anyway.</p>
+<p>The reason is a mismatch of scope. The binary loss compares positives and negatives <strong>across all users at once</strong> — it is <em>non-personalized</em>. Recall@<span class="math inline">\(k\)</span> compares items <strong>within one user</strong> — it is <em>personalized</em>. Comparing <span class="math inline">\((u_2,v_1)\)</span> against <span class="math inline">\((u_1,v_1)\)</span> is a comparison the metric never makes and never rewards, so the loss is strictly stricter than the objective.</p>
+<p>Note that this is a proof, not an observation. One counterexample is enough to establish the misalignment.</p>
+</div>
+</section>
+<section id="the-bpr-loss" class="level3" data-number="4.2">
+<h3 data-number="4.2" class="anchored" data-anchor-id="the-bpr-loss"><span class="header-section-number">4.2</span> The BPR loss</h3>
+<p>What we want instead: for each user separately, positive scores above that same user’s negative scores. Score ordering <em>across</em> users is irrelevant.</p>
+<div class="figure-panel">
+<div id="fig-bpr-rooted" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A bipartite graph with one user highlighted and its positive and negative edges distinguished">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-bpr-rooted-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/bpr-rooted-edges.svg" class="img-fluid figure-img" alt="A bipartite graph with one user highlighted and its positive and negative edges distinguished">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bpr-rooted-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8: Rooted edges. For a fixed user <span class="math inline">\(u^*\)</span>, <span class="math inline">\(\mathcal{E}(u^*)\)</span> are the positive edges leaving <span class="math inline">\(u^*\)</span> and <span class="math inline">\(\mathcal{E}_{\text{neg}}(u^*)\)</span> the negative ones. All comparisons stay inside this neighborhood.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="definition">
+<p><strong>Definition 5 — Bayesian Personalized Ranking loss</strong></p>
+<p>For a user <span class="math inline">\(u^*\)</span>, with rooted positive edges <span class="math inline">\(\mathcal{E}(u^*)=\{(u^*,v)\in\mathcal{E}\}\)</span> and rooted negative edges <span class="math inline">\(\mathcal{E}_{\text{neg}}(u^*)=\{(u^*,v)\in\mathcal{E}_{\text{neg}}\}\)</span>,</p>
+<p><span id="eq-bpr"><span class="math display">\[
+\text{Loss}(u^*)=
+\frac{1}{|\mathcal{E}(u^*)|\,|\mathcal{E}_{\text{neg}}(u^*)|}
+\sum_{(u^*,v_{\text{pos}})\in\mathcal{E}(u^*)}\ \sum_{(u^*,v_{\text{neg}})\in\mathcal{E}_{\text{neg}}(u^*)}
+-\log\sigma\!\left(F_\theta(u^*,v_{\text{pos}})-F_\theta(u^*,v_{\text{neg}})\right),
+\tag{1}\]</span></span></p>
+<p>and the total loss is <span class="math inline">\(\frac{1}{|\mathcal{U}|}\sum_{u^*\in\mathcal{U}}\text{Loss}(u^*)\)</span>.</p>
+</div>
+<p>The whole design is in the <strong>difference</strong> <span class="math inline">\(F_\theta(u^*,v_{\text{pos}})-F_\theta(u^*,v_{\text{neg}})\)</span>. Only scores belonging to the same user are ever compared, so the loss is invariant to shifting one user’s scores up or down — precisely the invariance Recall@<span class="math inline">\(k\)</span> has. Applied to <a href="#fig-binary-counterexample" class="quarto-xref">Figure&nbsp;7</a>, the BPR loss is happy: within <span class="math inline">\(u_1\)</span>, <span class="math inline">\(v_1\)</span> outranks <span class="math inline">\(v_2\)</span>; within <span class="math inline">\(u_2\)</span>, <span class="math inline">\(v_2\)</span> outranks <span class="math inline">\(v_1\)</span>; nothing else is checked.</p>
+<div class="figure-panel">
+<div id="fig-bpr-minibatch" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A bipartite graph with a few users highlighted and their sampled positive and negative items marked">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-bpr-minibatch-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/bpr-minibatch.svg" class="img-fluid figure-img" alt="A bipartite graph with a few users highlighted and their sampled positive and negative items marked">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bpr-minibatch-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;9: Mini-batch estimation. Sample a subset of users <span class="math inline">\(\mathcal{U}_{\text{mini}}\)</span>; for each, sample one positive item and a set of negative items.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>The double sum in <a href="#eq-bpr" class="quarto-xref">Equation&nbsp;1</a> is far too large to evaluate exactly, so it is estimated:</p>
+<p><span class="math display">\[
+\frac{1}{|\mathcal{U}_{\text{mini}}|}\sum_{u^*\in\mathcal{U}_{\text{mini}}}
+\frac{1}{|\mathcal{V}_{\text{neg}}|}\sum_{v_{\text{neg}}\in\mathcal{V}_{\text{neg}}}
+-\log\sigma\!\left(F_\theta(u^*,v_{\text{pos}})-F_\theta(u^*,v_{\text{neg}})\right).
+\]</span></p>
+</section>
+</section>
+<section id="why-embeddings-work-at-all" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="why-embeddings-work-at-all"><span class="header-section-number">5</span> Why embeddings work at all</h2>
+<div class="figure-panel">
+<div id="fig-collaborative-filtering" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A bipartite graph with two users sharing several common item neighbors highlighted">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-collaborative-filtering-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/collaborative-filtering-idea.svg" class="img-fluid figure-img" alt="A bipartite graph with two users sharing several common item neighbors highlighted">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-collaborative-filtering-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;10: <strong>Collaborative filtering</strong>: recommend for a user by pooling the preferences of many similar users. Users <span class="math inline">\(u\)</span> and <span class="math inline">\(u'\)</span> share several items, so an item liked by one is a good candidate for the other.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>The mechanism is a capacity argument, and it is worth stating precisely.</p>
+<div class="checkpoint">
+<p><strong>Check 4 — Low dimension is a feature, not a limitation</strong></p>
+<p>A <span class="math inline">\(D\)</span>-dimensional embedding table has <span class="math inline">\(O((|\mathcal{U}|+|\mathcal{V}|)D)\)</span> parameters, whereas the interaction matrix has <span class="math inline">\(|\mathcal{U}|\times|\mathcal{V}|\)</span> entries. When <span class="math inline">\(D\)</span> is small the model <strong>cannot memorize</strong> the interactions.</p>
+<p>Being unable to memorize, it is forced to explain the data with structure it can represent — which means placing similar users near each other and similar items near each other. That compression <em>is</em> collaborative filtering, and it is what lets the model say anything about a pair it has never observed.</p>
+</div>
+</section>
+<section id="neural-graph-collaborative-filtering" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="neural-graph-collaborative-filtering"><span class="header-section-number">6</span> Neural graph collaborative filtering</h2>
+<div class="figure-panel">
+<div id="fig-shallow" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A bipartite graph where each node carries a learnable embedding vector">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-shallow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/shallow-user-item-embeddings.svg" class="img-fluid figure-img" alt="A bipartite graph where each node carries a learnable embedding vector">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-shallow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;11: Conventional collaborative filtering: a learnable shallow embedding per user and per item, scored by inner product <span class="math inline">\(f(u,v)=\langle\mathbf{z}_u,\mathbf{z}_v\rangle\)</span>. No features, no graph in the model.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="checkpoint">
+<p><strong>Check 5 — What shallow encoders miss</strong></p>
+<p>The graph enters a shallow model <strong>only through the training objective</strong> — through which pairs are positive. It never enters the model itself.</p>
+<p>And the objective only ever looks at <strong>first-order</strong> structure: individual edges. A <span class="math inline">\(K\)</span>-hop path between a user and an item — the very thing that says “people like you, who liked things like this, went on to like that” — is never represented.</p>
+<p>This is exactly the limitation Lecture 2 identified for DeepWalk, in a new setting.</p>
+</div>
+<p>We want a model that captures graph structure <strong>explicitly</strong> and at <strong>higher order</strong>. GNNs do both.</p>
+<div class="figure-panel">
+<div id="fig-ngcf-overview" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three panels: initial shallow embeddings, GNN propagation with green arrows, and the resulting graph-aware embeddings">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ngcf-overview-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/ngcf-overview.svg" class="img-fluid figure-img" alt="Three panels: initial shallow embeddings, GNN propagation with green arrows, and the resulting graph-aware embeddings">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ngcf-overview-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;12: NGCF <span class="citation" data-cites="wang2019neural">(<a href="#ref-wang2019neural" role="doc-biblioref">Wang et al. 2019</a>)</span>: start from shallow embeddings that are not graph-aware, propagate them with a GNN over the bipartite graph, and obtain final embeddings that are.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="definition">
+<p><strong>Definition 6 — NGCF propagation</strong></p>
+<p>With shallow embeddings as the initial features, <span class="math inline">\(\mathbf{h}_u^{(0)}\)</span> and <span class="math inline">\(\mathbf{h}_v^{(0)}\)</span>, iterate</p>
+<p><span class="math display">\[
+\mathbf{h}_v^{(k+1)}=\operatorname{COMBINE}\!\left(\mathbf{h}_v^{(k)},\ \operatorname{AGGR}\!\left(\left\{\mathbf{h}_u^{(k)}\right\}_{u\in\mathcal{N}(v)}\right)\right),
+\]</span> <span class="math display">\[
+\mathbf{h}_u^{(k+1)}=\operatorname{COMBINE}\!\left(\mathbf{h}_u^{(k)},\ \operatorname{AGGR}\!\left(\left\{\mathbf{h}_v^{(k)}\right\}_{v\in\mathcal{N}(u)}\right)\right).
+\]</span></p>
+<p>A typical choice is <span class="math inline">\(\operatorname{AGGR}=\operatorname{MEAN}\)</span> and <span class="math inline">\(\operatorname{COMBINE}(\mathbf{x},\mathbf{y})=\operatorname{ReLU}(\operatorname{Linear}(\operatorname{Concat}(\mathbf{x},\mathbf{y})))\)</span>.</p>
+</div>
+<div class="figure-panel">
+<div id="fig-ngcf-aggregation" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A bipartite graph with green arrows from items to users and blue arrows from users to items">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ngcf-aggregation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/ngcf-neighbor-aggregation.svg" class="img-fluid figure-img" alt="A bipartite graph with green arrows from items to users and blue arrows from users to items">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ngcf-aggregation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13: Because the graph is bipartite, users aggregate from items and items aggregate from users. Two rounds therefore connect a user to other users through shared items — the second-order structure the shallow model could not see.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>After <span class="math inline">\(K\)</span> rounds we set <span class="math inline">\(\mathbf{u}\leftarrow\mathbf{h}_u^{(K)}\)</span> and <span class="math inline">\(\mathbf{v}\leftarrow\mathbf{h}_v^{(K)}\)</span>, and score by inner product.</p>
+<div class="figure-panel">
+<div id="fig-ngcf-final" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A bipartite graph whose nodes carry final graph-aware embedding vectors">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ngcf-final-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/ngcf-final-embedding.svg" class="img-fluid figure-img" alt="A bipartite graph whose nodes carry final graph-aware embedding vectors">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ngcf-final-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;14: The final embeddings are explicitly graph-aware. NGCF trains <strong>two</strong> kinds of parameters jointly: the shallow embeddings and the GNN weights.
+</figcaption>
+</figure>
+</div>
+</div>
+</section>
+<section id="lightgcn" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="lightgcn"><span class="header-section-number">7</span> LightGCN</h2>
+<div class="checkpoint">
+<p><strong>Check 6 — Count the parameters before adding machinery</strong></p>
+<p>NGCF learns shallow embeddings <strong>and</strong> GNN weights. Compare their sizes:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>shallow embeddings</td>
+<td><span class="math inline">\(O(ND)\)</span></td>
+</tr>
+<tr class="even">
+<td>GNN weights</td>
+<td><span class="math inline">\(O(D^{2})\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>With <span class="math inline">\(N\)</span> (users plus items) in the millions and <span class="math inline">\(D\)</span> in the tens, <span class="math inline">\(ND \ggg D^{2}\)</span>. <strong>Essentially all the capacity is already in the shallow embeddings.</strong> So it is worth asking whether the GNN’s own parameters are earning their place.</p>
+<p>They are not — and removing them <em>improves</em> performance <span class="citation" data-cites="he2020lightgcn">(<a href="#ref-he2020lightgcn" role="doc-biblioref">He et al. 2020</a>)</span>.</p>
+</div>
+<section id="the-bipartite-adjacency" class="level3" data-number="7.1">
+<h3 data-number="7.1" class="anchored" data-anchor-id="the-bipartite-adjacency"><span class="header-section-number">7.1</span> The bipartite adjacency</h3>
+<div class="figure-panel">
+<div id="fig-bipartite-matrices" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A block matrix with zeros on the diagonal blocks and R and R transpose off-diagonal, beside a stacked embedding matrix">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-bipartite-matrices-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/bipartite-adjacency-embedding.svg" class="img-fluid figure-img" alt="A block matrix with zeros on the diagonal blocks and R and R transpose off-diagonal, beside a stacked embedding matrix">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bipartite-matrices-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;15: For a bipartite graph the adjacency matrix is block anti-diagonal, built from the interaction matrix <span class="math inline">\(\mathbf{R}\)</span> with <span class="math inline">\(R_{uv}=1\)</span> when user <span class="math inline">\(u\)</span> interacted with item <span class="math inline">\(v\)</span>. The embedding matrix <span class="math inline">\(\mathbf{E}\)</span> stacks the user block on the item block.
+</figcaption>
+</figure>
+</div>
+</div>
+</section>
+<section id="deriving-the-model" class="level3" data-number="7.2">
+<h3 data-number="7.2" class="anchored" data-anchor-id="deriving-the-model"><span class="header-section-number">7.2</span> Deriving the model</h3>
+<p>Take the GCN formulation, but <strong>omit the self-loops</strong> — a bipartite graph has no same-type edges to preserve — and normalize as <span class="math inline">\(\tilde{\mathbf{A}}=\mathbf{D}^{-1/2}\mathbf{A}\mathbf{D}^{-1/2}\)</span>. A layer is then</p>
+<p><span class="math display">\[
+\mathbf{E}^{(k+1)}=\operatorname{ReLU}\!\left(\tilde{\mathbf{A}}\mathbf{E}^{(k)}\mathbf{W}^{(k)}\right).
+\]</span></p>
+<p>Now apply Lecture 3’s argument verbatim. Remove the nonlinearities and the stack collapses, exactly as it did for SGC:</p>
+<p><span class="math display">\[
+\mathbf{E}^{(k)}=\tilde{\mathbf{A}}^{k}\mathbf{E}\mathbf{W}.
+\]</span></p>
+<p>LightGCN goes one step further and drops the linear projection too:</p>
+<p><span id="eq-lightgcn-layer"><span class="math display">\[
+\mathbf{E}^{(k)}=\tilde{\mathbf{A}}^{k}\mathbf{E}.
+\tag{2}\]</span></span></p>
+<div class="figure-panel">
+<div id="fig-lightgcn-diffusion" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A sensor network with an impulse spreading over successive diffusion steps">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-lightgcn-diffusion-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/graph-diffusion-sequence.svg" class="img-fluid figure-img" alt="A sensor network with an impulse spreading over successive diffusion steps">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-lightgcn-diffusion-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;16: <span class="math inline">\(\tilde{\mathbf{A}}^{k}\mathbf{E}\)</span> is the diffusion sequence from Lecture 2, with <span class="math inline">\(\mathbf{S}=\tilde{\mathbf{A}}\)</span>. As always, implement it recursively — <span class="math inline">\(\mathbf{E}\leftarrow\tilde{\mathbf{A}}\mathbf{E}\)</span> applied <span class="math inline">\(k\)</span> times — so that <span class="math inline">\(\tilde{\mathbf{A}}^{k}\)</span>, which is dense, never gets materialized.
+</figcaption>
+</figure>
+</div>
+</div>
+</section>
+<section id="multi-scale-diffusion" class="level3" data-number="7.3">
+<h3 data-number="7.3" class="anchored" data-anchor-id="multi-scale-diffusion"><span class="header-section-number">7.3</span> Multi-scale diffusion</h3>
+<p>Here LightGCN differs from SGC in one important respect. Rather than using the embedding at a single depth, it <strong>averages across all depths</strong>:</p>
+<p><span id="eq-lightgcn-multiscale"><span class="math display">\[
+\mathbf{E}_{\text{final}}=\alpha_0\mathbf{E}^{(0)}+\alpha_1\mathbf{E}^{(1)}+\cdots+\alpha_k\mathbf{E}^{(k)},
+\qquad
+\mathbf{E}^{(0)}=\tilde{\mathbf{A}}^{0}\mathbf{E}=\mathbf{E}.
+\tag{3}\]</span></span></p>
+<p>The coefficients are hyperparameters; LightGCN simply takes them uniform, <span class="math inline">\(\alpha_i=\frac{1}{k+1}\)</span>.</p>
+<div class="checkpoint">
+<p><strong>Check 7 — Why average across scales?</strong></p>
+<p>Keeping <span class="math inline">\(\mathbf{E}^{(0)}\)</span> in the sum means the un-diffused embedding always survives with weight <span class="math inline">\(\frac{1}{k+1}\)</span>. This is a direct structural defence against the failure mode of Lecture 2: however much the deep terms over-smooth, the model retains a path back to the node’s own identity.</p>
+<p>It is the same idea as a residual connection, and it is why LightGCN tolerates more propagation steps than a plain GCN would.</p>
+</div>
+</section>
+<section id="the-model-end-to-end" class="level3" data-number="7.4">
+<h3 data-number="7.4" class="anchored" data-anchor-id="the-model-end-to-end"><span class="header-section-number">7.4</span> The model end to end</h3>
+<div class="two-figures">
+<div class="figure-panel">
+<div id="fig-lightgcn-inputs" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A bipartite adjacency matrix beside a stacked user-item embedding matrix">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-lightgcn-inputs-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/lightgcn-inputs.svg" class="img-fluid figure-img" alt="A bipartite adjacency matrix beside a stacked user-item embedding matrix">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-lightgcn-inputs-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;17: Inputs: the adjacency matrix <span class="math inline">\(\mathbf{A}\)</span> and the learnable embedding matrix <span class="math inline">\(\mathbf{E}\)</span>.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="figure-panel">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../../assets/figures/lightgcn-diffusion.svg" class="img-fluid figure-img" alt="The normalized adjacency matrix multiplying the embedding matrix to produce the next one"></p>
+<figcaption>Diffuse: <span class="math inline">\(\mathbf{E}^{(i+1)}=\tilde{\mathbf{A}}\mathbf{E}^{(i)}\)</span>, repeated <span class="math inline">\(k\)</span> times.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="figure-panel">
+<div id="fig-lightgcn-multiscale" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Several embedding matrices summed and scaled by one over k plus one into a final embedding matrix">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-lightgcn-multiscale-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/lightgcn-multiscale.svg" class="img-fluid figure-img" alt="Several embedding matrices summed and scaled by one over k plus one into a final embedding matrix">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-lightgcn-multiscale-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;18: Average the embedding matrices from every scale with uniform weights <span class="math inline">\(\frac{1}{k+1}\)</span> to obtain <span class="math inline">\(\mathbf{E}_{\text{final}}\)</span>.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="figure-panel">
+<div id="fig-lightgcn-final" class="quarto-float quarto-figure quarto-figure-center anchored" alt="The final embedding matrix split into a user block and an item block">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-lightgcn-final-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/lightgcn-final-embedding.svg" class="img-fluid figure-img" alt="The final embedding matrix split into a user block and an item block">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-lightgcn-final-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;19: Read the user and item vectors off <span class="math inline">\(\mathbf{E}_{\text{final}}\)</span> and score by inner product <span class="math inline">\(\mathbf{z}_u^{\top}\mathbf{z}_v\)</span>.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>The <strong>only</strong> learnable parameters are the input embeddings <span class="math inline">\(\mathbf{E}\)</span>. Everything else is a fixed sparse matrix product.</p>
+<div class="figure-panel">
+<div id="fig-lightgcn-depth" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Test Recall at 10 rising steadily with the number of diffusion steps">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-lightgcn-depth-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/lightgcn-diffusion-depth.svg" class="img-fluid figure-img" alt="Test Recall at 10 rising steadily with the number of diffusion steps">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-lightgcn-depth-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;20: What the diffusion is worth, measured. A LightGCN trained end to end on a synthetic user–item graph (400 users, 300 items, latent taste groups, heavy-tailed popularity), under the BPR loss, with the gradient propagated <em>through</em> the diffusion. At <span class="math inline">\(k=0\)</span> the model is exactly a shallow encoder; every diffusion step adds recall.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="checkpoint">
+<p><strong>Check 8 — What <a href="#fig-lightgcn-depth" class="quarto-xref">Figure&nbsp;20</a> does and does not show</strong></p>
+<p>It shows the central claim: <strong>diffusion is the whole of what LightGCN adds over a shallow encoder</strong>, and it is worth a large factor. The <span class="math inline">\(k=0\)</span> point is a shallow model trained identically, so the gap is attributable to the propagation alone.</p>
+<p>It does <strong>not</strong> show a turning point. In this small, clean, strongly homophilous synthetic graph, recall was still improving at the largest depth tested — the multi-scale average of <a href="#eq-lightgcn-multiscale" class="quarto-xref">Equation&nbsp;3</a> is doing its job. On real data, and without that average, more layers eventually hurt for the reasons Lecture 2 measured. Do not read this curve as licence to stack layers indefinitely; read it as evidence that the diffusion is where the value is. Exercise 6 asks you to look for the turnover.</p>
+</div>
+<div class="checkpoint">
+<p><strong>Check 9 — Why the simple thing works</strong></p>
+<p>The diffusion directly pulls together the embeddings of users who share many item neighbors. Two users who interacted with many of the same items get similar final embeddings, and therefore similar recommendations.</p>
+<p>That is a mechanical restatement of collaborative filtering — the assumption we started from. LightGCN works because its inductive bias <em>is</em> the assumption of the problem, and it needs no parameters to express it.</p>
+</div>
+<div class="checkpoint">
+<p><strong>Check 10 — NGCF, LightGCN, and shallow encoders</strong></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>learnable parameters</th>
+<th>graph in the model</th>
+<th>cost</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Shallow encoder</strong></td>
+<td>embeddings</td>
+<td>no — only via the loss</td>
+<td>cheapest</td>
+</tr>
+<tr class="even">
+<td><strong>NGCF</strong></td>
+<td>embeddings <strong>and</strong> GNN weights</td>
+<td>yes, high-order</td>
+<td>highest</td>
+</tr>
+<tr class="odd">
+<td><strong>LightGCN</strong></td>
+<td>embeddings only</td>
+<td>yes, high-order</td>
+<td>embeddings plus <span class="math inline">\(k\)</span> sparse products</td>
+</tr>
+</tbody>
+</table>
+<p>All three learn one embedding per user and item. The difference is that LightGCN scores with the <strong>diffused</strong> embeddings, which costs more than a shallow encoder and consistently performs better — while beating NGCF by having <em>fewer</em> moving parts.</p>
+</div>
+</section>
+</section>
+<section id="exercises" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="exercises"><span class="header-section-number">8</span> Exercises</h2>
+<section id="exercise-1-recallk-by-hand" class="level3" data-number="8.1">
+<h3 data-number="8.1" class="anchored" data-anchor-id="exercise-1-recallk-by-hand"><span class="header-section-number">8.1</span> Exercise 1 — Recall@<span class="math inline">\(k\)</span> by hand</h3>
+<p>A user has <span class="math inline">\(P_u=\{v_3,v_7,v_9,v_{11}\}\)</span> and the model returns <span class="math inline">\(R_u=\{v_2,v_3,v_5,v_9,v_{12}\}\)</span>. Compute Recall@5. Then state what Recall@<span class="math inline">\(k\)</span> does when <span class="math inline">\(k&gt;|P_u|\)</span>, and why practitioners also report Precision@<span class="math inline">\(k\)</span> and NDCG@<span class="math inline">\(k\)</span>.</p>
+</section>
+<section id="exercise-2-the-counterexample-generalized" class="level3" data-number="8.2">
+<h3 data-number="8.2" class="anchored" data-anchor-id="exercise-2-the-counterexample-generalized"><span class="header-section-number">8.2</span> Exercise 2 — The counterexample, generalized</h3>
+<p><a href="#fig-binary-counterexample" class="quarto-xref">Figure&nbsp;7</a> uses two users and two items. Construct a family of examples with <span class="math inline">\(n\)</span> users in which training Recall@1 is perfect but the binary loss is arbitrarily large. What property of the score matrix are you exploiting?</p>
+</section>
+<section id="exercise-3-invariance" class="level3" data-number="8.3">
+<h3 data-number="8.3" class="anchored" data-anchor-id="exercise-3-invariance"><span class="header-section-number">8.3</span> Exercise 3 — Invariance</h3>
+<p>Show that the BPR loss of <a href="#eq-bpr" class="quarto-xref">Equation&nbsp;1</a> is unchanged if every score of one user is shifted by a constant, <span class="math inline">\(F_\theta(u^*,v)\mapsto F_\theta(u^*,v)+c_{u^*}\)</span>, and that the binary loss is not. Relate this to Check 1.</p>
+</section>
+<section id="exercise-4-gradient-of-the-bpr-loss" class="level3" data-number="8.4">
+<h3 data-number="8.4" class="anchored" data-anchor-id="exercise-4-gradient-of-the-bpr-loss"><span class="header-section-number">8.4</span> Exercise 4 — Gradient of the BPR loss</h3>
+<p>With <span class="math inline">\(F_\theta(u,v)=\langle\mathbf{u},\mathbf{v}\rangle\)</span>, differentiate a single BPR term with respect to <span class="math inline">\(\mathbf{u}\)</span>, <span class="math inline">\(\mathbf{v}_{\text{pos}}\)</span> and <span class="math inline">\(\mathbf{v}_{\text{neg}}\)</span>. Show that the update magnitude shrinks as the positive already outranks the negative, and say why that is desirable.</p>
+</section>
+<section id="exercise-5-the-collapse" class="level3" data-number="8.5">
+<h3 data-number="8.5" class="anchored" data-anchor-id="exercise-5-the-collapse"><span class="header-section-number">8.5</span> Exercise 5 — The collapse</h3>
+<p>Verify <a href="#eq-lightgcn-layer" class="quarto-xref">Equation&nbsp;2</a> for <span class="math inline">\(k=2\)</span>: expand <span class="math inline">\(\mathbf{E}^{(2)}\)</span> with the ReLU present and again with it removed, and identify the step that fails when it is present. Compare with the SGC derivation in Lecture 3 — what does LightGCN remove that SGC keeps?</p>
+</section>
+<section id="exercise-6-diffusion-depth" class="level3" data-number="8.6">
+<h3 data-number="8.6" class="anchored" data-anchor-id="exercise-6-diffusion-depth"><span class="header-section-number">8.6</span> Exercise 6 — Diffusion depth</h3>
+<p>Reproduce <a href="#fig-lightgcn-depth" class="quarto-xref">Figure&nbsp;20</a> with <code>scripts/figures/lecture_05_figures.py</code>. Then remove the multi-scale average — score with <span class="math inline">\(\mathbf{E}^{(k)}\)</span> alone instead of the average of <a href="#eq-lightgcn-multiscale" class="quarto-xref">Equation&nbsp;3</a> — and re-run the sweep. Does a turning point appear? Explain the result using Check 7.</p>
+</section>
+<section id="exercise-7-parameter-counts" class="level3" data-number="8.7">
+<h3 data-number="8.7" class="anchored" data-anchor-id="exercise-7-parameter-counts"><span class="header-section-number">8.7</span> Exercise 7 — Parameter counts</h3>
+<p>A platform has <span class="math inline">\(10^{7}\)</span> users, <span class="math inline">\(10^{6}\)</span> items and <span class="math inline">\(D=64\)</span>. Count the parameters of a shallow encoder, of LightGCN, and of NGCF with a 3-layer GNN. Then state which of the three you would deploy first, and why the answer does not follow from the parameter count alone.</p>
+</section>
+</section>
+<section id="main-takeaways" class="level2" data-number="9">
+<h2 data-number="9" class="anchored" data-anchor-id="main-takeaways"><span class="header-section-number">9</span> Main takeaways</h2>
+<ol type="1">
+<li>A recommender system is a <strong>bipartite user–item graph</strong>, and recommendation is <strong>link prediction</strong> on it.</li>
+<li>We recommend <span class="math inline">\(k \ll |\mathcal{V}|\)</span> items and evaluate with <strong>Recall@<span class="math inline">\(k\)</span></strong>, which is defined <strong>per user</strong> and then averaged.</li>
+<li>Recall@<span class="math inline">\(k\)</span> is not differentiable, so training uses a <strong>surrogate loss</strong> — and the choice of surrogate is where the alignment with the metric is won or lost.</li>
+<li>The <strong>binary loss</strong> compares positives and negatives across all users. One two-user counterexample shows it penalizes a model with perfect Recall@1.</li>
+<li>The <strong>BPR loss</strong> compares items only within a user, matching the metric’s personalization exactly.</li>
+<li>Embeddings work because they are <strong>too small to memorize</strong>, which forces them to encode user and item similarity — collaborative filtering.</li>
+<li><strong>NGCF</strong> propagates shallow embeddings over the bipartite graph with a GNN, capturing high-order structure the training objective alone cannot.</li>
+<li><strong>LightGCN</strong> removes the GNN’s parameters entirely, keeping only diffusion plus a multi-scale average. It has fewer parameters than NGCF and performs better — and the multi-scale average is what keeps depth safe.</li>
+</ol>
+</section>
+<section id="references-and-provenance" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="references-and-provenance">References and provenance</h2>
+<p>This web note is adapted from the Lecture 5 slides by Jhony H. Giraldo. The binary-loss counterexample is analyzed as a proof of misalignment rather than an anecdote, the LightGCN derivation is connected explicitly to Lecture 3’s SGC collapse, and the role of the multi-scale average is drawn out.</p>
+<p>The diagrams reproduce the original course vectors. <a href="#fig-two-stage" class="quarto-xref">Figure&nbsp;4</a> and <a href="#fig-lightgcn-depth" class="quarto-xref">Figure&nbsp;20</a> are new: the first is redrawn, and the second is a measurement produced by <code>scripts/figures/lecture_05_figures.py</code> in this repository, which trains a LightGCN end to end with <code>numpy</code>.</p>
+<div id="refs" class="references-small references csl-bib-body hanging-indent" role="list">
+<div id="ref-he2020lightgcn" class="csl-entry" role="listitem">
+He, Xiangnan, Kuan Deng, Xiang Wang, Yan Li, Yongdong Zhang, and Meng Wang. 2020. <span>“<span>LightGCN</span>: Simplifying and Powering Graph Convolution Network for Recommendation.”</span> <em>International ACM SIGIR Conference on Research and Development in Information Retrieval</em>. <a href="https://doi.org/10.1145/3397271.3401063">https://doi.org/10.1145/3397271.3401063</a>.
+</div>
+<div id="ref-wang2019neural" class="csl-entry" role="listitem">
+Wang, Xiang, Xiangnan He, Meng Wang, Fuli Feng, and Tat-Seng Chua. 2019. <span>“Neural Graph Collaborative Filtering.”</span> <em>International ACM SIGIR Conference on Research and Development in Information Retrieval</em>. <a href="https://doi.org/10.1145/3331184.3331267">https://doi.org/10.1145/3331184.3331267</a>.
+</div>
+</div>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script src="../../assets/site.js" defer=""></script>
+
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/jhonygiraldo\.github\.io");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© 2026 Jhony H. Giraldo</p>
+</div>   
+    <div class="nav-footer-center">
+<p>Télécom Paris · Institut Polytechnique de Paris</p>
+</div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+    <a class="nav-link" href="https://orcid.org/0000-0002-0039-1270">
+<p>ORCID</p>
+</a>
+  </li>  
+    <li class="nav-item">
+    <a class="nav-link" href="mailto:jhony.giraldo@telecom-paris.fr">
+<p>Email</p>
+</a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+<script src="../../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

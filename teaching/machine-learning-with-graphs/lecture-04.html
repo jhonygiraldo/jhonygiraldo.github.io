@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Web lecture note on spectral GNNs, the graph Fourier transform, and the reconstruction and forecasting of time-varying graph signals.">
+
+<title>Lecture 4 — Spatiotemporal Analysis with Graphs – Jhony H. Giraldo</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../assets/images/jhony-giraldo.jpg" rel="icon" type="image/jpeg">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-e3f251471e60ae6bf9c8e95d70d1e8a4.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Jhony H. Giraldo",
+  "jobTitle": "Assistant Professor in Machine Learning and Computer Vision",
+  "url": "https://jhonygiraldo.github.io/",
+  "image": "https://jhonygiraldo.github.io/assets/images/jhony-giraldo.jpg",
+  "email": "mailto:jhony.giraldo@telecom-paris.fr",
+  "affiliation": [
+    {"@type": "CollegeOrUniversity", "name": "Télécom Paris"},
+    {"@type": "CollegeOrUniversity", "name": "Institut Polytechnique de Paris"}
+  ],
+  "sameAs": [
+    "https://orcid.org/0000-0002-0039-1270",
+    "https://scholar.google.com/citations?user=iwzmGKwAAAAJ",
+    "https://www.linkedin.com/in/jhonyhgiraldo",
+    "https://bsky.app/profile/jhonyhgiraldo.bsky.social"
+  ],
+  "knowsAbout": [
+    "Graph machine learning",
+    "Geometric deep learning",
+    "Graph signal processing",
+    "Computer vision",
+    "Higher-order neural networks"
+  ]
+}
+</script>
+
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<meta property="og:title" content="Lecture 4 — Spatiotemporal Analysis with Graphs">
+<meta property="og:description" content="Web lecture note on spectral GNNs, the graph Fourier transform, and the reconstruction and forecasting of time-varying graph signals.">
+<meta property="og:image" content="https://jhonygiraldo.github.io/assets/figures/time-varying-graph-signal.svg">
+<meta property="og:site_name" content="Jhony H. Giraldo">
+<meta property="og:image:alt" content="A graph with a time series attached to each node, the matrix X, and the difference operator matrix">
+<meta name="twitter:title" content="Lecture 4 — Spatiotemporal Analysis with Graphs">
+<meta name="twitter:description" content="Web lecture note on spectral GNNs, the graph Fourier transform, and the reconstruction and forecasting of time-varying graph signals.">
+<meta name="twitter:image" content="https://jhonygiraldo.github.io/assets/figures/time-varying-graph-signal.svg">
+<meta name="twitter:image:alt" content="A graph with a time series attached to each node, the matrix X, and the difference operator matrix">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed custom-title-page lecture-page quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Jhony H. Giraldo</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../research/index.html"> 
+<span class="menu-text">Research</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../people/index.html"> 
+<span class="menu-text">Team</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../publications/index.html"> 
+<span class="menu-text">Publications</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../teaching/index.html"> 
+<span class="menu-text">Teaching</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../news/index.html"> 
+<span class="menu-text">News</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../cv/index.html"> 
+<span class="menu-text">CV</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:jhony.giraldo@telecom-paris.fr"> <i class="bi bi-envelope" role="img" aria-label="Email Jhony Giraldo">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://scholar.google.com/citations?user=iwzmGKwAAAAJ"> <i class="bi bi-mortarboard-fill" role="img" aria-label="Google Scholar">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/jhonyhgiraldo"> <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives"><span class="header-section-number">1</span> Learning objectives</a></li>
+  <li><a href="#time-varying-graph-signals" id="toc-time-varying-graph-signals" class="nav-link" data-scroll-target="#time-varying-graph-signals"><span class="header-section-number">2</span> Time-varying graph signals</a>
+  <ul class="collapse">
+  <li><a href="#the-two-problems" id="toc-the-two-problems" class="nav-link" data-scroll-target="#the-two-problems"><span class="header-section-number">2.1</span> The two problems</a></li>
+  </ul></li>
+  <li><a href="#sec-spectral" id="toc-sec-spectral" class="nav-link" data-scroll-target="#sec-spectral"><span class="header-section-number">3</span> Spectral GNNs</a>
+  <ul class="collapse">
+  <li><a href="#from-fourier-to-graph-fourier" id="toc-from-fourier-to-graph-fourier" class="nav-link" data-scroll-target="#from-fourier-to-graph-fourier"><span class="header-section-number">3.1</span> From Fourier to graph Fourier</a></li>
+  <li><a href="#filters-in-the-frequency-domain" id="toc-filters-in-the-frequency-domain" class="nav-link" data-scroll-target="#filters-in-the-frequency-domain"><span class="header-section-number">3.2</span> Filters in the frequency domain</a></li>
+  <li><a href="#chebyshev-graph-convolutions" id="toc-chebyshev-graph-convolutions" class="nav-link" data-scroll-target="#chebyshev-graph-convolutions"><span class="header-section-number">3.3</span> Chebyshev graph convolutions</a></li>
+  </ul></li>
+  <li><a href="#sec-reconstruction" id="toc-sec-reconstruction" class="nav-link" data-scroll-target="#sec-reconstruction"><span class="header-section-number">4</span> Reconstruction of time-varying graph signals</a>
+  <ul class="collapse">
+  <li><a href="#measuring-smoothness-on-a-graph" id="toc-measuring-smoothness-on-a-graph" class="nav-link" data-scroll-target="#measuring-smoothness-on-a-graph"><span class="header-section-number">4.1</span> Measuring smoothness on a graph</a></li>
+  <li><a href="#from-static-to-time-varying-smoothness" id="toc-from-static-to-time-varying-smoothness" class="nav-link" data-scroll-target="#from-static-to-time-varying-smoothness"><span class="header-section-number">4.2</span> From static to time-varying smoothness</a></li>
+  <li><a href="#the-optimization-problem" id="toc-the-optimization-problem" class="nav-link" data-scroll-target="#the-optimization-problem"><span class="header-section-number">4.3</span> The optimization problem</a></li>
+  <li><a href="#solving-it" id="toc-solving-it" class="nav-link" data-scroll-target="#solving-it"><span class="header-section-number">4.4</span> Solving it</a></li>
+  <li><a href="#sobolev-smoothness" id="toc-sobolev-smoothness" class="nav-link" data-scroll-target="#sobolev-smoothness"><span class="header-section-number">4.5</span> Sobolev smoothness</a></li>
+  <li><a href="#reconstruction-with-a-neural-network" id="toc-reconstruction-with-a-neural-network" class="nav-link" data-scroll-target="#reconstruction-with-a-neural-network"><span class="header-section-number">4.6</span> Reconstruction with a neural network</a></li>
+  </ul></li>
+  <li><a href="#forecasting-of-time-varying-graph-signals" id="toc-forecasting-of-time-varying-graph-signals" class="nav-link" data-scroll-target="#forecasting-of-time-varying-graph-signals"><span class="header-section-number">5</span> Forecasting of time-varying graph signals</a>
+  <ul class="collapse">
+  <li><a href="#auto-regressive-modeling" id="toc-auto-regressive-modeling" class="nav-link" data-scroll-target="#auto-regressive-modeling"><span class="header-section-number">5.1</span> Auto-regressive modeling</a></li>
+  <li><a href="#forecasting-with-gnns" id="toc-forecasting-with-gnns" class="nav-link" data-scroll-target="#forecasting-with-gnns"><span class="header-section-number">5.2</span> Forecasting with GNNs</a></li>
+  <li><a href="#multiple-horizons" id="toc-multiple-horizons" class="nav-link" data-scroll-target="#multiple-horizons"><span class="header-section-number">5.3</span> Multiple horizons</a></li>
+  <li><a href="#graphcast" id="toc-graphcast" class="nav-link" data-scroll-target="#graphcast"><span class="header-section-number">5.4</span> GraphCast</a></li>
+  </ul></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">6</span> Exercises</a>
+  <ul class="collapse">
+  <li><a href="#exercise-1-reading-the-gft" id="toc-exercise-1-reading-the-gft" class="nav-link" data-scroll-target="#exercise-1-reading-the-gft"><span class="header-section-number">6.1</span> Exercise 1 — Reading the GFT</a></li>
+  <li><a href="#exercise-2-quadratic-form" id="toc-exercise-2-quadratic-form" class="nav-link" data-scroll-target="#exercise-2-quadratic-form"><span class="header-section-number">6.2</span> Exercise 2 — Quadratic form</a></li>
+  <li><a href="#exercise-3-why-the-difference-is-smoother" id="toc-exercise-3-why-the-difference-is-smoother" class="nav-link" data-scroll-target="#exercise-3-why-the-difference-is-smoother"><span class="header-section-number">6.3</span> Exercise 3 — Why the difference is smoother</a></li>
+  <li><a href="#exercise-4-the-gradient" id="toc-exercise-4-the-gradient" class="nav-link" data-scroll-target="#exercise-4-the-gradient"><span class="header-section-number">6.4</span> Exercise 4 — The gradient</a></li>
+  <li><a href="#exercise-5-chebyshev-recursion" id="toc-exercise-5-chebyshev-recursion" class="nav-link" data-scroll-target="#exercise-5-chebyshev-recursion"><span class="header-section-number">6.5</span> Exercise 5 — Chebyshev recursion</a></li>
+  <li><a href="#exercise-6-does-the-sobolev-term-speed-things-up" id="toc-exercise-6-does-the-sobolev-term-speed-things-up" class="nav-link" data-scroll-target="#exercise-6-does-the-sobolev-term-speed-things-up"><span class="header-section-number">6.6</span> Exercise 6 — Does the Sobolev term speed things up?</a></li>
+  <li><a href="#exercise-7-parameter-count" id="toc-exercise-7-parameter-count" class="nav-link" data-scroll-target="#exercise-7-parameter-count"><span class="header-section-number">6.7</span> Exercise 7 — Parameter count</a></li>
+  <li><a href="#exercise-8-horizons" id="toc-exercise-8-horizons" class="nav-link" data-scroll-target="#exercise-8-horizons"><span class="header-section-number">6.8</span> Exercise 8 — Horizons</a></li>
+  </ul></li>
+  <li><a href="#main-takeaways" id="toc-main-takeaways" class="nav-link" data-scroll-target="#main-takeaways"><span class="header-section-number">7</span> Main takeaways</a></li>
+  <li><a href="#references-and-provenance" id="toc-references-and-provenance" class="nav-link" data-scroll-target="#references-and-provenance">References and provenance</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+</div>
+
+<div>
+  <div class="description">
+    Web lecture note on spectral GNNs, the graph Fourier transform, and the reconstruction and forecasting of time-varying graph signals.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    <div>
+    <div class="quarto-title-meta-heading">Modified</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date-modified">September 6, 2026</p>
+    </div>
+  </div>
+    
+  </div>
+  
+
+
+</header>
+
+
+<header class="lecture-header">
+  <div class="eyebrow">APM 5DS30 TP · Machine Learning with Graphs</div>
+  <h1>Spatiotemporal analysis with graphs</h1>
+  <p>Lecture 4 · Jhony H. Giraldo · Télécom Paris, Institut Polytechnique de Paris</p>
+  <div class="lecture-meta"><span>Original lecture: 18 February 2025</span><span>Web note revised: 6 September 2026</span><span>Mathematics rendered with MathJax</span></div>
+  <div class="button-row">
+    <a class="button-link primary" href="../../assets/pdf/Lecture-04-Spatiotemporal-Analysis-with-Graphs.pdf">Download the original slides</a>
+    <a class="button-link secondary" href="../../teaching/machine-learning-with-graphs/index.html">Back to the course</a>
+  </div>
+</header>
+<p>So far the data has been static: one signal on one graph. This note adds <strong>time</strong>. A sensor network reports a temperature every ten minutes, a road network reports a speed every five, a global monitoring system reports a case count every day. The graph describes <em>where</em>; the time series describes <em>when</em>; and the two are not independent.</p>
+<p>Two problems organize the note. <strong>Reconstruction</strong>: values are missing, and we want them back. <strong>Forecasting</strong>: we have the past, and we want the future. Both are solved twice — once by writing an optimization problem, once by training a network — and comparing the two is the point of the lecture. Along the way we need one tool we have so far avoided: the <strong>spectral</strong> view of a graph.</p>
+<section id="learning-objectives" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="learning-objectives"><span class="header-section-number">1</span> Learning objectives</h2>
+<p>After studying this note, you should be able to:</p>
+<ol class="learning-objectives">
+  <li>define a time-varying graph signal and the temporal difference operator;</li>
+  <li>define the graph Fourier transform and interpret its coefficients as graph frequencies;</li>
+  <li>express a graph filter in the spectral domain and state the cost of doing so;</li>
+  <li>write the ChebConv recursion and explain why it avoids the eigendecomposition;</li>
+  <li>formulate reconstruction as a smoothness-regularized optimization problem and solve it by gradient descent;</li>
+  <li>formulate forecasting as auto-regressive modeling on a graph, and extend it to multiple horizons.</li>
+</ol>
+</section>
+<section id="time-varying-graph-signals" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="time-varying-graph-signals"><span class="header-section-number">2</span> Time-varying graph signals</h2>
+<div class="definition">
+<p><strong>Definition 1 — Time-varying graph signal</strong></p>
+<p>Let <span class="math inline">\(\mathcal{G}\)</span> have <span class="math inline">\(N\)</span> nodes. A <strong>time-varying graph signal</strong> is</p>
+<p><span class="math display">\[
+\mathbf{X}=[\mathbf{x}_1,\mathbf{x}_2,\ldots,\mathbf{x}_M]\in\mathbb{R}^{N\times M},
+\]</span></p>
+<p>where <span class="math inline">\(\mathbf{x}_s\in\mathbb{R}^{N}\)</span> is a graph signal on <span class="math inline">\(\mathcal{G}\)</span> at time <span class="math inline">\(s\)</span>. Row <span class="math inline">\(i\)</span> is the time series observed at node <span class="math inline">\(i\)</span>; column <span class="math inline">\(s\)</span> is a snapshot of the whole network.</p>
+</div>
+<div class="definition">
+<p><strong>Definition 2 — Temporal difference operator</strong></p>
+<p><span class="math inline">\(\mathbf{D}_{h}\in\mathbb{R}^{M\times(M-1)}\)</span> is the first-difference operator,</p>
+<p><span class="math display">\[
+\mathbf{D}_h=
+\begin{bmatrix}
+-1 &amp; &amp; &amp;\\
+1 &amp; -1 &amp; &amp;\\
+&amp; 1 &amp; \ddots &amp;\\
+&amp; &amp; \ddots &amp; -1\\
+&amp; &amp; &amp; 1
+\end{bmatrix},
+\qquad
+\mathbf{X}\mathbf{D}_h=[\mathbf{x}_2-\mathbf{x}_1,\ \mathbf{x}_3-\mathbf{x}_2,\ \ldots,\ \mathbf{x}_M-\mathbf{x}_{M-1}].
+\]</span></p>
+</div>
+<div class="figure-panel">
+<div id="fig-time-varying" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A graph with a time series attached to each node, the matrix X, and the difference operator matrix">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-time-varying-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/time-varying-graph-signal.svg" class="img-fluid figure-img" alt="A graph with a time series attached to each node, the matrix X, and the difference operator matrix">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-time-varying-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: A time-varying graph signal: a graph whose nodes each carry a time series, collected into a matrix <span class="math inline">\(\mathbf{X}\in\mathbb{R}^{N\times M}\)</span>, together with the temporal difference operator <span class="math inline">\(\mathbf{D}_h\)</span>.
+</figcaption>
+</figure>
+</div>
+</div>
+<p><span class="math inline">\(\mathbf{X}\mathbf{D}_h\)</span> looks like a technicality. It is not: it is the single modeling assumption that makes reconstruction work, and <a href="#sec-reconstruction" class="quarto-xref">Section&nbsp;4</a> measures why.</p>
+<section id="the-two-problems" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="the-two-problems"><span class="header-section-number">2.1</span> The two problems</h3>
+<div class="figure-panel">
+<div id="fig-problem-reconstruction" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two rows of network snapshots; the top row has black patches of missing sensors, the bottom row is fully colored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-problem-reconstruction-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/problem-reconstruction.png" class="img-fluid figure-img" alt="Two rows of network snapshots; the top row has black patches of missing sensors, the bottom row is fully colored">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-problem-reconstruction-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: <strong>Reconstruction.</strong> At each time step some nodes report nothing (black). The task is to fill them in, using both the graph and the temporal history.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="figure-panel">
+<div id="fig-problem-forecasting" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two rows of network snapshots; the top-right snapshot is entirely black, the bottom row is fully colored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-problem-forecasting-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/problem-forecasting.png" class="img-fluid figure-img" alt="Two rows of network snapshots; the top-right snapshot is entirely black, the bottom row is fully colored">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-problem-forecasting-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: <strong>Forecasting.</strong> The signal is known up to time <span class="math inline">\(t\)</span> and entirely unknown at <span class="math inline">\(t+n\)</span>. The task is to predict it.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="checkpoint">
+<p><strong>Check 1 — Which is which?</strong></p>
+<p>Both problems produce missing values, and it is worth being precise about the difference. In <strong>reconstruction</strong> the missing entries are <em>interior</em>: we know values before and after them, at the same node and at neighboring nodes, and we interpolate. In <strong>forecasting</strong> the missing entries are at the <em>boundary</em>: everything we know lies in the past, and we extrapolate.</p>
+<p>Interpolation can lean on smoothness in both directions. Extrapolation cannot, which is why the two get different machinery.</p>
+</div>
+</section>
+</section>
+<section id="sec-spectral" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="sec-spectral"><span class="header-section-number">3</span> Spectral GNNs</h2>
+<p>Lecture 2 defined a graph filter as a polynomial in the shift operator, <span class="math inline">\(\mathbf{z}=\sum_{k}h_k\mathbf{S}^{k}\mathbf{x}\)</span>, and worked entirely in the <em>vertex</em> domain. There is a second description, and for spatiotemporal problems it earns its keep: in practice spectral GNNs often outperform plain message passing on these tasks.</p>
+<section id="from-fourier-to-graph-fourier" class="level3" data-number="3.1">
+<h3 data-number="3.1" class="anchored" data-anchor-id="from-fourier-to-graph-fourier"><span class="header-section-number">3.1</span> From Fourier to graph Fourier</h3>
+<p>The classical Fourier transform decomposes a signal into sinusoids of increasing frequency, and the inverse transform reassembles it.</p>
+<div class="figure-panel">
+<div id="fig-fourier" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A waveform, a bar chart of three frequency components, and the three sinusoids that sum to it">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-fourier-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/fourier-recap.svg" class="img-fluid figure-img" alt="A waveform, a bar chart of three frequency components, and the three sinusoids that sum to it">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-fourier-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: A signal, its frequency content, and the sinusoids that compose it. Each Fourier coefficient measures how much of one oscillation is present in the signal.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>The graph Fourier transform is the same idea with the sinusoids replaced by the eigenvectors of the shift operator.</p>
+<div class="definition">
+<p><strong>Definition 3 — Graph Fourier transform</strong></p>
+<p>Let <span class="math inline">\(\mathbf{S}\)</span> be diagonalizable, <span class="math inline">\(\mathbf{S}=\mathbf{U}\boldsymbol{\Lambda}\mathbf{U}^{-1}\)</span>. The eigenvectors <span class="math inline">\(\mathbf{u}_i\)</span> form a basis of <span class="math inline">\(\mathbb{R}^{N}\)</span>, so any graph signal can be written as</p>
+<p><span class="math display">\[
+\mathbf{x}=\mathbf{U}\hat{\mathbf{x}},
+\qquad
+\hat{\mathbf{x}}=\mathbf{U}^{-1}\mathbf{x},
+\]</span></p>
+<p>where <span class="math inline">\(\hat{\mathbf{x}}\)</span> is the <strong>graph Fourier transform (GFT)</strong> of <span class="math inline">\(\mathbf{x}\)</span>.</p>
+<p>For an undirected graph <span class="math inline">\(\mathbf{S}\)</span> is symmetric, so <span class="math inline">\(\mathbf{U}\)</span> is orthogonal, <span class="math inline">\(\mathbf{U}^{\top}\mathbf{U}=\mathbf{U}\mathbf{U}^{\top}=\mathbf{I}\)</span>, and the pair simplifies to <span class="math inline">\(\mathbf{x}=\mathbf{U}\hat{\mathbf{x}}\)</span>, <span class="math inline">\(\hat{\mathbf{x}}=\mathbf{U}^{\top}\mathbf{x}\)</span>.</p>
+</div>
+<div class="figure-panel">
+<div id="fig-eigenvectors" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three copies of a sensor network colored by the first, second, and tenth Laplacian eigenvector, with increasing spatial oscillation">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-eigenvectors-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/laplacian-eigenvectors.png" class="img-fluid figure-img" alt="Three copies of a sensor network colored by the first, second, and tenth Laplacian eigenvector, with increasing spatial oscillation">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-eigenvectors-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5: Laplacian eigenvectors of a sensor network, ordered by eigenvalue. <span class="math inline">\(\mathbf{u}_1\)</span> with <span class="math inline">\(\lambda_1=0\)</span> is constant; higher eigenvalues carry eigenvectors that oscillate more and more across edges. The eigenvalue <em>is</em> the notion of frequency on a graph.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>Because <span class="math inline">\(\mathbf{U}\)</span> is orthogonal, <span class="math inline">\(\hat{x}(i)=\langle\mathbf{u}_i,\mathbf{x}\rangle\)</span>: <strong>the <span class="math inline">\(i\)</span>-th GFT coefficient measures how similar <span class="math inline">\(\mathbf{x}\)</span> is to the <span class="math inline">\(i\)</span>-th eigenvector.</strong> A signal whose energy sits in the first few coefficients is <em>smooth</em> — it barely changes across edges. A signal spread across the spectrum is rough.</p>
+<div class="figure-panel">
+<div id="fig-gft" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Left, spiky noise coefficients against a smooth signal concentrated at low frequency; right, a cumulative energy curve rising almost immediately to 100% versus a diagonal line">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-gft-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/gft-spectrum.svg" class="img-fluid figure-img" alt="Left, spiky noise coefficients against a smooth signal concentrated at low frequency; right, a cumulative energy curve rising almost immediately to 100% versus a diagonal line">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gft-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6: The GFT on a 220-node sensor graph. Left: coefficient magnitudes for a smooth spatial field and for white noise. Right: cumulative energy against the fraction of the spectrum. The lowest 10% of graph frequencies carry 98% of the smooth field’s energy, while noise tracks the diagonal — it is spread uniformly over the spectrum. This concentration is what every smoothness prior in this note exploits.
+</figcaption>
+</figure>
+</div>
+</div>
+</section>
+<section id="filters-in-the-frequency-domain" class="level3" data-number="3.2">
+<h3 data-number="3.2" class="anchored" data-anchor-id="filters-in-the-frequency-domain"><span class="header-section-number">3.2</span> Filters in the frequency domain</h3>
+<div class="definition">
+<p><strong>Definition 4 — Graph filters in the spectral domain</strong></p>
+<p>Any graph filter defined as a polynomial in <span class="math inline">\(\mathbf{S}\)</span> can be written</p>
+<p><span class="math display">\[
+\mathbf{H}=h(\mathbf{S})=\sum_{i=0}^{k}h_i\mathbf{S}^{i}=\mathbf{U}\,h(\boldsymbol{\Lambda})\,\mathbf{U}^{-1},
+\]</span></p>
+<p>where <span class="math inline">\(h(\boldsymbol{\Lambda})\)</span> is diagonal with entries <span class="math inline">\(h(\lambda_j)=\sum_{i=0}^{k}h_i\lambda_j^{i}\)</span> <span class="citation" data-cites="ortega2022introduction">(<a href="#ref-ortega2022introduction" role="doc-biblioref">Ortega 2022</a>)</span>.</p>
+</div>
+<p>The proof is one line: <span class="math inline">\(\mathbf{S}^{i}=\mathbf{U}\boldsymbol{\Lambda}^{i}\mathbf{U}^{-1}\)</span> because the inner <span class="math inline">\(\mathbf{U}^{-1}\mathbf{U}\)</span> factors cancel; summing over <span class="math inline">\(i\)</span> gives the result.</p>
+<p>So filtering can be done in three steps: transform, multiply, transform back.</p>
+<p><span class="math display">\[
+\hat{\mathbf{x}}=\mathbf{U}^{-1}\mathbf{x},
+\qquad
+\hat{\mathbf{y}}=h(\boldsymbol{\Lambda})\hat{\mathbf{x}},
+\qquad
+\mathbf{y}=\mathbf{U}\hat{\mathbf{y}}.
+\]</span></p>
+<p>This is appealing: no matrix powers, no sequential recursion, and complete freedom over the response <span class="math inline">\(h(\lambda)\)</span> — it need not be a low-pass filter, which is exactly the limitation Lecture 2 identified in GCN.</p>
+<div class="checkpoint">
+<p><strong>Check 2 — The trade-off between spectral and spatial</strong></p>
+<p>The catch is <span class="math inline">\(\mathbf{U}\)</span>. Obtaining it requires an <strong>eigendecomposition, costing <span class="math inline">\(O(N^{3})\)</span></strong>, and <span class="math inline">\(\mathbf{U}\)</span> is dense even when <span class="math inline">\(\mathbf{S}\)</span> is sparse. Compare with the vertex domain, where a <span class="math inline">\(K\)</span>-tap filter costs <span class="math inline">\(O(K|\mathcal{E}|)\)</span> and touches only <span class="math inline">\(K\)</span>-hop neighborhoods.</p>
+<p>So the spectral view is a modeling tool for small and medium graphs, and an analysis tool for large ones. It is also not transferable: <span class="math inline">\(\mathbf{U}\)</span> belongs to one graph, so a model defined directly on <span class="math inline">\(\boldsymbol{\Lambda}\)</span> is not inductive.</p>
+</div>
+</section>
+<section id="chebyshev-graph-convolutions" class="level3" data-number="3.3">
+<h3 data-number="3.3" class="anchored" data-anchor-id="chebyshev-graph-convolutions"><span class="header-section-number">3.3</span> Chebyshev graph convolutions</h3>
+<p>The way to keep the spectral expressiveness without paying <span class="math inline">\(O(N^{3})\)</span> is to approximate the response <span class="math inline">\(h(\lambda)\)</span> by a polynomial — which returns us to the vertex domain, where polynomials in <span class="math inline">\(\mathbf{S}\)</span> are sparse products. ChebConv <span class="citation" data-cites="defferrard2016convolutional">(<a href="#ref-defferrard2016convolutional" role="doc-biblioref">Defferrard et al. 2016</a>)</span> does this with the Chebyshev basis, and it is the direct predecessor of GCN.</p>
+<div class="definition">
+<p><strong>Definition 5 — ChebConv layer</strong></p>
+<p><span class="math display">\[
+\mathbf{H}^{(\ell+1)}=\sum_{i=1}^{k}\mathbf{Z}_i\mathbf{W}_i,
+\]</span></p>
+<p>with</p>
+<p><span class="math display">\[
+\mathbf{Z}_1=\mathbf{H}^{(\ell)},
+\qquad
+\mathbf{Z}_2=\tilde{\mathbf{L}}\mathbf{H}^{(\ell)},
+\qquad
+\mathbf{Z}_i=2\tilde{\mathbf{L}}\mathbf{Z}_{i-1}-\mathbf{Z}_{i-2},
+\]</span></p>
+<p>and the rescaled Laplacian <span class="math inline">\(\tilde{\mathbf{L}}=\dfrac{2\mathbf{L}}{\lambda_N}-\mathbf{I}\)</span>.</p>
+</div>
+<p>Two details explain the design. The rescaling maps the spectrum of <span class="math inline">\(\mathbf{L}\)</span> from <span class="math inline">\([0,\lambda_N]\)</span> onto <span class="math inline">\([-1,1]\)</span>, which is where the Chebyshev polynomials are defined and where they are numerically well behaved. And the three-term recursion <span class="math inline">\(T_i(x)=2xT_{i-1}(x)-T_{i-2}(x)\)</span> is exactly the recursion satisfied by <span class="math inline">\(\mathbf{Z}_i\)</span> — so a degree-<span class="math inline">\(k\)</span> response costs <span class="math inline">\(k\)</span> sparse matrix products and no eigendecomposition at all.</p>
+<div class="figure-panel">
+<div id="fig-chebyshev" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Left, six oscillating polynomial curves on the interval minus one to one; right, a decreasing low-pass curve and a peaked band-pass curve">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-chebyshev-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/chebyshev-polynomials.svg" class="img-fluid figure-img" alt="Left, six oscillating polynomial curves on the interval minus one to one; right, a decreasing low-pass curve and a peaked band-pass curve">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-chebyshev-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7: Left: the Chebyshev polynomials <span class="math inline">\(T_0,\ldots,T_5\)</span> on <span class="math inline">\([-1,1]\)</span>. Right: two responses built as learned combinations of them. Unlike a stack of GCN layers, which can only realize <span class="math inline">\(\mu^{L}\)</span>, a ChebConv layer can place its pass-band anywhere — including away from <span class="math inline">\(\lambda=0\)</span>.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>Swapping the polynomial family gives other models: Gegenbauer polynomials yield GegenConv <span class="citation" data-cites="castro2024gegenbauer">(<a href="#ref-castro2024gegenbauer" role="doc-biblioref">Castro-Correa et al. 2024</a>)</span>, Jacobi polynomials yield JacobiConv <span class="citation" data-cites="wang2022powerful">(<a href="#ref-wang2022powerful" role="doc-biblioref">Wang and Zhang 2022</a>)</span>.</p>
+<div class="checkpoint">
+<p><strong>Check 3 — Spectral GNNs in one paragraph</strong></p>
+<p>The GFT diagonalizes graph filters, turning convolution into pointwise multiplication by <span class="math inline">\(h(\lambda)\)</span> and making “graph frequency” precise. Working on the spectrum directly costs an <span class="math inline">\(O(N^{3})\)</span> eigendecomposition. ChebConv recovers an arbitrary degree-<span class="math inline">\(k\)</span> response using only sparse products, through the Chebyshev recursion — and GCN is the special case <span class="math inline">\(k=1\)</span> with tied coefficients.</p>
+</div>
+</section>
+</section>
+<section id="sec-reconstruction" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="sec-reconstruction"><span class="header-section-number">4</span> Reconstruction of time-varying graph signals</h2>
+<div class="definition">
+<p><strong>Definition 6 — Reconstruction problem</strong></p>
+<p>Given <span class="math inline">\(\mathcal{G}\)</span> and a time-varying signal <span class="math inline">\(\mathbf{X}\in\mathbb{R}^{N\times M}\)</span> in which the entries indexed by a <strong>known</strong> set <span class="math inline">\(\mathcal{S}=\{(i,j)\}\)</span> are missing, and writing <span class="math inline">\(\mathcal{T}=(\mathcal{V}\times\mathcal{M})\setminus\mathcal{S}\)</span> for the observed entries, recover the values on <span class="math inline">\(\mathcal{S}\)</span>.</p>
+</div>
+<p>That <span class="math inline">\(\mathcal{S}\)</span> is known matters. We are not detecting outliers; we know exactly which sensors failed and when.</p>
+<section id="measuring-smoothness-on-a-graph" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="measuring-smoothness-on-a-graph"><span class="header-section-number">4.1</span> Measuring smoothness on a graph</h3>
+<div class="definition">
+<p><strong>Definition 7 — Laplacian quadratic form</strong></p>
+<p><span class="math display">\[
+\Delta_{\mathbf{L}}(\mathbf{x})=\mathbf{x}^{\top}\mathbf{L}\mathbf{x}=\sum_{i\sim j}a_{ij}(x_i-x_j)^{2},
+\]</span></p>
+<p>summing over edges. Each edge contributes in proportion to its weight <span class="math inline">\(a_{ij}\)</span> and to the squared difference of the signal at its endpoints.</p>
+</div>
+<div class="figure-panel">
+<div id="fig-quadratic-form" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Node 1 at the centre connected to nodes 2, 3, and 4 with labelled edge weights">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-quadratic-form-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/laplacian-quadratic-form.svg" class="img-fluid figure-img" alt="Node 1 at the centre connected to nodes 2, 3, and 4 with labelled edge weights">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-quadratic-form-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8: A star on four nodes with edge weights <span class="math inline">\(a_{12}\)</span>, <span class="math inline">\(a_{13}\)</span>, <span class="math inline">\(a_{14}\)</span>.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="worked-example">
+<p><strong>Worked example — Computing <span class="math inline">\(\mathbf{x}^{\top}\mathbf{L}\mathbf{x}\)</span></strong></p>
+<p>For <a href="#fig-quadratic-form" class="quarto-xref">Figure&nbsp;8</a> the only edges are <span class="math inline">\((1,2)\)</span>, <span class="math inline">\((1,3)\)</span> and <span class="math inline">\((1,4)\)</span>, so</p>
+<p><span class="math display">\[
+\mathbf{x}^{\top}\mathbf{L}\mathbf{x}
+=a_{12}(x_1-x_2)^{2}+a_{13}(x_1-x_3)^{2}+a_{14}(x_1-x_4)^{2}.
+\]</span></p>
+<p>Note what is <strong>absent</strong>: no term in <span class="math inline">\((x_3-x_4)\)</span>. Nodes 3 and 4 may differ freely at no cost, because they are not adjacent. Variation is measured along edges, not between arbitrary pairs.</p>
+<p><strong>Minimum.</strong> Take <span class="math inline">\(x_1=x_2=x_3=x_4=1\)</span>. Every difference vanishes, so <span class="math inline">\(\mathbf{x}^{\top}\mathbf{L}\mathbf{x}=0\)</span>. Since <span class="math inline">\(a_{ij}\geq0\)</span> makes every term nonnegative, this is the global minimum — and it is the constant eigenvector <span class="math inline">\(\mathbf{u}_1\)</span> with <span class="math inline">\(\lambda_1=0\)</span> from <a href="#fig-eigenvectors" class="quarto-xref">Figure&nbsp;5</a>.</p>
+<p><strong>Maximum.</strong> Maximize the sign changes across edges: <span class="math inline">\(x_1=1\)</span>, <span class="math inline">\(x_2=x_3=x_4=-1\)</span>. Each difference is <span class="math inline">\(2\)</span>, so</p>
+<p><span class="math display">\[
+\mathbf{x}^{\top}\mathbf{L}\mathbf{x}=4(a_{12}+a_{13}+a_{14}).
+\]</span></p>
+</div>
+</section>
+<section id="from-static-to-time-varying-smoothness" class="level3" data-number="4.2">
+<h3 data-number="4.2" class="anchored" data-anchor-id="from-static-to-time-varying-smoothness"><span class="header-section-number">4.2</span> From static to time-varying smoothness</h3>
+<p>The obvious extension sums the quadratic form over time:</p>
+<p><span class="math display">\[
+E(\mathbf{X})=\sum_{s=1}^{M}\mathbf{x}_s^{\top}\mathbf{L}\mathbf{x}_s=\operatorname{tr}(\mathbf{X}^{\top}\mathbf{L}\mathbf{X}).
+\]</span></p>
+<p>Qiu et al. <span class="citation" data-cites="qiu2017time">(<a href="#ref-qiu2017time" role="doc-biblioref">Qiu et al. 2017</a>)</span> observed that on real data this is the <em>wrong quantity</em>. What is smooth on the graph is not the signal but its <strong>temporal difference</strong>:</p>
+<p><span class="math display">\[
+E(\mathbf{X}\mathbf{D}_h)=\sum_{s=2}^{M}(\mathbf{x}_s-\mathbf{x}_{s-1})^{\top}\mathbf{L}(\mathbf{x}_s-\mathbf{x}_{s-1}).
+\]</span></p>
+<p>The intuition is physical. A temperature field can have large spatial gradients — a valley is genuinely colder than a ridge — so <span class="math inline">\(\mathbf{x}_s\)</span> need not be smooth. But when the sampling rate is high, <em>how much things changed since the last reading</em> varies gently across the network, because neighboring sensors experience the same weather. Nature rarely moves abruptly, and even more rarely does so at one node and not its neighbor.</p>
+<div class="figure-panel">
+<div id="fig-sobolev-intuition" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A signal matrix, two consecutive columns being subtracted, and the difference evaluated on a small graph">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-sobolev-intuition-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/sobolev-smoothness-intuition.png" class="img-fluid figure-img" alt="A signal matrix, two consecutive columns being subtracted, and the difference evaluated on a small graph">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-sobolev-intuition-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;9: The quantity being regularized: at each step, take the difference between consecutive snapshots and measure <em>its</em> variation on the graph.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="figure-panel">
+<div id="fig-temporal-difference" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A log-scale curve of per-step variation, with the difference curve well below the signal curve, and a bar chart of the totals">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-temporal-difference-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/temporal-difference-smoothness.svg" class="img-fluid figure-img" alt="A log-scale curve of per-step variation, with the difference curve well below the signal curve, and a bar chart of the totals">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-temporal-difference-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;10: The assumption, checked. On a 220-node sensor graph with a slowly evolving field, the temporal difference is markedly smoother than the signal itself at every time step, and about <span class="math inline">\(4\times\)</span> smoother in total. This is the entire justification for putting <span class="math inline">\(\mathbf{X}\mathbf{D}_h\)</span> rather than <span class="math inline">\(\mathbf{X}\)</span> inside the regularizer.
+</figcaption>
+</figure>
+</div>
+</div>
+</section>
+<section id="the-optimization-problem" class="level3" data-number="4.3">
+<h3 data-number="4.3" class="anchored" data-anchor-id="the-optimization-problem"><span class="header-section-number">4.3</span> The optimization problem</h3>
+<p>We need an error term as well. Let <span class="math inline">\(\mathbf{J}\in\{0,1\}^{N\times M}\)</span> be the <strong>sampling matrix</strong>, with <span class="math inline">\(J_{ij}=1\)</span> when the value at node <span class="math inline">\(i\)</span> and time <span class="math inline">\(j\)</span> is observed, let <span class="math inline">\(\tilde{\mathbf{X}}\)</span> be the matrix to recover, and <span class="math inline">\(\mathbf{Y}\)</span> the observations. Then <span class="math inline">\(\|\mathbf{J}\circ\tilde{\mathbf{X}}-\mathbf{Y}\|_F^2\)</span> penalizes disagreement <strong>on the observed entries only</strong> — the Hadamard product simply ignores everything else.</p>
+<div class="definition">
+<p><strong>Definition 8 — Time-varying graph signal reconstruction (TGSR)</strong></p>
+<p><span id="eq-tgsr"><span class="math display">\[
+\min_{\tilde{\mathbf{X}}}\ \frac{1}{2}\left\|\mathbf{J}\circ\tilde{\mathbf{X}}-\mathbf{Y}\right\|_F^{2}
++\frac{\upsilon}{2}\operatorname{tr}\!\left((\tilde{\mathbf{X}}\mathbf{D}_h)^{\top}\mathbf{L}\,\tilde{\mathbf{X}}\mathbf{D}_h\right).
+\tag{1}\]</span></span></p>
+</div>
+<div class="figure-panel">
+<div id="fig-error-intuition" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A graph with time series, a heavily subsampled signal matrix, and the reconstructed matrix">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-error-intuition-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/reconstruction-error-intuition.png" class="img-fluid figure-img" alt="A graph with time series, a heavily subsampled signal matrix, and the reconstructed matrix">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-error-intuition-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;11: The error term. The observed entries pin the solution down; the smoothness term propagates information into the gaps.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="figure-panel">
+<div id="fig-graphtrss" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A block diagram from time-varying signal and coordinates through the temporal operator and Laplacian to the two-term objective">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-graphtrss-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/graphtrss-pipeline.png" class="img-fluid figure-img" alt="A block diagram from time-varying signal and coordinates through the temporal operator and Laplacian to the two-term objective">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-graphtrss-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;12: The full pipeline: build the graph from sensor coordinates by <span class="math inline">\(k\)</span>-nearest neighbors, form <span class="math inline">\(\mathbf{L}\)</span>, assemble the sampling matrix, and minimize the sum of the error and smoothness terms.
+</figcaption>
+</figure>
+</div>
+</div>
+</section>
+<section id="solving-it" class="level3" data-number="4.4">
+<h3 data-number="4.4" class="anchored" data-anchor-id="solving-it"><span class="header-section-number">4.4</span> Solving it</h3>
+<p><a href="#eq-tgsr" class="quarto-xref">Equation&nbsp;1</a> is a convex quadratic, so it has a closed-form solution — which requires inverting an <span class="math inline">\(MN\times MN\)</span> matrix. For <span class="math inline">\(N=1000\)</span> sensors over <span class="math inline">\(M=500\)</span> time steps that is a <span class="math inline">\(500\,000\times500\,000\)</span> inverse. Not a good idea.</p>
+<p>Use gradient descent instead. Writing <span class="math inline">\(f_u(\tilde{\mathbf{X}})\)</span> for the objective,</p>
+<p><span class="math display">\[
+\nabla_{\tilde{\mathbf{X}}}f_u(\tilde{\mathbf{X}})
+=\mathbf{J}\circ\tilde{\mathbf{X}}-\mathbf{Y}
++\upsilon\,\mathbf{L}\tilde{\mathbf{X}}\mathbf{D}_h\mathbf{D}_h^{\top},
+\]</span></p>
+<p>a formula built entirely from sparse products. The original paper uses conjugate gradient.</p>
+<div class="figure-panel">
+<div id="fig-reconstruction-smoothness" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Left, three error curves against observed fraction with the temporal-difference curve far below the others; right, condition number against epsilon on log axes">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-reconstruction-smoothness-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/reconstruction-smoothness.svg" class="img-fluid figure-img" alt="Left, three error curves against observed fraction with the temporal-difference curve far below the others; right, condition number against epsilon on log axes">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-reconstruction-smoothness-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13: The claim, measured. A 220-node graph, 60 time steps, entries deleted at random. Doing nothing leaves the error near 1. Regularizing <span class="math inline">\(\mathbf{X}\)</span> itself helps. Regularizing <span class="math inline">\(\mathbf{X}\mathbf{D}_h\)</span> is in a different class: at 10% of entries observed it reaches 20% error, where smoothing the signal directly reaches 67%. The regularization weight <span class="math inline">\(\upsilon\)</span> was tuned separately for each, so this compares the two priors, not two hyperparameters.
+</figcaption>
+</figure>
+</div>
+</div>
+</section>
+<section id="sobolev-smoothness" class="level3" data-number="4.5">
+<h3 data-number="4.5" class="anchored" data-anchor-id="sobolev-smoothness"><span class="header-section-number">4.5</span> Sobolev smoothness</h3>
+<p>Giraldo et al. <span class="citation" data-cites="giraldo2022reconstruction">(<a href="#ref-giraldo2022reconstruction" role="doc-biblioref">Giraldo et al. 2022</a>)</span> observed that <a href="#eq-tgsr" class="quarto-xref">Equation&nbsp;1</a> is ill-posed in a specific sense, and that this slows convergence.</p>
+<div class="checkpoint">
+<p><strong>Check 4 — Why <span class="math inline">\(\mathbf{L}\)</span> conditions the problem badly</strong></p>
+<p>The condition number of a square matrix,</p>
+<p><span class="math display">\[
+\kappa(\mathbf{L})=\frac{|\lambda_{\max}(\mathbf{L})|}{|\lambda_{\min}(\mathbf{L})|},
+\]</span></p>
+<p>measures how well-behaved its inversion is, and small condition numbers are associated with fast convergence of gradient methods. For a graph Laplacian <span class="math inline">\(\lambda_{\min}(\mathbf{L})=0\)</span> always — the constant eigenvector — so</p>
+<p><span class="math display">\[
+\kappa(\mathbf{L})=\infty .
+\]</span></p>
+<p>The regularizer supplies no curvature at all along the constant direction.</p>
+</div>
+<p>The fix is to regularize the regularizer:</p>
+<p><span id="eq-sobolev"><span class="math display">\[
+\min_{\tilde{\mathbf{X}}}\ \frac{1}{2}\left\|\mathbf{J}\circ\tilde{\mathbf{X}}-\mathbf{Y}\right\|_F^{2}
++\frac{\upsilon}{2}\operatorname{tr}\!\left((\tilde{\mathbf{X}}\mathbf{D}_h)^{\top}(\mathbf{L}+\epsilon\mathbf{I})^{\beta}\,\tilde{\mathbf{X}}\mathbf{D}_h\right),
+\tag{2}\]</span></span></p>
+<p>adding a positive definite <span class="math inline">\(\epsilon\mathbf{I}\)</span> so that every eigenvalue is bounded away from zero. This is called <strong>Sobolev smoothness</strong>, after its relationship to the Sobolev norm for static graph signals. The right panel of <a href="#fig-reconstruction-smoothness" class="quarto-xref">Figure&nbsp;13</a> plots <span class="math inline">\(\kappa\big((\mathbf{L}+\epsilon\mathbf{I})^{\beta}\big)\)</span> against <span class="math inline">\(\epsilon\)</span>: finite everywhere, and tunable through <span class="math inline">\(\epsilon\)</span> and <span class="math inline">\(\beta\)</span>.</p>
+<p>The algorithm changes in exactly one place, the gradient:</p>
+<p><span class="math display">\[
+\nabla_{\tilde{\mathbf{X}}}f_u(\tilde{\mathbf{X}})
+=\mathbf{J}\circ\tilde{\mathbf{X}}-\mathbf{Y}
++\upsilon\,(\mathbf{L}+\epsilon\mathbf{I})^{\beta}\tilde{\mathbf{X}}\mathbf{D}_h\mathbf{D}_h^{\top}.
+\]</span></p>
+<div class="figure-panel">
+<div id="fig-conditioning" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two contour plots, one with circular level sets and a direct path, one with elongated level sets and an oscillating path">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-conditioning-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/conditioning-gradient-descent.svg" class="img-fluid figure-img" alt="Two contour plots, one with circular level sets and a direct path, one with elongated level sets and an oscillating path">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-conditioning-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;14: Why conditioning matters for gradient descent. On a well-conditioned problem the level sets are near-circular and the iterates head almost straight for the optimum; on an ill-conditioned one they are elongated and the iterates zig-zag across the valley.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="checkpoint">
+<p><strong>Check 5 — What is and is not shown here</strong></p>
+<p><a href="#fig-reconstruction-smoothness" class="quarto-xref">Figure&nbsp;13</a> establishes two things directly: the temporal-difference prior is dramatically better than the static one, and <span class="math inline">\(\kappa(\mathbf{L}+\epsilon\mathbf{I})^{\beta}\)</span> is finite while <span class="math inline">\(\kappa(\mathbf{L})\)</span> is not.</p>
+<p>It does <strong>not</strong> show a convergence speed-up from the Sobolev term. On this small synthetic problem the data term already supplies curvature in the directions that matter, so the two objectives descend at nearly the same rate. The empirical advantage reported in <span class="citation" data-cites="giraldo2022reconstruction">(<a href="#ref-giraldo2022reconstruction" role="doc-biblioref">Giraldo et al. 2022</a>)</span> is measured on real datasets, and you should read the paper rather than take it from a 220-node simulation. Reproducing it — or failing to — is Exercise 6.</p>
+</div>
+<div class="figure-panel">
+<div id="fig-reconstruction-datasets" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three panels: a world map with case data, a sea surface temperature map with a sensor graph, and a coastal experiment map">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-reconstruction-datasets-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/reconstruction-datasets.png" class="img-fluid figure-img" alt="Three panels: a world map with case data, a sea surface temperature map with a sensor graph, and a coastal experiment map">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-reconstruction-datasets-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;15: Applications of these methods: global COVID-19 case counts on a graph of countries, sea-surface temperature, and the SW06 underwater acoustics experiment. Air-quality monitoring (PM 2.5) is another standard use.
+</figcaption>
+</figure>
+</div>
+</div>
+</section>
+<section id="reconstruction-with-a-neural-network" class="level3" data-number="4.6">
+<h3 data-number="4.6" class="anchored" data-anchor-id="reconstruction-with-a-neural-network"><span class="header-section-number">4.6</span> Reconstruction with a neural network</h3>
+<p>The same problem can be solved by learning. Feed the Laplacian and the incomplete signal to a GNN with an <strong>autoencoder</strong> shape, and train it with a loss that is the previous objective in disguise.</p>
+<div class="figure-panel">
+<div id="fig-gegenbauer" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A pipeline from an underwater experiment through a k-NN graph and encoder-decoder architecture to a reconstructed signal matrix">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-gegenbauer-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/gegenbauer-reconstruction-pipeline.png" class="img-fluid figure-img" alt="A pipeline from an underwater experiment through a k-NN graph and encoder-decoder architecture to a reconstructed signal matrix">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gegenbauer-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;16: The learned pipeline: build the graph, sample the signal, pass it through a Chebyshev-based autoencoder, and recover the full time-varying signal. Source: <span class="citation" data-cites="castro2024gegenbauer">(<a href="#ref-castro2024gegenbauer" role="doc-biblioref">Castro-Correa et al. 2024</a>)</span>.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>Each layer is a <strong>cascade of Chebyshev convolutions</strong> of increasing order <span class="math inline">\(\rho=0,\dots,\zeta-1\)</span>, combined linearly.</p>
+<div class="figure-panel">
+<div id="fig-cheb-layer" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A block diagram with the Laplacian and signal feeding several Chebyshev convolution branches merged by a linear combination block">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-cheb-layer-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/chebyshev-cascade-layer.png" class="img-fluid figure-img" alt="A block diagram with the Laplacian and signal feeding several Chebyshev convolution branches merged by a linear combination block">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cheb-layer-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;17: One layer: the signal enters <span class="math inline">\(\zeta\)</span> branches, branch <span class="math inline">\(\rho\)</span> applying a Chebyshev convolution of order <span class="math inline">\(\rho\)</span>, and the outputs are merged by a learned linear combination.
+</figcaption>
+</figure>
+</div>
+</div>
+<p><span class="math display">\[
+\mathbf{X}^{(\ell+1)}=\sum_{\rho=0}^{\zeta-1}\mu_{\rho}^{(\ell)}\mathbf{Z}_{\rho}^{(\ell)}\in\mathbb{R}^{N\times F_\ell},
+\]</span></p>
+<p>where <span class="math inline">\(\mathbf{Z}_{\rho}^{(\ell)}\in\mathbb{R}^{N\times F_\ell}\)</span> is branch <span class="math inline">\(\rho\)</span>’s output and the <span class="math inline">\(\mu_{\rho}^{(\ell)}\)</span> are trainable. The number of branches <span class="math inline">\(\zeta\)</span> is a hyperparameter.</p>
+<div class="worked-example">
+<p><strong>Worked example — Shapes through the autoencoder</strong></p>
+<p>The input is the whole time-varying signal, <span class="math inline">\(\mathbf{X}^{(0)}\in\mathbb{R}^{N\times M}\)</span>: each node’s <em>feature vector is its time series</em>, so the feature dimension is <span class="math inline">\(M\)</span>.</p>
+<p>The first layer’s weights are <span class="math inline">\(\mathbf{W}_{\rho}^{(0)}\in\mathbb{R}^{M\times F_0}\)</span> for every branch <span class="math inline">\(\rho\)</span>, with <span class="math inline">\(F_0&lt;M\)</span> — the encoder compresses. Widths keep shrinking to the latent layer, then grow back, and the last layer uses <span class="math inline">\(\mathbf{W}_{\rho}^{(\ell)}\in\mathbb{R}^{F_\ell\times M}\)</span> so the output is again <span class="math inline">\(N\times M\)</span>.</p>
+<p>These networks are <strong>shallow</strong> in practice. The reason is Lecture 2’s: over-smoothing. Depth here buys receptive field on the graph, and pays for it in discriminative power.</p>
+</div>
+<div class="figure-panel">
+<div id="fig-autoencoder" class="quarto-float quarto-figure quarto-figure-center anchored" alt="An encoder-decoder diagram narrowing to a latent layer and widening again, with the ChebConv propagation rule underneath">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-autoencoder-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/chebconv-autoencoder.svg" class="img-fluid figure-img" alt="An encoder-decoder diagram narrowing to a latent layer and widening again, with the ChebConv propagation rule underneath">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-autoencoder-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;18: The autoencoder: hidden width contracts to a latent space and expands back, while every layer applies the Chebyshev cascade on the graph.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>The loss is the optimization objective, rewritten for training:</p>
+<p><span class="math display">\[
+\mathcal{L}=\frac{1}{|\mathcal{T}|}\sum_{(i,j)\in\mathcal{T}}\left(X_{ij}-\tilde{X}_{ij}\right)^{2}
++\lambda\operatorname{tr}\!\left((\tilde{\mathbf{X}}\mathbf{D}_h)^{\top}(\mathbf{L}+\epsilon\mathbf{I})\,\tilde{\mathbf{X}}\mathbf{D}_h\right).
+\]</span></p>
+<p>An MSE term on the observed entries plus the Sobolev term from <a href="#eq-sobolev" class="quarto-xref">Equation&nbsp;2</a>. Train it with Adam or SGD.</p>
+<div class="checkpoint">
+<p><strong>Check 6 — Optimization or network?</strong></p>
+<p>They solve the same problem with the same prior, and the difference is where the effort goes.</p>
+<p>The <strong>optimization</strong> approach has no training data, no training phase, and few hyperparameters (<span class="math inline">\(\upsilon\)</span>, <span class="math inline">\(\epsilon\)</span>, <span class="math inline">\(\beta\)</span>); it needs a bespoke solver, and it starts from scratch on every new signal.</p>
+<p>The <strong>network</strong> approach reuses a standard optimizer and amortizes the cost across signals once trained; but hyperparameter tuning is harder, and it needs data to train on.</p>
+</div>
+</section>
+</section>
+<section id="forecasting-of-time-varying-graph-signals" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="forecasting-of-time-varying-graph-signals"><span class="header-section-number">5</span> Forecasting of time-varying graph signals</h2>
+<div class="definition">
+<p><strong>Definition 9 — Forecasting problem</strong></p>
+<p>Given <span class="math inline">\(\mathcal{G}\)</span>, a time-varying graph signal <span class="math inline">\(\mathbf{X}\in\mathbb{R}^{N\times M}\)</span>, and a temporal window</p>
+<p><span class="math display">\[
+\mathbf{X}_K=[\mathbf{x}_{m-K},\ldots,\mathbf{x}_{m-1}]\in\mathbb{R}^{N\times K},
+\qquad K&lt;M,
+\]</span></p>
+<p>predict <span class="math inline">\(\mathbf{x}_m\)</span>. <span class="math inline">\(K\)</span> is the <strong>auto-regressive order</strong>.</p>
+</div>
+<div class="figure-panel">
+<div id="fig-forecasting" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A graph with node time series, and the signal matrix with a K-wide window highlighted before the target column">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-forecasting-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/forecasting-problem.svg" class="img-fluid figure-img" alt="A graph with node time series, and the signal matrix with a K-wide window highlighted before the target column">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-forecasting-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;19: The forecasting setup: a sliding window of <span class="math inline">\(K\)</span> past snapshots (grey) is used to predict the next one (pink).
+</figcaption>
+</figure>
+</div>
+</div>
+<section id="auto-regressive-modeling" class="level3" data-number="5.1">
+<h3 data-number="5.1" class="anchored" data-anchor-id="auto-regressive-modeling"><span class="header-section-number">5.1</span> Auto-regressive modeling</h3>
+<p>The classical AR(<span class="math inline">\(K\)</span>) model for a scalar time series is</p>
+<p><span class="math display">\[
+x_m=\sum_{i=1}^{K}\phi_i x_{m-i}+\epsilon_m,
+\]</span></p>
+<p>a weighted sum of the last <span class="math inline">\(K\)</span> lags plus white noise. The order <span class="math inline">\(K\)</span> sets how much history is retained, the coefficients <span class="math inline">\(\phi_i\)</span> weight it — typically decaying with distance in time — and <span class="math inline">\(\epsilon_m\)</span> absorbs whatever the model cannot explain.</p>
+<p>On a graph, the scalar coefficients become matrices:</p>
+<p><span class="math display">\[
+\mathbf{x}_m=\sum_{i=1}^{K}\boldsymbol{\Phi}_i\mathbf{x}_{m-i}+\boldsymbol{\epsilon}_m,
+\qquad
+\boldsymbol{\Phi}_i\in\mathbb{R}^{N\times N}.
+\]</span></p>
+<p>Leaving <span class="math inline">\(\boldsymbol{\Phi}_i\)</span> arbitrary would be hopeless — <span class="math inline">\(KN^{2}\)</span> parameters, and no locality. But we know from Lecture 2 what a well-behaved <span class="math inline">\(N\times N\)</span> operator on a graph looks like: <strong>a graph filter</strong>. Take <span class="math inline">\(\boldsymbol{\Phi}_i=\sum_{j=0}^{p}h_{j,i}\mathbf{S}^{j}\)</span> and the model becomes</p>
+<p><span id="eq-graph-ar"><span class="math display">\[
+\mathbf{x}_m=\sum_{i=1}^{K}\sum_{j=0}^{p}h_{j,i}\mathbf{S}^{j}\mathbf{x}_{m-i}+\boldsymbol{\epsilon}_m,
+\tag{3}\]</span></span></p>
+<p>with <span class="math inline">\((p+1)K\)</span> parameters regardless of <span class="math inline">\(N\)</span>. Reading it off: the value at a node at time <span class="math inline">\(m\)</span> depends on its own past <span class="math inline">\(K\)</span> values <strong>and</strong> on the past values of its <span class="math inline">\(p\)</span>-hop neighborhood. Setting <span class="math inline">\(p=1\)</span> gives the simplest useful case, <span class="math inline">\(\mathbf{x}_m=\sum_i(h_{0,i}\mathbf{I}+h_{1,i}\mathbf{S})\mathbf{x}_{m-i}+\boldsymbol{\epsilon}_m\)</span> — each node’s own history plus its immediate neighbors’.</p>
+<div class="checkpoint">
+<p><strong>Check 7 — Two axes, not one</strong></p>
+<p>An ordinary time series has one axis of dependence: the past. A spatiotemporal graph signal has two, and <a href="#eq-graph-ar" class="quarto-xref">Equation&nbsp;3</a> has one index for each — <span class="math inline">\(i\)</span> runs over time lags and <span class="math inline">\(j\)</span> over graph hops. Traffic at an intersection depends on that intersection an hour ago <em>and</em> on the upstream intersections a few minutes ago.</p>
+</div>
+</section>
+<section id="forecasting-with-gnns" class="level3" data-number="5.2">
+<h3 data-number="5.2" class="anchored" data-anchor-id="forecasting-with-gnns"><span class="header-section-number">5.2</span> Forecasting with GNNs</h3>
+<p>Add nonlinearities to <a href="#eq-graph-ar" class="quarto-xref">Equation&nbsp;3</a> and it becomes a network:</p>
+<p><span id="eq-forecast-gnn"><span class="math display">\[
+\tilde{\mathbf{x}}_m=\sum_{i=1}^{K}\alpha_i\,\sigma\!\left(\sum_{j=0}^{p}h_{j,i}\mathbf{S}^{j}\mathbf{x}_{m-i}\right),
+\tag{4}\]</span></span></p>
+<p>where each lag is filtered on the graph, passed through <span class="math inline">\(\sigma\)</span>, and the <span class="math inline">\(K\)</span> results are combined with learnable weights <span class="math inline">\(\alpha_i\)</span>.</p>
+<div class="figure-panel">
+<div id="fig-forecasting-gnn" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A diagram from a graph and its signal matrix through K parallel filter branches into a summation and an MSE loss">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-forecasting-gnn-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../../assets/figures/forecasting-gnn-architecture.svg" class="img-fluid figure-img" alt="A diagram from a graph and its signal matrix through K parallel filter branches into a summation and an MSE loss">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-forecasting-gnn-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;20: The architecture of <a href="#eq-forecast-gnn" class="quarto-xref">Equation&nbsp;4</a>: each of the <span class="math inline">\(K\)</span> lags in the window is graph-filtered and passed through a nonlinearity, the branches are summed, and the prediction is compared with the true next snapshot by the MSE loss.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>The loss is mean squared error over the nodes,</p>
+<p><span class="math display">\[
+\mathcal{L}_{\mathrm{MSE}}(\mathbf{x}_m,\tilde{\mathbf{x}}_m)
+=\frac{1}{N}\sum_{i=1}^{N}\left(x_m(i)-\tilde{x}_m(i)\right)^{2},
+\]</span></p>
+<p>and training is ordinary SGD or Adam.</p>
+</section>
+<section id="multiple-horizons" class="level3" data-number="5.3">
+<h3 data-number="5.3" class="anchored" data-anchor-id="multiple-horizons"><span class="header-section-number">5.3</span> Multiple horizons</h3>
+<p>Predicting <span class="math inline">\(H\)</span> steps ahead rather than one admits two designs.</p>
+<p><strong>MLP head.</strong> Produce all <span class="math inline">\(H\)</span> horizons in one forward pass by projecting the shared representation:</p>
+<p><span class="math display">\[
+\tilde{\mathbf{X}}_m=\sigma\!\left(\left[\sum_{i=1}^{K}\alpha_i\sigma\!\left(\sum_{j=0}^{p}h_{j,i}\mathbf{S}^{j}\mathbf{x}_{m-i}\right)\right]\mathbf{w}_h^{\top}\right)
+\in\mathbb{R}^{N\times H},
+\]</span></p>
+<p>with <span class="math inline">\(\mathbf{w}_h\in\mathbb{R}^{H\times1}\)</span> learnable, and MSE taken between the matrices <span class="math inline">\(\tilde{\mathbf{X}}_m\)</span> and <span class="math inline">\(\mathbf{X}_m\)</span>.</p>
+<p><strong>Recursive.</strong> Feed the model’s own prediction back in. Writing <span class="math inline">\(\texttt{GNN}_{\mathcal{G},\boldsymbol{\theta}}(\cdot)\)</span> for <a href="#eq-forecast-gnn" class="quarto-xref">Equation&nbsp;4</a>,</p>
+<p><span class="math display">\[
+\tilde{\mathbf{x}}_m=\texttt{GNN}_{\mathcal{G},\boldsymbol{\theta}}(\mathbf{x}_{m-1},\ldots,\mathbf{x}_{m-K}),
+\qquad
+\tilde{\mathbf{x}}_{m+1}=\texttt{GNN}_{\mathcal{G},\boldsymbol{\theta}}(\tilde{\mathbf{x}}_m,\mathbf{x}_{m-1},\ldots,\mathbf{x}_{m-K+1}),
+\]</span></p>
+<p>and so on for <span class="math inline">\(H-1\)</span> steps, assembling <span class="math inline">\(\tilde{\mathbf{X}}_m\in\mathbb{R}^{N\times H}\)</span>.</p>
+<div class="checkpoint">
+<p><strong>Check 8 — Two things to notice about the recursion</strong></p>
+<ol type="1">
+<li><strong>The window shifts.</strong> Each step drops the oldest true observation and prepends the newest prediction, so the input stays <span class="math inline">\(K\)</span> wide and grows progressively more synthetic.</li>
+<li><strong>The parameters are shared.</strong> The same <span class="math inline">\(\boldsymbol{\theta}\)</span> is used at every horizon — one model, applied <span class="math inline">\(H\)</span> times, not <span class="math inline">\(H\)</span> models.</li>
+</ol>
+<p>The recursive formulation works better in practice. It also compounds its own errors, which is why forecast accuracy degrades with the horizon.</p>
+</div>
+</section>
+<section id="graphcast" class="level3" data-number="5.4">
+<h3 data-number="5.4" class="anchored" data-anchor-id="graphcast"><span class="header-section-number">5.4</span> GraphCast</h3>
+<p>The clearest large-scale demonstration is <strong>GraphCast</strong> <span class="citation" data-cites="lam2023learning">(<a href="#ref-lam2023learning" role="doc-biblioref"><span class="nocase">Lam et al.</span> 2023</a>)</span>, DeepMind’s medium-range weather model.</p>
+<ul>
+<li>It forecasts up to <strong>10 days</strong> ahead, learning from historical reanalysis data instead of integrating the equations of motion numerically.</li>
+<li>The atmosphere is represented as a <strong>global multi-mesh graph</strong> built on hierarchical icosahedral meshes, not a latitude–longitude grid — which avoids the pole distortion a regular grid suffers.</li>
+<li>Message passing across mesh resolutions propagates information locally and globally in the same forward pass.</li>
+<li>It is <strong>auto-regressive</strong>, exactly as above: each output state is computed from previous states plus multi-resolution message passing.</li>
+<li>It produces a 10-day forecast in <strong>under a minute on one TPU</strong>, against roughly an hour for traditional numerical weather prediction.</li>
+</ul>
+<p>GraphCast has a good deal of additional machinery. The part that matters here is that its skeleton is <a href="#eq-forecast-gnn" class="quarto-xref">Equation&nbsp;4</a>.</p>
+<p>Traffic forecasting is the other standard benchmark family: <strong>MetrLA</strong> (four months of speeds on 207 Los Angeles County highway sensors at 5-minute resolution) and <strong>PemsBay</strong> (six months at 325 Bay Area stations, also 5-minute).</p>
+</section>
+</section>
+<section id="exercises" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="exercises"><span class="header-section-number">6</span> Exercises</h2>
+<section id="exercise-1-reading-the-gft" class="level3" data-number="6.1">
+<h3 data-number="6.1" class="anchored" data-anchor-id="exercise-1-reading-the-gft"><span class="header-section-number">6.1</span> Exercise 1 — Reading the GFT</h3>
+<p>Take the path graph on 6 nodes. Compute <span class="math inline">\(\mathbf{L}\)</span>, its eigenvalues and eigenvectors, and verify that the eigenvector for <span class="math inline">\(\lambda_1=0\)</span> is constant and that the number of sign changes grows with <span class="math inline">\(\lambda\)</span>.</p>
+</section>
+<section id="exercise-2-quadratic-form" class="level3" data-number="6.2">
+<h3 data-number="6.2" class="anchored" data-anchor-id="exercise-2-quadratic-form"><span class="header-section-number">6.2</span> Exercise 2 — Quadratic form</h3>
+<p>For <a href="#fig-quadratic-form" class="quarto-xref">Figure&nbsp;8</a> with <span class="math inline">\(a_{12}=2\)</span>, <span class="math inline">\(a_{13}=1\)</span>, <span class="math inline">\(a_{14}=1\)</span> and <span class="math inline">\(\mathbf{x}=[1,0,-1,2]^{\top}\)</span>, compute <span class="math inline">\(\mathbf{x}^{\top}\mathbf{L}\mathbf{x}\)</span> directly from the edge sum, then again as a matrix product, and confirm they agree.</p>
+</section>
+<section id="exercise-3-why-the-difference-is-smoother" class="level3" data-number="6.3">
+<h3 data-number="6.3" class="anchored" data-anchor-id="exercise-3-why-the-difference-is-smoother"><span class="header-section-number">6.3</span> Exercise 3 — Why the difference is smoother</h3>
+<p>Let each node carry <span class="math inline">\(x_s(i)=f(i)+g(s)\)</span>: a fixed spatial pattern plus a spatially uniform temporal drift. Show that <span class="math inline">\(\mathbf{x}_s^{\top}\mathbf{L}\mathbf{x}_s\)</span> is generally nonzero while <span class="math inline">\((\mathbf{x}_s-\mathbf{x}_{s-1})^{\top}\mathbf{L}(\mathbf{x}_s-\mathbf{x}_{s-1})=0\)</span> exactly. Relate this to <a href="#fig-temporal-difference" class="quarto-xref">Figure&nbsp;10</a>.</p>
+</section>
+<section id="exercise-4-the-gradient" class="level3" data-number="6.4">
+<h3 data-number="6.4" class="anchored" data-anchor-id="exercise-4-the-gradient"><span class="header-section-number">6.4</span> Exercise 4 — The gradient</h3>
+<p>Derive <span class="math inline">\(\nabla_{\tilde{\mathbf{X}}}f_u\)</span> for <a href="#eq-tgsr" class="quarto-xref">Equation&nbsp;1</a>. You will need <span class="math inline">\(\nabla_{\mathbf{Z}}\operatorname{tr}(\mathbf{Z}^{\top}\mathbf{A}\mathbf{Z})=2\mathbf{A}\mathbf{Z}\)</span> for symmetric <span class="math inline">\(\mathbf{A}\)</span>, and the chain rule through <span class="math inline">\(\mathbf{Z}=\tilde{\mathbf{X}}\mathbf{D}_h\)</span>.</p>
+</section>
+<section id="exercise-5-chebyshev-recursion" class="level3" data-number="6.5">
+<h3 data-number="6.5" class="anchored" data-anchor-id="exercise-5-chebyshev-recursion"><span class="header-section-number">6.5</span> Exercise 5 — Chebyshev recursion</h3>
+<p>Verify that <span class="math inline">\(\mathbf{Z}_i=2\tilde{\mathbf{L}}\mathbf{Z}_{i-1}-\mathbf{Z}_{i-2}\)</span> implements <span class="math inline">\(T_i(\tilde{\mathbf{L}})\mathbf{H}^{(\ell)}\)</span>, and explain why <span class="math inline">\(\tilde{\mathbf{L}}=2\mathbf{L}/\lambda_N-\mathbf{I}\)</span> rather than <span class="math inline">\(\mathbf{L}\)</span> itself.</p>
+</section>
+<section id="exercise-6-does-the-sobolev-term-speed-things-up" class="level3" data-number="6.6">
+<h3 data-number="6.6" class="anchored" data-anchor-id="exercise-6-does-the-sobolev-term-speed-things-up"><span class="header-section-number">6.6</span> Exercise 6 — Does the Sobolev term speed things up?</h3>
+<p>Using <code>scripts/figures/lecture_04_figures.py</code>, run gradient descent on <a href="#eq-tgsr" class="quarto-xref">Equation&nbsp;1</a> and on <a href="#eq-sobolev" class="quarto-xref">Equation&nbsp;2</a> from the same start, and plot the error against iteration. Try to find a regime — sparser sampling, larger <span class="math inline">\(\upsilon\)</span>, larger <span class="math inline">\(\epsilon\)</span> or <span class="math inline">\(\beta\)</span> — in which the Sobolev version converges measurably faster. If you cannot, say what that tells you about which term controls the conditioning of this particular problem, and read <span class="citation" data-cites="giraldo2022reconstruction">(<a href="#ref-giraldo2022reconstruction" role="doc-biblioref">Giraldo et al. 2022</a>)</span> for the setting where the effect is visible.</p>
+</section>
+<section id="exercise-7-parameter-count" class="level3" data-number="6.7">
+<h3 data-number="6.7" class="anchored" data-anchor-id="exercise-7-parameter-count"><span class="header-section-number">6.7</span> Exercise 7 — Parameter count</h3>
+<p>For <a href="#eq-graph-ar" class="quarto-xref">Equation&nbsp;3</a> with <span class="math inline">\(N=10^{4}\)</span> nodes, order <span class="math inline">\(K=12\)</span> and <span class="math inline">\(p=3\)</span> hops, count the parameters. Compare with an unconstrained <span class="math inline">\(\boldsymbol{\Phi}_i\in\mathbb{R}^{N\times N}\)</span>, and with an LSTM run independently at each node with hidden size 64.</p>
+</section>
+<section id="exercise-8-horizons" class="level3" data-number="6.8">
+<h3 data-number="6.8" class="anchored" data-anchor-id="exercise-8-horizons"><span class="header-section-number">6.8</span> Exercise 8 — Horizons</h3>
+<p>Explain why the recursive formulation compounds errors while the MLP head does not, and why the recursive one is nonetheless usually more accurate.</p>
+</section>
+</section>
+<section id="main-takeaways" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="main-takeaways"><span class="header-section-number">7</span> Main takeaways</h2>
+<ol type="1">
+<li>A <strong>time-varying graph signal</strong> <span class="math inline">\(\mathbf{X}\in\mathbb{R}^{N\times M}\)</span> carries a time series at every node; the temporal difference <span class="math inline">\(\mathbf{X}\mathbf{D}_h\)</span> is the object most of the modeling acts on.</li>
+<li>The <strong>GFT</strong> diagonalizes graph filters and makes “graph frequency” precise: the eigenvalue is the frequency, and smooth signals concentrate their energy at the low end.</li>
+<li>Working on the spectrum costs <span class="math inline">\(O(N^{3})\)</span> and is not inductive. <strong>ChebConv</strong> buys an arbitrary degree-<span class="math inline">\(k\)</span> response with sparse products only, and GCN is its <span class="math inline">\(k=1\)</span> special case.</li>
+<li><strong>Reconstruction</strong> is an error term on the observed entries plus a smoothness regularizer, and the regularizer belongs on <span class="math inline">\(\mathbf{X}\mathbf{D}_h\)</span> — a choice worth several factors of accuracy.</li>
+<li><span class="math inline">\(\kappa(\mathbf{L})=\infty\)</span> because <span class="math inline">\(\lambda_{\min}(\mathbf{L})=0\)</span>. <strong>Sobolev smoothness</strong> replaces <span class="math inline">\(\mathbf{L}\)</span> with <span class="math inline">\((\mathbf{L}+\epsilon\mathbf{I})^{\beta}\)</span> and makes the conditioning finite and tunable.</li>
+<li>The same problem solves with a <strong>Chebyshev autoencoder</strong> and the same loss. Optimization needs no data; the network amortizes across signals. Both are shallow, for the usual reason.</li>
+<li><strong>Forecasting</strong> is auto-regressive modeling where the AR coefficients become graph filters, giving dependence on both past time steps and nearby nodes with a parameter count independent of <span class="math inline">\(N\)</span>.</li>
+<li>Multiple horizons come from an <strong>MLP head</strong> or a <strong>recursive</strong> rollout with shared parameters; the recursive version usually wins. <strong>GraphCast</strong> is this recipe at planetary scale.</li>
+</ol>
+</section>
+<section id="references-and-provenance" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="references-and-provenance">References and provenance</h2>
+<p>This web note is adapted from the Lecture 4 slides by Jhony H. Giraldo. The graph-filter diagonalization is proved, the shapes of the autoencoder are worked through, the auto-regressive model is derived from the classical AR(<span class="math inline">\(K\)</span>) model, and the smoothness and conditioning claims are checked numerically.</p>
+<p>The diagrams reproduce the original course vectors. <a href="#fig-gft" class="quarto-xref">Figure&nbsp;6</a>, <a href="#fig-temporal-difference" class="quarto-xref">Figure&nbsp;10</a>, <a href="#fig-reconstruction-smoothness" class="quarto-xref">Figure&nbsp;13</a>, and <a href="#fig-chebyshev" class="quarto-xref">Figure&nbsp;7</a> are new and were computed with <code>numpy</code> and <code>networkx</code>; the script that produces them is <code>scripts/figures/lecture_04_figures.py</code> in this repository. <a href="#fig-fourier" class="quarto-xref">Figure&nbsp;4</a> is a redrawn version of the lecture’s Fourier recap.</p>
+<div id="refs" class="references-small references csl-bib-body hanging-indent" role="list">
+<div id="ref-castro2024gegenbauer" class="csl-entry" role="listitem">
+Castro-Correa, Jhon A., Jhony H. Giraldo, Mohsen Badiey, and Fragkiskos D. Malliaros. 2024. <span>“Gegenbauer Graph Neural Networks for Time-Varying Signal Reconstruction.”</span> <em>IEEE Transactions on Neural Networks and Learning Systems</em>, ahead of print. <a href="https://doi.org/10.1109/TNNLS.2024.3381069">https://doi.org/10.1109/TNNLS.2024.3381069</a>.
+</div>
+<div id="ref-defferrard2016convolutional" class="csl-entry" role="listitem">
+Defferrard, Michaël, Xavier Bresson, and Pierre Vandergheynst. 2016. <span>“Convolutional Neural Networks on Graphs with Fast Localized Spectral Filtering.”</span> <em>Advances in Neural Information Processing Systems</em>.
+</div>
+<div id="ref-giraldo2022reconstruction" class="csl-entry" role="listitem">
+Giraldo, Jhony H., Arif Mahmood, Belmar Garcia-Garcia, Dorina Thanou, and Thierry Bouwmans. 2022. <span>“Reconstruction of Time-Varying Graph Signals via Sobolev Smoothness.”</span> <em>IEEE Transactions on Signal and Information Processing over Networks</em> 8: 201–14. <a href="https://doi.org/10.1109/TSIPN.2022.3156886">https://doi.org/10.1109/TSIPN.2022.3156886</a>.
+</div>
+<div id="ref-lam2023learning" class="csl-entry" role="listitem">
+<span class="nocase">Lam, Remi, Alvaro Sanchez-Gonzalez, Matthew Willson, et al.</span> 2023. <span>“Learning Skillful Medium-Range Global Weather Forecasting.”</span> <em>Science</em> 382 (6677): 1416–21. <a href="https://doi.org/10.1126/science.adi2336">https://doi.org/10.1126/science.adi2336</a>.
+</div>
+<div id="ref-ortega2022introduction" class="csl-entry" role="listitem">
+Ortega, Antonio. 2022. <em>Introduction to Graph Signal Processing</em>. Cambridge University Press.
+</div>
+<div id="ref-qiu2017time" class="csl-entry" role="listitem">
+Qiu, Kai, Xianghui Mao, Xinyue Shen, Xiaohan Wang, Tiejian Gu, and Yuantao Gu. 2017. <span>“Time-Varying Graph Signal Reconstruction.”</span> <em>IEEE Journal of Selected Topics in Signal Processing</em> 11 (6): 870–83. <a href="https://doi.org/10.1109/JSTSP.2017.2726969">https://doi.org/10.1109/JSTSP.2017.2726969</a>.
+</div>
+<div id="ref-wang2022powerful" class="csl-entry" role="listitem">
+Wang, Xiyuan, and Muhan Zhang. 2022. <span>“How Powerful Are Spectral Graph Neural Networks?”</span> <em>International Conference on Machine Learning</em>.
+</div>
+</div>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script src="../../assets/site.js" defer=""></script>
+
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/jhonygiraldo\.github\.io");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© 2026 Jhony H. Giraldo</p>
+</div>   
+    <div class="nav-footer-center">
+<p>Télécom Paris · Institut Polytechnique de Paris</p>
+</div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+    <a class="nav-link" href="https://orcid.org/0000-0002-0039-1270">
+<p>ORCID</p>
+</a>
+  </li>  
+    <li class="nav-item">
+    <a class="nav-link" href="mailto:jhony.giraldo@telecom-paris.fr">
+<p>Email</p>
+</a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+<script src="../../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>
