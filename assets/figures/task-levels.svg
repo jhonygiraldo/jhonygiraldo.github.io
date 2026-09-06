@@ -3,7 +3,7 @@
   <desc id="desc">Four copies of a graph highlight a node, an edge, a community, and the whole graph to illustrate node-, edge-, subgraph-, and graph-level tasks.</desc>
   <defs>
     <style>
-      .panel{fill:#fff;stroke:#dbe2df;stroke-width:2}.edge{stroke:#9aaeb1;stroke-width:5;stroke-linecap:round}.edgehot{stroke:#d2644b;stroke-width:10}.node{fill:#b9c8c9;stroke:#fff;stroke-width:4}.hot{fill:#d2644b}.community{fill:#0f6c78}.label{font:700 25px system-ui,sans-serif;fill:#16343c;text-anchor:middle}.small{font:500 17px system-ui,sans-serif;fill:#586874;text-anchor:middle}.halo{fill:#dceff0;stroke:#0f6c78;stroke-width:3;stroke-dasharray:8 7}
+      .panel{fill:#fff;stroke:#dbe2df;stroke-width:2}.edge{fill:none;stroke:#9aaeb1;stroke-width:5;stroke-linecap:round}.edgehot{stroke:#d2644b;stroke-width:10}.node{fill:#b9c8c9;stroke:#fff;stroke-width:4}.hot{fill:#d2644b}.community{fill:#0f6c78}.label{font:700 25px system-ui,sans-serif;fill:#16343c;text-anchor:middle}.small{font:500 17px system-ui,sans-serif;fill:#586874;text-anchor:middle}.halo{fill:#dceff0;stroke:#0f6c78;stroke-width:3;stroke-dasharray:8 7}
     </style>
     <g id="basegraph">
       <path class="edge" d="M65 110L142 62L225 104L196 190L105 200L65 110M142 62L196 190M65 110L105 200M225 104L285 180M196 190L285 180"/>

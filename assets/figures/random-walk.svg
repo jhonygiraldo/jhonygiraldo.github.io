@@ -2,9 +2,9 @@
   <title id="title">Random walk and node-context pairs</title>
   <desc id="desc">A graph contains a highlighted random walk from node u through nodes a, b, c, and d. The walk becomes training pairs centered on node b.</desc>
   <defs>
-    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#9cb0b3"/></marker>
+    <marker id="arrow" markerUnits="userSpaceOnUse" markerWidth="26" markerHeight="20" refX="24" refY="10" orient="auto"><path d="M0 0L26 10L0 20Z" fill="#d2644b"/></marker>
     <style>
-      .panel{fill:#fff;stroke:#dbe2df;stroke-width:2}.edge{stroke:#9fb0b3;stroke-width:5;stroke-linecap:round}.walk{fill:none;stroke:#d2644b;stroke-width:11;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#arrow)}.node{fill:#0f6c78;stroke:#fff;stroke-width:5}.visited{fill:#d2644b}.n{font:800 20px system-ui,sans-serif;fill:#fff;text-anchor:middle;dominant-baseline:middle}.label{font:700 27px system-ui,sans-serif;fill:#16343c}.small{font:500 18px system-ui,sans-serif;fill:#586874}.token{fill:#edf6f5;stroke:#a6c7c9;stroke-width:2}.tokenhot{fill:#f9e9e2;stroke:#d2644b;stroke-width:3}.t{font:700 22px ui-monospace,monospace;fill:#17353d;text-anchor:middle;dominant-baseline:middle}.pair{font:600 22px ui-monospace,monospace;fill:#33474f}
+      .panel{fill:#fff;stroke:#dbe2df;stroke-width:2}.edge{fill:none;stroke:#9fb0b3;stroke-width:5;stroke-linecap:round}.walk{fill:none;stroke:#d2644b;stroke-width:11;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#arrow)}.node{fill:#0f6c78;stroke:#fff;stroke-width:5}.visited{fill:#d2644b}.n{font:800 20px system-ui,sans-serif;fill:#fff;text-anchor:middle;dominant-baseline:middle}.label{font:700 27px system-ui,sans-serif;fill:#16343c}.small{font:500 18px system-ui,sans-serif;fill:#586874}.token{fill:#edf6f5;stroke:#a6c7c9;stroke-width:2}.tokenhot{fill:#f9e9e2;stroke:#d2644b;stroke-width:3}.t{font:700 22px ui-monospace,monospace;fill:#17353d;text-anchor:middle;dominant-baseline:middle}.pair{font:600 22px ui-monospace,monospace;fill:#33474f}
     </style>
   </defs>
   <rect class="panel" x="20" y="20" width="590" height="440" rx="24"/><rect class="panel" x="635" y="20" width="545" height="440" rx="24"/>
@@ -15,6 +15,6 @@
   <text class="n" x="92" y="250">u</text><text class="n" x="185" y="145">a</text><text class="n" x="300" y="190">b</text><text class="n" x="408" y="118">c</text><text class="n" x="520" y="195">d</text><text class="n" x="470" y="330">e</text><text class="n" x="335" y="354">f</text><text class="n" x="215" y="318">g</text>
   <text class="label" x="670" y="67">2 · Predict context nodes</text><text class="small" x="670" y="95">Example context window of radius two around b.</text>
   <g transform="translate(690,130)"><rect class="token" x="0" y="0" width="70" height="62" rx="14"/><rect class="token" x="82" y="0" width="70" height="62" rx="14"/><rect class="tokenhot" x="164" y="0" width="70" height="62" rx="14"/><rect class="token" x="246" y="0" width="70" height="62" rx="14"/><rect class="token" x="328" y="0" width="70" height="62" rx="14"/><text class="t" x="35" y="31">u</text><text class="t" x="117" y="31">a</text><text class="t" x="199" y="31">b</text><text class="t" x="281" y="31">c</text><text class="t" x="363" y="31">d</text></g>
-  <text class="pair" x="735" y="260">positive pairs</text><text class="pair" x="760" y="302">(b,u)  (b,a)</text><text class="pair" x="760" y="342">(b,c)  (b,d)</text><text class="small" x="700" y="403">Increase zᵦᵀzᵥ for context nodes; decrease it for sampled negatives.</text>
+  <text class="pair" x="735" y="260">positive pairs</text><text class="pair" x="760" y="302">(b,u)  (b,a)</text><text class="pair" x="760" y="342">(b,c)  (b,d)</text><text class="small" x="660" y="403">Positive pairs pull together; negatives push apart.</text>
 </svg>
 

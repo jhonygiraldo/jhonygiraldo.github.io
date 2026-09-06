@@ -286,7 +286,7 @@ window.Quarto = {
   <li><a href="#exercise-2-the-g_np-clustering-derivation" id="toc-exercise-2-the-g_np-clustering-derivation" class="nav-link" data-scroll-target="#exercise-2-the-g_np-clustering-derivation"><span class="header-section-number">9.2</span> Exercise 2 — The <span class="math inline">\(G_{np}\)</span> clustering derivation</a></li>
   <li><a href="#exercise-3-degree-distribution" id="toc-exercise-3-degree-distribution" class="nav-link" data-scroll-target="#exercise-3-degree-distribution"><span class="header-section-number">9.3</span> Exercise 3 — Degree distribution</a></li>
   <li><a href="#exercise-4-the-phase-transition" id="toc-exercise-4-the-phase-transition" class="nav-link" data-scroll-target="#exercise-4-the-phase-transition"><span class="header-section-number">9.4</span> Exercise 4 — The phase transition</a></li>
-  <li><a href="#exercise-5-orderings" id="toc-exercise-5-orderings" class="nav-link" data-scroll-target="#exercise-5-orderings"><span class="header-section-number">9.5</span> Exercise 5 — Orderings</a></li>
+  <li><a href="#exercise-5-orderings-advanced-optional" id="toc-exercise-5-orderings-advanced-optional" class="nav-link" data-scroll-target="#exercise-5-orderings-advanced-optional"><span class="header-section-number">9.5</span> Exercise 5 — Orderings (advanced, optional)</a></li>
   <li><a href="#exercise-6-counting-decisions" id="toc-exercise-6-counting-decisions" class="nav-link" data-scroll-target="#exercise-6-counting-decisions"><span class="header-section-number">9.6</span> Exercise 6 — Counting decisions</a></li>
   <li><a href="#exercise-7-comparing-the-two-approaches" id="toc-exercise-7-comparing-the-two-approaches" class="nav-link" data-scroll-target="#exercise-7-comparing-the-two-approaches"><span class="header-section-number">9.7</span> Exercise 7 — Comparing the two approaches</a></li>
   </ul></li>
@@ -530,14 +530,16 @@ Figure&nbsp;8: <span class="math inline">\(n\)</span> and <span class="math inli
 \]</span></p>
 <p>Substituting into Definition 2,</p>
 <p><span class="math display">\[
-\mathbb{E}[C_i]=\frac{2}{k_i(k_i-1)}\cdot p\,\frac{k_i(k_i-1)}{2}=p=\frac{\bar{k}}{N-1}\approx\frac{\bar{k}}{N}.
+\mathbb{E}[C_i\mid k_i]=\frac{2}{k_i(k_i-1)}\cdot p\,\frac{k_i(k_i-1)}{2}=p=\frac{\bar{k}}{N-1}\approx\frac{\bar{k}}{N}.
 \]</span></p>
+<p>Two conventions to fix, because the result is cleaner than it looks. The cancellation needs <span class="math inline">\(k_i\geq2\)</span> — a node of degree 0 or 1 has no pair of neighbors and its <span class="math inline">\(C_i\)</span> is <span class="math inline">\(0/0\)</span>. If we define <span class="math inline">\(C_i=0\)</span> in that case, then averaging over all nodes gives <span class="math inline">\(\mathbb{E}[C]=p\cdot\Pr(k_i\geq2)\)</span>, slightly below <span class="math inline">\(p\)</span>. And <span class="math inline">\(\bar{k}=p(N-1)\)</span> is the <em>expected</em> mean degree; any particular realization has its own.</p>
 <p>Read the result: if we hold the average degree <span class="math inline">\(\bar{k}\)</span> fixed and grow the graph, <strong>the clustering coefficient goes to zero</strong>. A large random graph has no local structure at all.</p>
 </div>
 </section>
 <section id="its-giant-component" class="level3" data-number="4.2">
 <h3 data-number="4.2" class="anchored" data-anchor-id="its-giant-component"><span class="header-section-number">4.2</span> Its giant component</h3>
-<p>The other classical result is a phase transition: the giant component appears exactly when the average degree reaches <span class="math inline">\(1\)</span>, that is <span class="math inline">\(p=1/(N-1)\)</span> — the point at which each node has, in expectation, at least one edge.</p>
+<p>The other classical result is a phase transition. Writing <span class="math inline">\(p=c/N\)</span>, the statement is <strong>asymptotic</strong>: as <span class="math inline">\(N\to\infty\)</span>, for <span class="math inline">\(c&lt;1\)</span> the largest component has size <span class="math inline">\(O(\log N)\)</span>, while for <span class="math inline">\(c&gt;1\)</span> a component containing a constant fraction of the nodes emerges. The critical case <span class="math inline">\(c=1\)</span> is different again, with a largest component of order <span class="math inline">\(N^{2/3}\)</span>.</p>
+<p>Two things this is <em>not</em>. It is not a sharp event in a finite sample — the transition in a 2000-node graph is a smooth rise, not a step, and it sharpens as <span class="math inline">\(N\)</span> grows. And a giant component is not <strong>full connectivity</strong>: that requires the much higher <span class="math inline">\(p\approx\log N/N\)</span>, so a graph well past the giant-component threshold still typically has isolated nodes and infinite distances between some pairs.</p>
 <div class="figure-panel">
 <div id="fig-er-properties" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Left, a sharp rise in giant component size at average degree one; right, two decreasing lines far below a horizontal line at 0.11">
 <figure class="quarto-float quarto-float-fig figure">
@@ -558,13 +560,13 @@ Figure&nbsp;9: Both results, simulated. Left: the largest component against aver
 <section id="the-verdict" class="level3" data-number="4.4">
 <h3 data-number="4.4" class="anchored" data-anchor-id="the-verdict"><span class="header-section-number">4.4</span> The verdict</h3>
 <div class="figure-panel">
-<div id="fig-real-vs-random" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Left, three complementary CDF curves with the random graph dropping sharply; right, grouped bars where clustering differs and path length and component size match">
+<div id="fig-real-vs-random" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Left, three complementary CDF curves with the random graph dropping sharply; right, a log-scale ratio bar chart where clustering differs 193-fold and the other two properties agree">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-real-vs-random-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../../assets/figures/real-vs-random-graphs.svg" class="img-fluid figure-img" alt="Left, three complementary CDF curves with the random graph dropping sharply; right, grouped bars where clustering differs and path length and component size match">
+<img src="../../assets/figures/real-vs-random-graphs.svg" class="img-fluid figure-img" alt="Left, three complementary CDF curves with the random graph dropping sharply; right, a log-scale ratio bar chart where clustering differs 193-fold and the other two properties agree">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-real-vs-random-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;10: The comparison, measured. Left: the complementary CDF <span class="math inline">\(P(K\geq k)\)</span> — the readable way to compare tails. A preferential-attachment graph and the real Les Misérables network keep mass out to high degree; the size-matched <span class="math inline">\(G_{np}\)</span> falls off a cliff at <span class="math inline">\(k\approx15\)</span>. Right: with <span class="math inline">\(N\)</span> and average degree held equal, path length and connectivity agree closely, and clustering differs by more than two orders of magnitude.
+Figure&nbsp;10: The comparison, measured — and note that the two panels compare different things. <strong>Left</strong>: the complementary CDF <span class="math inline">\(P(K\geq k)\)</span>, the readable way to compare tails on a small sample. The real Les Misérables network (<span class="math inline">\(N=77\)</span>) and a preferential-attachment model (<span class="math inline">\(N=5000\)</span>) both keep mass out to high degree; the <span class="math inline">\(G_{np}\)</span> graph, matched to the model in <span class="math inline">\(N\)</span> and mean degree, falls off a cliff at <span class="math inline">\(k\approx15\)</span>. The real graph is here as an anchor, not as a size-matched comparison — it is 65 times smaller. <strong>Right</strong>: two <strong>synthetic</strong> models only, at equal <span class="math inline">\(N\)</span> and equal mean degree, so the comparison is like for like. Ratios rather than raw values, because <span class="math inline">\(C\approx0.001\)</span> and <span class="math inline">\(\bar{h}\approx5\)</span> cannot share a linear axis: clustering differs by <span class="math inline">\(193\times\)</span>, while path length (<span class="math inline">\(0.82\times\)</span>) and giant-component fraction (<span class="math inline">\(1.00\times\)</span>) agree.
 </figcaption>
 </figure>
 </div>
@@ -598,7 +600,9 @@ Figure&nbsp;10: The comparison, measured. Left: the complementary CDF <span clas
 </tbody>
 </table>
 <p>Two out of four, and the two failures are the interesting ones. The degree distribution is binomial rather than heavily skewed, there is no local structure, and the giant component in most real networks does not emerge through a sharp phase transition at all.</p>
-<p>So: <strong>no, real networks are not random graphs.</strong> <span class="math inline">\(G_{np}\)</span> nonetheless remains valuable as the reference point — the null model you compare against before claiming that a structure is meaningful, and the standard setting for analyzing the cost and stability of graph algorithms.</p>
+<p>So: <strong>real networks are not <span class="math inline">\(G_{np}\)</span> graphs.</strong> Be careful to draw the conclusion no wider than that. “Real networks are not random graphs” would be far too strong — most useful models of real networks, including preferential attachment and the stochastic block model, <em>are</em> random graph models. What fails here is the specific assumption that edges appear <strong>independently with a common probability</strong>, and that assumption is what makes the degree distribution binomial and the clustering vanish.</p>
+<p>Note too what a good fit would and would not buy. Classical models have parameters and can be fitted: a preferential-attachment model can be tuned to match an observed degree exponent. But matching a graph’s summary statistics is not the same as identifying the <strong>process</strong> that produced it — several mechanisms generate heavy tails, and a distributional fit does not choose between them.</p>
+<p><span class="math inline">\(G_{np}\)</span> nonetheless remains valuable as the reference point — the null model you compare against before claiming that a structure is meaningful, and the standard setting for analyzing the cost and stability of graph algorithms.</p>
 </div>
 <p>Other classical models improve on parts of this. The <strong>small-world model</strong> recovers a realistic clustering coefficient; the <strong>Kronecker graph model</strong> approximates several real properties at once. Both are left for self-study.</p>
 <div class="checkpoint">
@@ -736,7 +740,7 @@ y_t=s_t\mathbf{V}.
 <ul>
 <li>the node-level RNN generates the initial state for the edge-level RNN;</li>
 <li>the edge-level RNN sequentially predicts whether the new node connects to each previous node;</li>
-<li>the last hidden state of the edge-level RNN is fed back to advance the node-level RNN.</li>
+<li>the node-level RNN advances by consuming the <strong>adjacency vector just generated</strong> — the sequence of edge decisions for the node that was added — not the edge-level RNN’s hidden state.</li>
 </ul>
 </section>
 <section id="making-it-stochastic" class="level3" data-number="6.4">
@@ -770,13 +774,13 @@ Figure&nbsp;17: At the edge level, <span class="math inline">\(y_t\)</span> is a
 <section id="training" class="level3" data-number="6.5">
 <h3 data-number="6.5" class="anchored" data-anchor-id="training"><span class="header-section-number">6.5</span> Training</h3>
 <div class="figure-panel">
-<div id="fig-teacher-forcing" class="quarto-float quarto-figure quarto-figure-center anchored" alt="An unrolled RNN with the ground-truth sequence supplied at every input and compared at every output">
+<div id="fig-teacher-forcing" class="quarto-float quarto-figure quarto-figure-center anchored" alt="An unrolled RNN with the ground-truth sequence supplied at every input and predictions compared against targets at every output">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-teacher-forcing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../../assets/figures/graphrnn-teacher-forcing.svg" class="img-fluid figure-img" alt="An unrolled RNN with the ground-truth sequence supplied at every input and compared at every output">
+<img src="../../assets/figures/graphrnn-teacher-forcing.svg" class="img-fluid figure-img" alt="An unrolled RNN with the ground-truth sequence supplied at every input and predictions compared against targets at every output">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-teacher-forcing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;18: <strong>Teacher forcing.</strong> At training time the observed edge sequence <span class="math inline">\(y^{*}=[0,0,1,\ldots]\)</span> replaces both the inputs and the outputs, so each step is conditioned on the true prefix rather than on the model’s own samples.
+Figure&nbsp;18: <strong>Teacher forcing.</strong> At training time the observed edge sequence <span class="math inline">\(y^{*}=[0,0,1,\ldots]\)</span> is fed in as the <strong>inputs</strong>, so each step is conditioned on the true prefix rather than on the model’s own samples. The <strong>outputs</strong> are not replaced: the model still predicts a probability at every step, and the loss compares those predictions against the same <span class="math inline">\(y^{*}\)</span> as targets. Both appear in the diagram — ground truth entering from below, predictions leaving above.
 </figcaption>
 </figure>
 </div>
@@ -824,18 +828,19 @@ Figure&nbsp;20: The structural problem: <strong>any node can connect to any prio
 </figure>
 </div>
 </div>
-<p>The authors mitigate the ordering problem with a <strong>BFS ordering</strong>, which bounds how far back a new node can plausibly connect. The cost problem remains:</p>
+<p>The authors mitigate this with a <strong>BFS ordering</strong>. Under a BFS order a new node can only connect within a bounded frontier, so the edge-level sequence can be truncated to a fixed maximum length <span class="math inline">\(M\)</span> — which is what makes GraphRNN practical, and turns the cost from quadratic into <span class="math inline">\(O(NM)\)</span> on graphs where a small <span class="math inline">\(M\)</span> suffices.</p>
+<p>Without that truncation, adding node <span class="math inline">\(i\)</span> requires <span class="math inline">\(i-1\)</span> binary decisions, so the worst case is</p>
 <p><span class="math display">\[
-\mathcal{O}\!\left(\sum_{i=1}^{N}i\right)=\mathcal{O}\!\left(\frac{N(N+1)}{2}\right).
+\sum_{i=1}^{N}(i-1)=\frac{N(N-1)}{2},
 \]</span></p>
 <div class="figure-panel">
-<div id="fig-generation-cost" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Log-log plot with a steep quadratic line for GraphRNN above a shallower sub-quadratic line">
+<div id="fig-generation-cost" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Log-log plot with a steep quadratic line for GraphRNN above a shallower reference slope">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-generation-cost-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../../assets/figures/graph-generation-cost.svg" class="img-fluid figure-img" alt="Log-log plot with a steep quadratic line for GraphRNN above a shallower sub-quadratic line">
+<img src="../../assets/figures/graph-generation-cost.svg" class="img-fluid figure-img" alt="Log-log plot with a steep quadratic line for GraphRNN above a shallower reference slope">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-generation-cost-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;21: Sequential edge generation in numbers. At <span class="math inline">\(N=100\)</span> a graph takes about 5000 decisions; at <span class="math inline">\(N=1000\)</span>, about half a million. The dashed line marks a sub-quadratic alternative for comparison — the point is the slope, not the constant.
+Figure&nbsp;21: Sequential edge generation in numbers, as a <strong>worst case</strong>. At <span class="math inline">\(N=100\)</span> an untruncated graph takes about 5000 decisions; at <span class="math inline">\(N=1000\)</span>, about half a million. Two caveats on this plot. The quadratic curve is the bound <em>without</em> BFS truncation, which GraphRNN does apply. And the dashed line is <strong>not a measurement</strong>: it is <span class="math inline">\(N\log_2 N\)</span>, drawn purely as a reference slope for “sub-quadratic”. It is neither a runtime nor a derived bound for the cited method, whose actual cost depends on its candidate-set assumptions and its denoising steps. Compare the slopes, not the values.
 </figcaption>
 </figure>
 </div>
@@ -917,9 +922,15 @@ Figure&nbsp;24: One expansion step. The model first decides <strong>which nodes 
 <h3 data-number="9.4" class="anchored" data-anchor-id="exercise-4-the-phase-transition"><span class="header-section-number">9.4</span> Exercise 4 — The phase transition</h3>
 <p>Reproduce the left panel of <a href="#fig-er-properties" class="quarto-xref">Figure&nbsp;9</a> with <code>scripts/figures/lecture_06_figures.py</code>. Vary <span class="math inline">\(N\)</span> over <span class="math inline">\(\{500, 2000, 10000\}\)</span> and describe what happens to the sharpness of the transition at <span class="math inline">\(\bar{k}=1\)</span>.</p>
 </section>
-<section id="exercise-5-orderings" class="level3" data-number="9.5">
-<h3 data-number="9.5" class="anchored" data-anchor-id="exercise-5-orderings"><span class="header-section-number">9.5</span> Exercise 5 — Orderings</h3>
-<p>A graph with <span class="math inline">\(N\)</span> nodes admits up to <span class="math inline">\(N!\)</span> node orderings. For <span class="math inline">\(N=10\)</span>, how many is that? Explain why GraphRNN’s random ordering makes the likelihood it maximizes a lower bound rather than the true likelihood, and what the BFS ordering does about it.</p>
+<section id="exercise-5-orderings-advanced-optional" class="level3" data-number="9.5">
+<h3 data-number="9.5" class="anchored" data-anchor-id="exercise-5-orderings-advanced-optional"><span class="header-section-number">9.5</span> Exercise 5 — Orderings (advanced, optional)</h3>
+<p>A graph with <span class="math inline">\(N\)</span> nodes admits up to <span class="math inline">\(N!\)</span> node orderings. For <span class="math inline">\(N=10\)</span>, how many is that?</p>
+<p>Now set the likelihood up properly. GraphRNN models a <em>sequence</em>, so it defines <span class="math inline">\(p_\theta(S^{\pi})\)</span> for an ordering <span class="math inline">\(\pi\)</span>, whereas we want <span class="math inline">\(p_\theta(\mathcal{G})\)</span>. These are related by marginalizing over orderings,</p>
+<p><span class="math display">\[
+p_\theta(\mathcal{G})=\sum_{\pi}p_\theta(S^{\pi})\,\Pr(\pi),
+\]</span></p>
+<p>with <span class="math inline">\(\Pr(\pi)\)</span> the distribution the training procedure samples orderings from. Training maximizes <span class="math inline">\(\mathbb{E}_{\pi\sim\Pr}[\log p_\theta(S^{\pi})]\)</span> — the expectation of the log, not the log of the expectation. Use Jensen’s inequality to show this is a <strong>lower bound</strong> on <span class="math inline">\(\log p_\theta(\mathcal{G})\)</span>, and state when the bound is tight.</p>
+<p>Then make it concrete on a three-node path with just two orderings: write both sequences, assign each probability <span class="math inline">\(\tfrac12\)</span>, and compute both sides of the inequality for a model of your choosing. Finally, explain what the BFS restriction does to <span class="math inline">\(\Pr(\pi)\)</span> and why that helps.</p>
 </section>
 <section id="exercise-6-counting-decisions" class="level3" data-number="9.6">
 <h3 data-number="9.6" class="anchored" data-anchor-id="exercise-6-counting-decisions"><span class="header-section-number">9.6</span> Exercise 6 — Counting decisions</h3>

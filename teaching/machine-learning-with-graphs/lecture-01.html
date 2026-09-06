@@ -393,6 +393,17 @@ Figure&nbsp;1: Isolated observations become substantially more informative when 
 <p>where <span class="math inline">\(\mathcal{V}=\{v_1,\ldots,v_N\}\)</span> is a set of <strong>nodes</strong> (or vertices) and <span class="math inline">\(\mathcal{E}\subseteq\mathcal{V}\times\mathcal{V}\)</span> is a set of <strong>edges</strong>. An edge <span class="math inline">\((u,v)\in\mathcal{E}\)</span> records a relation from <span class="math inline">\(u\)</span> to <span class="math inline">\(v\)</span>.</p>
 </div>
 <p>We write <span class="math inline">\(N=|\mathcal{V}|\)</span> and <span class="math inline">\(M=|\mathcal{E}|\)</span>. A node can carry a feature vector <span class="math inline">\(\mathbf{x}_v\in\mathbb{R}^F\)</span>; an edge can carry a scalar or vector attribute, such as distance, capacity, time, or bond type.</p>
+<div class="checkpoint">
+<p><strong>Conventions used throughout this course</strong></p>
+<p>Defining <span class="math inline">\(\mathcal{E}\)</span> as a set of ordered pairs and then calling <span class="math inline">\((u,v)\)</span> and <span class="math inline">\((v,u)\)</span> “the same edge” needs an explicit convention, so here it is.</p>
+<ul>
+<li><strong>Counting.</strong> For an undirected graph, <span class="math inline">\(M=|\mathcal{E}|\)</span> counts each edge <strong>once</strong>, so a triangle has <span class="math inline">\(M=3\)</span>. Stored formats keep both directions, so an <code>edge_index</code> has <span class="math inline">\(2M\)</span> columns and a sparse matrix has <span class="math inline">\(2M\)</span> nonzeros. When a complexity is quoted as <span class="math inline">\(O(|\mathcal{E}|)\)</span> the factor of two is absorbed into the constant.</li>
+<li><strong>Graphs.</strong> Unless stated otherwise, graphs are <strong>simple</strong> (no self-loops, no multi-edges) and weights are <strong>nonnegative</strong>. Self-loops appear deliberately in Lecture 2 and are flagged there.</li>
+<li><strong>Isolated nodes.</strong> A node of degree zero has no outgoing transition, so a random walk cannot leave it and its clustering coefficient is defined as <span class="math inline">\(0\)</span>. Degree-normalized operators use the convention <span class="math inline">\(1/0=0\)</span>.</li>
+<li><strong>Features.</strong> <span class="math inline">\(\mathbf{X}\in\mathbb{R}^{N\times F}\)</span> is <strong>row-wise</strong>: one row per node.</li>
+<li><strong>Reused symbols.</strong> <span class="math inline">\(M\)</span> is the edge count here, the mini-batch size in Lecture 3, and the number of time samples in Lecture 4. Each lecture states which it means.</li>
+</ul>
+</div>
 <section id="undirected-directed-and-weighted-graphs" class="level3" data-number="3.1">
 <h3 data-number="3.1" class="anchored" data-anchor-id="undirected-directed-and-weighted-graphs"><span class="header-section-number">3.1</span> Undirected, directed, and weighted graphs</h3>
 <p>In an <strong>undirected graph</strong>, <span class="math inline">\((u,v)\)</span> and <span class="math inline">\((v,u)\)</span> represent the same edge. In a <strong>directed graph</strong>, their meanings differ. A <strong>weighted graph</strong> associates a value <span class="math inline">\(w_{uv}\)</span> with every edge.</p>
@@ -446,7 +457,8 @@ Figure&nbsp;3: A graph drawing, an edge list, and an adjacency matrix encode the
 </div>
 <section id="adjacency-matrix" class="level3" data-number="4.1">
 <h3 data-number="4.1" class="anchored" data-anchor-id="adjacency-matrix"><span class="header-section-number">4.1</span> Adjacency matrix</h3>
-<p>An adjacency matrix supports algebraic operations and dense linear algebra. Its storage cost is <span class="math inline">\(O(N^2)\)</span>, even when only a small fraction of node pairs are connected.</p>
+<p>An adjacency matrix supports algebraic operations and linear algebra. Stored <strong>densely</strong> its cost is <span class="math inline">\(O(N^2)\)</span>, even when only a small fraction of node pairs are connected.</p>
+<p>That is a statement about the storage format, not about matrices. A <strong>sparse</strong> adjacency matrix — CSR, COO, or the <code>edge_index</code> of a graph library — stores only the nonzeros, at <span class="math inline">\(O(N+M)\)</span>, and still supports the matrix products every later lecture relies on. So the choice is not “matrix or efficiency”: it is dense or sparse. Dense <span class="math inline">\(O(N^2)\)</span> storage is what becomes impossible at scale, and the sparse matrix is what Lectures 2 to 6 actually use.</p>
 </section>
 <section id="edge-list-and-adjacency-list" class="level3" data-number="4.2">
 <h3 data-number="4.2" class="anchored" data-anchor-id="edge-list-and-adjacency-list"><span class="header-section-number">4.2</span> Edge list and adjacency list</h3>
@@ -579,7 +591,8 @@ C_D(i)=\frac{d_i}{N-1}.
 <p><span class="math display">\[
 \mathbf{x}^{(t+1)}=\frac{\mathbf{A}\mathbf{x}^{(t)}}{\|\mathbf{A}\mathbf{x}^{(t)}\|_2}
 \]</span></p>
-<p>often converges toward this dominant direction when the standard spectral conditions hold.</p>
+<p>converges toward this dominant direction provided <span class="math inline">\(|\lambda_1|&gt;|\lambda_2|\)</span> — the largest eigenvalue must be strictly larger <em>in absolute value</em> than the next.</p>
+<p>That condition is not a formality. A <strong>connected bipartite graph</strong> has eigenvalues symmetric about zero, so <span class="math inline">\(-\lambda_{\max}\)</span> is also an eigenvalue and <span class="math inline">\(|\lambda_1|=|\lambda_2|\)</span>. Power iteration then oscillates between two directions instead of converging. This is the same near-bipartite structure that will reappear in Lecture 3, where it makes diffusion behave very differently from the homophilous case.</p>
 </section>
 <section id="closeness-centrality" class="level3" data-number="7.3">
 <h3 data-number="7.3" class="anchored" data-anchor-id="closeness-centrality"><span class="header-section-number">7.3</span> Closeness centrality</h3>
@@ -591,11 +604,12 @@ C_C(i)=\frac{N-1}{\sum_{j\neq i}d(i,j)}.
 </section>
 <section id="betweenness-centrality" class="level3" data-number="7.4">
 <h3 data-number="7.4" class="anchored" data-anchor-id="betweenness-centrality"><span class="header-section-number">7.4</span> Betweenness centrality</h3>
-<p>Let <span class="math inline">\(\sigma_{st}\)</span> be the number of shortest paths from <span class="math inline">\(s\)</span> to <span class="math inline">\(t\)</span>, and <span class="math inline">\(\sigma_{st}(i)\)</span> the number of those paths passing through <span class="math inline">\(i\)</span>. Then</p>
+<p>Let <span class="math inline">\(\sigma_{st}\)</span> be the number of shortest paths from <span class="math inline">\(s\)</span> to <span class="math inline">\(t\)</span>, and <span class="math inline">\(\sigma_{st}(i)\)</span> the number of those paths passing through <span class="math inline">\(i\)</span>. Summing over <strong>ordered</strong> pairs <span class="math inline">\((s,t)\)</span>,</p>
 <p><span class="math display">\[
 C_B(i)=\sum_{\substack{s\neq i\neq t\\s\neq t}}
 \frac{\sigma_{st}(i)}{\sigma_{st}}.
 \]</span></p>
+<p>On an undirected graph each unordered pair is therefore counted twice, and implementations usually divide by two — <code>networkx</code> does, and also offers a normalized variant. Compare conventions before comparing numbers.</p>
 <p>Betweenness identifies potential bridges and bottlenecks rather than merely well-connected nodes.</p>
 </section>
 <section id="clustering-coefficient-and-graphlets" class="level3" data-number="7.5">
@@ -606,8 +620,18 @@ C_i=\frac{2T_i}{d_i(d_i-1)}.
 \]</span></p>
 <p>The coefficient counts the fraction of possible neighbor–neighbor edges that exist. <strong>Graphlets</strong> generalize this idea by counting small rooted subgraph patterns. A graphlet-degree vector can describe the structural role of a node, but its dimension and computational cost grow as larger patterns are included <span class="citation" data-cites="leskovec2020mmds">(<a href="#ref-leskovec2020mmds" role="doc-biblioref">Leskovec et al. 2020</a>)</span>.</p>
 <div class="checkpoint">
-<p><strong>Check 2 — Importance is not one concept</strong></p>
-<p>A high-degree node has many immediate contacts. A high-closeness node reaches other nodes quickly. A high-betweenness node mediates many shortest routes. A high-eigenvector-centrality node connects to influential neighbors. The rankings need not agree.</p>
+<p><strong>Check 2 — Predict before you read on</strong></p>
+<p>Take a “barbell”: two dense clusters of five nodes each, joined by a single path through one intermediate node <span class="math inline">\(m\)</span>. A node <span class="math inline">\(h\)</span> inside one cluster is connected to everything in that cluster.</p>
+<p>Before reading further, predict which of <span class="math inline">\(h\)</span> and <span class="math inline">\(m\)</span> ranks higher on each of <strong>degree</strong>, <strong>closeness</strong>, and <strong>betweenness</strong>.</p>
+<details>
+<summary>
+Now check yourself
+</summary>
+<p><span class="math inline">\(h\)</span> wins on <strong>degree</strong> — it has more immediate contacts, while <span class="math inline">\(m\)</span> has only two.</p>
+<p><span class="math inline">\(m\)</span> wins on <strong>betweenness</strong>, and by a wide margin: every shortest path between the clusters passes through it, and none passes through <span class="math inline">\(h\)</span>.</p>
+<p><strong>Closeness</strong> is the interesting one. <span class="math inline">\(m\)</span> is typically closer <em>on average</em> to everything, because it sits between the two clusters, whereas <span class="math inline">\(h\)</span> is far from the whole opposite cluster. So <span class="math inline">\(m\)</span> usually wins here too, despite its degree of two.</p>
+<p>The general lesson: a high-degree node has many immediate contacts, a high-closeness node reaches the network quickly, a high-betweenness node mediates routes, and a high-eigenvector-centrality node attaches to influential neighbors. <strong>These rankings need not agree</strong>, and choosing among them is a modelling decision, not a technicality.</p>
+</details>
 </div>
 </section>
 </section>
@@ -618,8 +642,8 @@ C_i=\frac{2T_i}{d_i(d_i-1)}.
 <div class="figure-panel">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="../../assets/figures/representation-learning.svg" class="img-fluid figure-img" alt="Pipeline from input graph to automatically learned representation and prediction"></p>
-<figcaption>A classical pipeline depends on manually engineered structural features. Vector figure from the supplied course material.</figcaption>
+<p><img src="../../assets/figures/representation-learning.svg" class="img-fluid figure-img" alt="Pipeline from input graph with the feature engineering stage crossed out, replaced by an automatically learned representation feeding a prediction"></p>
+<figcaption>The transition this section is about: the <strong>feature-engineering stage is struck out</strong> and replaced by a representation learned from the graph itself, which then feeds the same downstream learner. Vector figure from the supplied course material.</figcaption>
 </figure>
 </div>
 </div>
@@ -643,6 +667,7 @@ f(u)=\mathbf{z}_u,
 \operatorname{ENC}(u)=\mathbf{z}_u=\mathbf{Z}\mathbf{e}_u,
 \]</span></p>
 <p>where <span class="math inline">\(\mathbf{e}_u\)</span> is the one-hot vector identifying <span class="math inline">\(u\)</span>.</p>
+<p>One simplification to flag, because it affects the exercises. We use a <strong>single</strong> embedding table, so the same <span class="math inline">\(\mathbf{z}_u\)</span> appears whether <span class="math inline">\(u\)</span> is the center of a context window or a member of it. word2vec and most DeepWalk implementations keep <strong>two</strong> tables — a center (input) embedding and a context (output) embedding — and either discard the context table after training or average the two. The single-table version keeps the derivations readable and is a legitimate variant; just be aware that in a real implementation <span class="math inline">\(\mathbf{z}_u^{\top}\mathbf{z}_v\)</span> would be <span class="math inline">\(\mathbf{z}_u^{\top}\mathbf{c}_v\)</span>, and that the gradient in Exercise 4 has an extra term when <span class="math inline">\(u\)</span> and <span class="math inline">\(v\)</span> share a table.</p>
 <p>The decoder converts two embeddings into a similarity score. A common choice is the dot product</p>
 <p><span class="math display">\[
 \operatorname{DEC}(u,v)=\mathbf{z}_u^{\top}\mathbf{z}_v.
@@ -667,7 +692,7 @@ P_{uv}=
 <img src="../../assets/figures/random-walk.svg" class="img-fluid figure-img" alt="Highlighted path through a graph followed by a node sequence and positive context pairs">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-random-walk-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;5: A random walk produces node sequences. Nearby positions in each sequence form positive center–context training pairs.
+Figure&nbsp;5: A random walk produces node sequences. Nearby positions in each sequence form positive center–context training pairs: here the walk visits <span class="math inline">\(u,a,b,c,d\)</span>, and a context window of radius two around <span class="math inline">\(b\)</span> yields the pairs <span class="math inline">\((b,u)\)</span>, <span class="math inline">\((b,a)\)</span>, <span class="math inline">\((b,c)\)</span>, <span class="math inline">\((b,d)\)</span>. Training increases <span class="math inline">\(\mathbf{z}_b^{\top}\mathbf{z}_v\)</span> for each context node <span class="math inline">\(v\)</span> and decreases it for sampled negatives.
 </figcaption>
 </figure>
 </div>
@@ -704,20 +729,21 @@ P(v\mid\mathbf{z}_u)
 <section id="deepwalk" class="level2" data-number="10">
 <h2 data-number="10" class="anchored" data-anchor-id="deepwalk"><span class="header-section-number">10</span> DeepWalk</h2>
 <p>DeepWalk applies the word2vec skip-gram idea to random-walk sequences <span class="citation" data-cites="perozzi2014deepwalk">(<a href="#ref-perozzi2014deepwalk" role="doc-biblioref">Perozzi et al. 2014</a>)</span>.</p>
+<p>One point of attribution before the algorithm. The original DeepWalk paper makes the softmax denominator tractable with a <strong>hierarchical softmax</strong> — a binary tree over nodes, turning one <span class="math inline">\(O(N)\)</span> normalization into <span class="math inline">\(O(\log N)\)</span> binary decisions. The negative sampling used below is the later, and now more common, alternative inherited from word2vec. They are not two implementations of the same objective: hierarchical softmax computes a genuine normalized distribution, whereas negative sampling optimizes a <strong>different objective</strong> whose optimum happens to induce similar embeddings. Neither is an algebraically exact substitute for the full softmax.</p>
 <ol type="1">
 <li>Start several short unbiased random walks from every node.</li>
 <li>Treat each walk as a sentence and each node as a token.</li>
 <li>Within a context window, form center–context pairs.</li>
-<li>Optimize the embeddings with stochastic gradient descent and negative sampling.</li>
+<li>Optimize the embeddings with stochastic gradient descent — with hierarchical softmax in the original paper, or negative sampling as above.</li>
 </ol>
 <div class="figure-panel">
-<div id="fig-deepwalk" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Network communities on the left and their separated two-dimensional embedding clusters on the right">
+<div id="fig-deepwalk" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Network communities on the left and a two-dimensional projection of their embeddings, colored by community, on the right">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-deepwalk-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../../assets/figures/deepwalk-embedding.svg" class="img-fluid figure-img" alt="Network communities on the left and their separated two-dimensional embedding clusters on the right">
+<img src="../../assets/figures/deepwalk-embedding.svg" class="img-fluid figure-img" alt="Network communities on the left and a two-dimensional projection of their embeddings, colored by community, on the right">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-deepwalk-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;6: DeepWalk places structurally related nodes near one another in a low-dimensional embedding. Course-supplied vector based on the DeepWalk example.
+Figure&nbsp;6: DeepWalk places structurally related nodes near one another in a low-dimensional embedding. Left, the input graph with its communities colored; right, a <strong>two-dimensional projection</strong> of the learned embedding, colored by the same community labels. The axes carry no intrinsic meaning — they are projection directions, and the embedding itself is <span class="math inline">\(d\)</span>-dimensional with <span class="math inline">\(d\gg2\)</span>. What the picture shows is that nodes sharing a community end up near one another; the orientation, scale and sign of the axes are arbitrary. Course-supplied vector based on the DeepWalk example.
 </figcaption>
 </figure>
 </div>
@@ -758,8 +784,8 @@ P(c_{i+1}=x\mid c_i=v,c_{i-1}=t)
 <div class="figure-panel">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="../../assets/figures/node2vec-transition.svg" class="img-fluid figure-img" alt="Current and previous nodes with candidate transitions labeled one over p, one, and one over q"></p>
-<figcaption>node2vec assigns unnormalized transition weights according to the distance from the preceding node. Vector figure from the supplied course material.</figcaption>
+<p><img src="../../assets/figures/node2vec-transition.svg" class="img-fluid figure-img" alt="Previous node t and current node v with candidate transitions labeled one over p, one, and one over q according to distance from t"></p>
+<figcaption>node2vec assigns unnormalized transition weights according to the distance from the preceding node. Read the figure against the equations as follows: the node the walk <strong>came from</strong> is <span class="math inline">\(t\)</span>, the node it is <strong>at</strong> is <span class="math inline">\(v\)</span>, and the labelled candidates are the <span class="math inline">\(x\in\mathcal{N}(v)\)</span>. The factor <span class="math inline">\(1/p\)</span> sits on the edge back to <span class="math inline">\(t\)</span> (<span class="math inline">\(d(t,x)=0\)</span>), the factor <span class="math inline">\(1\)</span> on candidates adjacent to <span class="math inline">\(t\)</span> (<span class="math inline">\(d(t,x)=1\)</span>), and <span class="math inline">\(1/q\)</span> on those two hops from <span class="math inline">\(t\)</span> (<span class="math inline">\(d(t,x)=2\)</span>). Note that the figure’s own node letters differ from the symbols used here. Vector figure from the supplied course material.</figcaption>
 </figure>
 </div>
 </div>

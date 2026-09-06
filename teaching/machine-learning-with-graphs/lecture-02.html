@@ -329,7 +329,7 @@ window.Quarto = {
   <li><a href="#exercise-3-the-renormalization-trick" id="toc-exercise-3-the-renormalization-trick" class="nav-link" data-scroll-target="#exercise-3-the-renormalization-trick"><span class="header-section-number">15.3</span> Exercise 3 — The renormalization trick</a></li>
   <li><a href="#exercise-4-counting-parameters" id="toc-exercise-4-counting-parameters" class="nav-link" data-scroll-target="#exercise-4-counting-parameters"><span class="header-section-number">15.4</span> Exercise 4 — Counting parameters</a></li>
   <li><a href="#exercise-5-gcn-coefficients" id="toc-exercise-5-gcn-coefficients" class="nav-link" data-scroll-target="#exercise-5-gcn-coefficients"><span class="header-section-number">15.5</span> Exercise 5 — GCN coefficients</a></li>
-  <li><a href="#exercise-6-homophily" id="toc-exercise-6-homophily" class="nav-link" data-scroll-target="#exercise-6-homophily"><span class="header-section-number">15.6</span> Exercise 6 — Homophily</a></li>
+  <li><a href="#exercise-6-homophily-investigation" id="toc-exercise-6-homophily-investigation" class="nav-link" data-scroll-target="#exercise-6-homophily-investigation"><span class="header-section-number">15.6</span> Exercise 6 — Homophily (investigation)</a></li>
   <li><a href="#exercise-7-over-smoothing-in-practice" id="toc-exercise-7-over-smoothing-in-practice" class="nav-link" data-scroll-target="#exercise-7-over-smoothing-in-practice"><span class="header-section-number">15.7</span> Exercise 7 — Over-smoothing in practice</a></li>
   </ul></li>
   <li><a href="#main-takeaways" id="toc-main-takeaways" class="nav-link" data-scroll-target="#main-takeaways"><span class="header-section-number">16</span> Main takeaways</a></li>
@@ -448,7 +448,7 @@ Figure&nbsp;3: a) A discrete time axis is a directed line graph; b) an image is 
 </figure>
 </div>
 </div>
-<p>A discrete-time signal <span class="math inline">\(\mathbf{x}\in\mathbb{R}^{N}\)</span> lives on a <strong>directed line graph</strong>: sample <span class="math inline">\(i\)</span> is connected to sample <span class="math inline">\(i+1\)</span>. An image lives on a <strong>grid graph</strong>: pixel <span class="math inline">\((i,j)\)</span> is connected to its four neighbors. In both cases the adjacency matrix implements the elementary shift. For the line graph,</p>
+<p>A discrete-time signal <span class="math inline">\(\mathbf{x}\in\mathbb{R}^{N}\)</span> lives on a <strong>directed line graph</strong>: sample <span class="math inline">\(i\)</span> is connected to sample <span class="math inline">\(i+1\)</span>. An image lives on a <strong>grid graph</strong>: pixel <span class="math inline">\((i,j)\)</span> is connected to its four neighbors. For the line graph the adjacency matrix implements the elementary shift exactly:</p>
 <p><span class="math display">\[
 \mathbf{S}=
 \begin{bmatrix}
@@ -460,7 +460,12 @@ Figure&nbsp;3: a) A discrete time axis is a directed line graph; b) an image is 
 \qquad
 (\mathbf{S}\mathbf{x})_i=x_{i-1}.
 \]</span></p>
-<p>Multiplying by <span class="math inline">\(\mathbf{S}\)</span> delays the signal by one sample; multiplying by <span class="math inline">\(\mathbf{S}^{k}\)</span> delays it by <span class="math inline">\(k\)</span>.</p>
+<p>Multiplying by <span class="math inline">\(\mathbf{S}\)</span> delays the signal by one sample; multiplying by <span class="math inline">\(\mathbf{S}^{k}\)</span> delays it by <span class="math inline">\(k\)</span>. The 1-D case is therefore an exact correspondence: polynomials in this <span class="math inline">\(\mathbf{S}\)</span> are precisely the causal FIR filters.</p>
+<div class="checkpoint">
+<p><strong>Check 0 — The grid is an analogy, not an identity</strong></p>
+<p>The 2-D case is weaker, and it is worth being honest about it now rather than later. The grid adjacency is <strong>isotropic</strong>: it treats all four neighbors alike. A polynomial in it therefore cannot represent a directional filter — a horizontal derivative distinguishes left from right, and <span class="math inline">\(\mathbf{S}\)</span> has no way to. Ordinary CNN kernels have one weight <em>per offset</em>; a polynomial has one weight <em>per hop</em>.</p>
+<p>So read the grid as motivation for the shape of the construction, and the directed line as the case where the correspondence is exact. Graph polynomial filters are a structured generalization of convolution, not a superset of it.</p>
+</div>
 <div class="figure-panel">
 <div id="fig-convolution-time-space" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A line graph with the first six nodes highlighted and a grid graph with a diamond-shaped highlighted region">
 <figure class="quarto-float quarto-float-fig figure">
@@ -468,7 +473,7 @@ Figure&nbsp;3: a) A discrete time axis is a directed line graph; b) an image is 
 <img src="../../assets/figures/convolution-time-space.svg" class="img-fluid figure-img" alt="A line graph with the first six nodes highlighted and a grid graph with a diamond-shaped highlighted region">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-convolution-time-space-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;4: Two applications of the shift operator on a) the line graph and b) the grid graph. The red set is the part of the domain reached after two steps: exactly the support of <span class="math inline">\(\mathbf{S}^{2}\)</span> acting on an impulse.
+Figure&nbsp;4: Two applications of the shift operator on a) the line graph and b) the grid graph. The highlighted set is the part of the domain a two-tap filter reads — the union of the supports of <span class="math inline">\(\mathbf{S}^{0}\)</span>, <span class="math inline">\(\mathbf{S}^{1}\)</span> and <span class="math inline">\(\mathbf{S}^{2}\)</span> applied to an impulse. Be careful with <span class="math inline">\(\mathbf{S}^{2}\)</span> on its own: its entries count <em>length-two walks</em>, so on the directed line it is a single shifted nonzero rather than a filled interval, and on the grid the walk counts are non-uniform across the diamond.
 </figcaption>
 </figure>
 </div>
@@ -520,13 +525,13 @@ Figure&nbsp;5: A four-node graph. Two of its relations are one-way.
 </div>
 </div>
 <div class="figure-panel">
-<div id="fig-edge-list" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Four nodes connected by five undirected edges">
+<div id="fig-edge-list" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Four nodes connected by four undirected edges">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-edge-list-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../../assets/figures/edge-list-graph.svg" class="img-fluid figure-img" alt="Four nodes connected by five undirected edges">
+<img src="../../assets/figures/edge-list-graph.svg" class="img-fluid figure-img" alt="Four nodes connected by four undirected edges">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-edge-list-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;6: An undirected four-node graph, stored below as a list of edges.
+Figure&nbsp;6: An undirected four-node graph with four edges — <span class="math inline">\(\{1,2\}\)</span>, <span class="math inline">\(\{1,4\}\)</span>, <span class="math inline">\(\{2,3\}\)</span> and <span class="math inline">\(\{2,4\}\)</span> — stored below as a list of edges.
 </figcaption>
 </figure>
 </div>
@@ -697,14 +702,15 @@ Figure&nbsp;10: The diffusion sequence on a sensor graph. An impulse at <span cl
 <p><strong>Definition 3 — Graph filter and graph convolution</strong></p>
 <p>A <strong>graph filter</strong> is a polynomial in the shift operator,</p>
 <p><span class="math display">\[
-\mathbf{H}(\mathbf{S})=\sum_{k=0}^{\infty}h_k\mathbf{S}^{k}.
+\mathbf{H}(\mathbf{S})=\sum_{k=0}^{K-1}h_k\mathbf{S}^{k}.
 \]</span></p>
 <p>Applying it to a graph signal produces the <strong>graph convolution</strong></p>
 <p><span id="eq-graph-convolution"><span class="math display">\[
-\mathbf{y}=\mathbf{H}(\mathbf{S})\mathbf{x}=\sum_{k=0}^{\infty}h_k\mathbf{S}^{k}\mathbf{x} .
+\mathbf{y}=\mathbf{H}(\mathbf{S})\mathbf{x}=\sum_{k=0}^{K-1}h_k\mathbf{S}^{k}\mathbf{x} .
 \tag{1}\]</span></span></p>
+<p>The sum is <strong>finite</strong>: a <span class="math inline">\(K\)</span>-tap filter of order <span class="math inline">\(K-1\)</span>. An infinite series <span class="math inline">\(\sum_{k\ge0}h_k\mathbf{S}^k\)</span> is a useful formal object but needs convergence conditions on <span class="math inline">\(\{h_k\}\)</span> and on the spectral radius of <span class="math inline">\(\mathbf{S}\)</span>, so we take the finite polynomial as the definition and treat the infinite form as shorthand.</p>
 </div>
-<p>In practice the sum is truncated at <span class="math inline">\(K\)</span> taps, giving a filter of order <span class="math inline">\(K-1\)</span>. Three properties make <a href="#eq-graph-convolution" class="quarto-xref">Equation&nbsp;1</a> the right generalization of the classical convolution.</p>
+<p>Three properties make <a href="#eq-graph-convolution" class="quarto-xref">Equation&nbsp;1</a> the right generalization of the classical convolution.</p>
 <ul>
 <li><strong>Locality.</strong> The <span class="math inline">\(k\)</span>-th term reads only the <span class="math inline">\(k\)</span>-hop neighborhood, so a <span class="math inline">\(K\)</span>-tap filter is supported on <span class="math inline">\(K-1\)</span> hops.</li>
 <li><strong>Fixed parameter count.</strong> The filter has <span class="math inline">\(K\)</span> coefficients whatever the size of the graph. This is the property that shallow embeddings lacked.</li>
@@ -769,7 +775,14 @@ Figure&nbsp;13: A graph neural network: each layer applies a graph filter <span 
 <li><strong>locality</strong>, so that each output depends on a bounded neighborhood;</li>
 <li>applicability to <strong>inductive</strong> problems, that is, to graphs unseen during training.</li>
 </ol>
-<p>The generic filter of <a href="#eq-graph-convolution" class="quarto-xref">Equation&nbsp;1</a> satisfies 2 and 3 but not 1: the recursion <span class="math inline">\(\mathbf{S}\mathbf{x}^{(k)}\)</span> is inherently sequential across <span class="math inline">\(k\)</span> and cannot be parallelized, while the alternative of precomputing <span class="math inline">\(\mathbf{S}^{k}\)</span> destroys sparsity. Architectures built directly on high-order filters, such as ChebNet <span class="citation" data-cites="defferrard2016convolutional">(<a href="#ref-defferrard2016convolutional" role="doc-biblioref">Defferrard et al. 2016</a>)</span>, pay this price. The practical answer is to approximate.</p>
+<p>A <span class="math inline">\(K\)</span>-tap filter evaluated by the recursion of Check 2 satisfies all four, and its arithmetic <strong>is</strong> linear in the edge count: <span class="math inline">\(K\)</span> sparse products cost <span class="math inline">\(O(K|\mathcal{E}|)\)</span>, which is <span class="math inline">\(O(|\mathcal{E}|)\)</span> for fixed <span class="math inline">\(K\)</span>. With <span class="math inline">\(F_{\text{in}}\)</span> input and <span class="math inline">\(F_{\text{out}}\)</span> output channels the honest count is <span class="math inline">\(O(N F_{\text{in}} F_{\text{out}} + K |\mathcal{E}| F_{\text{out}})\)</span> — the node-wise dense maps are usually the larger term on a sparse graph, so “cost <span class="math inline">\(O(|\mathcal{E}|)\)</span>” is shorthand, not the whole story.</p>
+<p>What high order actually costs is different, and worth separating from the arithmetic:</p>
+<ul>
+<li><strong>Depth of the dependency chain.</strong> <span class="math inline">\(\mathbf{x}^{(k)}\)</span> needs <span class="math inline">\(\mathbf{x}^{(k-1)}\)</span>, so the <span class="math inline">\(K\)</span> products run in sequence. The work is linear in <span class="math inline">\(K\)</span>; the <em>latency</em> is too, and cannot be reduced by adding hardware.</li>
+<li><strong>A larger constant.</strong> Every extra tap is another full pass over the edges, and another <span class="math inline">\(K\)</span>-hop neighborhood to fetch — which is what Lecture 3 will find expensive at scale.</li>
+<li><strong>The tempting shortcut is the real trap.</strong> Precomputing <span class="math inline">\(\mathbf{S}^{k}\)</span> to parallelize the sum destroys sparsity: powers of a sparse matrix fill in, and the <span class="math inline">\(O(N^2)\)</span> memory returns.</li>
+</ul>
+<p>Architectures built on high-order filters, such as ChebNet <span class="citation" data-cites="defferrard2016convolutional">(<a href="#ref-defferrard2016convolutional" role="doc-biblioref">Defferrard et al. 2016</a>)</span>, pay the second and third of these. GCN’s answer is to make <span class="math inline">\(K\)</span> as small as possible.</p>
 </div>
 </section>
 <section id="sec-gcn" class="level2" data-number="10">
@@ -779,10 +792,16 @@ Figure&nbsp;13: A graph neural network: each layer applies a graph filter <span 
 <h3 data-number="10.1" class="anchored" data-anchor-id="deriving-the-propagation-rule"><span class="header-section-number">10.1</span> Deriving the propagation rule</h3>
 <p>Start from a first-order filter on the normalized Laplacian, keeping only <span class="math inline">\(k=0\)</span> and <span class="math inline">\(k=1\)</span>:</p>
 <p><span class="math display">\[
-\mathbf{y}\approx\theta_0\mathbf{x}+\theta_1\hat{\mathbf{L}}\mathbf{x}
-=\theta_0\mathbf{x}-\theta_1\mathbf{D}^{-1/2}\mathbf{A}\mathbf{D}^{-1/2}\mathbf{x},
+\mathbf{y}\approx\theta_0'\mathbf{x}+\theta_1'\hat{\mathbf{L}}\mathbf{x}.
 \]</span></p>
-<p>using <span class="math inline">\(\hat{\mathbf{L}}=\mathbf{I}-\hat{\mathbf{A}}\)</span> up to the constant term. Tying the two coefficients with <span class="math inline">\(\theta=\theta_0=-\theta_1\)</span> leaves a <strong>single</strong> parameter per filter:</p>
+<p>Now substitute <span class="math inline">\(\hat{\mathbf{L}}=\mathbf{I}-\hat{\mathbf{A}}\)</span> and collect terms. Note that this changes the constant coefficient — it does <strong>not</strong> leave <span class="math inline">\(\theta_0'\)</span> untouched:</p>
+<p><span class="math display">\[
+\theta_0'\mathbf{x}+\theta_1'(\mathbf{I}-\hat{\mathbf{A}})\mathbf{x}
+=\underbrace{(\theta_0'+\theta_1')}_{\textstyle \theta_0}\mathbf{x}
+\;\underbrace{-\;\theta_1'}_{\textstyle \theta_1}\hat{\mathbf{A}}\mathbf{x}
+=\theta_0\mathbf{x}+\theta_1\hat{\mathbf{A}}\mathbf{x}.
+\]</span></p>
+<p>So a first-order filter has two free parameters whichever basis we write it in. Tying them with <span class="math inline">\(\theta=\theta_0=\theta_1\)</span> leaves a <strong>single</strong> parameter per filter:</p>
 <p><span class="math display">\[
 \mathbf{y}\approx\theta\left(\mathbf{I}+\mathbf{D}^{-1/2}\mathbf{A}\mathbf{D}^{-1/2}\right)\mathbf{x}.
 \]</span></p>
@@ -880,7 +899,8 @@ Figure&nbsp;15: A transductive model must re-solve its optimization problem when
 </figure>
 </div>
 </div>
-<p>This is the decisive practical advantage over DeepWalk. The trained object is <span class="math inline">\(\{\mathbf{W}^{(\ell)}\}\)</span>, a set of matrices whose shapes depend on feature dimensions only. Give the network a different graph with the same feature dimension and it produces embeddings immediately.</p>
+<p>This is the decisive practical advantage over DeepWalk. The trained object is <span class="math inline">\(\{\mathbf{W}^{(\ell)}\}\)</span>, a set of matrices whose shapes depend on feature dimensions only, so the architecture <em>can</em> be applied to a graph it never saw.</p>
+<p>Two distinctions are worth keeping straight. First, being applicable inductively is a property of the <strong>architecture</strong>; whether a given experiment is inductive or transductive is a property of the <strong>protocol</strong> you evaluate under. A GCN trained and tested on one fixed graph with a node mask is a transductive experiment using an inductive architecture. Second, a matching feature dimension makes the forward pass <em>defined</em>, not <em>useful</em>: transfer to a new graph also needs the features to mean the same thing and the degree and homophily structure to be comparable.</p>
 </section>
 <section id="what-the-outputs-are-used-for" class="level3" data-number="10.5">
 <h3 data-number="10.5" class="anchored" data-anchor-id="what-the-outputs-are-used-for"><span class="header-section-number">10.5</span> What the outputs are used for</h3>
@@ -946,14 +966,16 @@ Figure&nbsp;17: One message-passing step at node 4. Every neighbor emits a messa
 =\sigma\!\left(
 \mathbf{W}^{\top}
 \sum_{j\in\mathcal{N}_i\cup\{i\}}
-\frac{a_{ij}}{\sqrt{(d_i+1)(d_j+1)}}\,
+\frac{\tilde{a}_{ij}}{\sqrt{(d_i+1)(d_j+1)}}\,
 \mathbf{h}_j^{(\ell)}
 \right),
 \tag{4}\]</span></span></p>
-<p>where <span class="math inline">\(d_i\)</span> is the degree of node <span class="math inline">\(i\)</span>. Reading <a href="#eq-gcn-mpnn" class="quarto-xref">Equation&nbsp;4</a> against <a href="#eq-mpnn" class="quarto-xref">Equation&nbsp;3</a>: the message function is the identity on the neighbor’s state, the aggregation is a weighted sum over the closed neighborhood <span class="math inline">\(\mathcal{N}_i\cup\{i\}\)</span> — the self-loop from the renormalization trick — and the update is a linear map followed by an activation.</p>
+<p>where <span class="math inline">\(d_i\)</span> is the degree of node <span class="math inline">\(i\)</span> in <span class="math inline">\(\mathbf{A}\)</span> and <span class="math inline">\(\tilde{a}_{ij}\)</span> is an entry of the <strong>self-loop-augmented</strong> <span class="math inline">\(\tilde{\mathbf{A}}=\mathbf{A}+\mathbf{I}\)</span>, so that <span class="math inline">\(\tilde{a}_{ii}=1\)</span>. Writing <span class="math inline">\(a_{ij}\)</span> here would be a mistake: the examples in this course use a simple graph, whose adjacency has a zero diagonal, and the <span class="math inline">\(j=i\)</span> term would silently vanish — dropping exactly the self-message the renormalization trick was introduced to add.</p>
+<p>Reading <a href="#eq-gcn-mpnn" class="quarto-xref">Equation&nbsp;4</a> against <a href="#eq-mpnn" class="quarto-xref">Equation&nbsp;3</a>: the message function is the identity on the neighbor’s state, the aggregation is a weighted sum over the closed neighborhood <span class="math inline">\(\mathcal{N}_i\cup\{i\}\)</span>, and the update is a linear map followed by an activation.</p>
 <div class="checkpoint">
 <p><strong>Check 4 — Where the GCN coefficients come from</strong></p>
-<p>In <a href="#eq-gcn-mpnn" class="quarto-xref">Equation&nbsp;4</a> the weight of neighbor <span class="math inline">\(j\)</span> is <span class="math inline">\(a_{ij}/\sqrt{(d_i+1)(d_j+1)}\)</span>. It depends only on the <strong>degrees</strong> and the <strong>prescribed edge weights</strong>. Nothing in it is learned, and nothing in it depends on what the nodes contain. Two consequences follow: a high-degree neighbor is systematically down-weighted regardless of how informative it is, and edge features cannot be used at all.</p>
+<p>In <a href="#eq-gcn-mpnn" class="quarto-xref">Equation&nbsp;4</a> the weight of neighbor <span class="math inline">\(j\)</span> is <span class="math inline">\(\tilde{a}_{ij}/\sqrt{(d_i+1)(d_j+1)}\)</span>. It depends only on the <strong>degrees</strong> and the <strong>prescribed edge weights</strong>. Nothing in it is learned, and nothing in it depends on what the nodes contain. Two consequences follow: a high-degree neighbor is systematically down-weighted regardless of how informative it is, and edge features cannot be used at all.</p>
+<p>Note also what these coefficients do <strong>not</strong> do: they do not sum to one over the closed neighborhood. Symmetric normalization is not a row-stochastic operation — that is <span class="math inline">\(\mathbf{D}^{-1}\mathbf{A}\)</span>, a different operator.</p>
 </div>
 </section>
 </section>
@@ -985,7 +1007,7 @@ Figure&nbsp;17: One message-passing step at node 4. Every neighbor emits a messa
 <img src="../../assets/figures/gcn-vs-gat-weights.svg" class="img-fluid figure-img" alt="Left, a five-node neighborhood with node degrees; right, a grouped bar chart comparing GCN and GAT coefficients">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gcn-vs-gat-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;18: The same neighborhood weighted two ways. The GCN coefficients (teal) are determined by the degrees alone and penalize the high-degree neighbor <span class="math inline">\(j=3\)</span>; the attention coefficients (coral) are computed from the node states and can concentrate on <span class="math inline">\(j=2\)</span> instead. Both sets sum to one.
+Figure&nbsp;18: The same neighborhood weighted two ways. The GCN coefficients (teal) are fixed by the degrees and damp the three high-degree neighbors to <span class="math inline">\(0.08\)</span> against <span class="math inline">\(0.26\)</span> for the low-degree one; the attention coefficients (coral) are computed from the node states and can concentrate on <span class="math inline">\(j=2\)</span> instead. Note the sums: the GAT coefficients are a softmax and sum to <span class="math inline">\(1\)</span>, while the symmetrically normalized GCN coefficients sum to <span class="math inline">\(0.70\)</span> here — symmetric normalization is not row-stochastic. The GAT values come from one <strong>untrained</strong> head with a random attention vector on random features; they illustrate what attention can express, not what a trained model learns.
 </figcaption>
 </figure>
 </div>
@@ -1034,7 +1056,15 @@ Figure&nbsp;19: Two graphs with the same number of nodes and comparable density 
 </figure>
 </div>
 </div>
-<p>The intuition is immediate: message passing averages a node with its neighbors, which helps precisely when neighbors share the node’s label. The formal statement is spectral. A GCN layer applies <span class="math inline">\(\hat{\mathbf{A}}_{\mathrm{sl}}\)</span>, whose eigenvalues <span class="math inline">\(\mu\)</span> lie in <span class="math inline">\((-1,1]\)</span>, and <span class="math inline">\(L\)</span> layers apply <span class="math inline">\(\mu^{L}\)</span>. Since <span class="math inline">\(|\mu|&lt;1\)</span> away from the top of the spectrum, every component except the smoothest is suppressed: <strong>a stack of GCN layers is a low-pass filter</strong>.</p>
+<p>The intuition is immediate: message passing averages a node with its neighbors, which helps precisely when neighbors share the node’s label.</p>
+<p>There is a spectral statement behind it, but it has to be scoped carefully. Consider <strong>repeated fixed linear propagation</strong> — apply <span class="math inline">\(\hat{\mathbf{A}}_{\mathrm{sl}}\)</span> <span class="math inline">\(L\)</span> times with no weights and no nonlinearity. Its eigenvalues <span class="math inline">\(\mu\)</span> lie in <span class="math inline">\((-1,1]\)</span>, so <span class="math inline">\(L\)</span> applications scale each spectral component by <span class="math inline">\(\mu^{L}\)</span>, and since <span class="math inline">\(|\mu|&lt;1\)</span> away from the top of the spectrum every component except the smoothest is suppressed. <strong>Repeated propagation alone is a low-pass filter.</strong></p>
+<p>Three caveats, because it is easy to over-claim here:</p>
+<ul>
+<li>A trained GCN is <strong>not</strong> multiplication by <span class="math inline">\(\mu^{L}\)</span>. The weights <span class="math inline">\(\mathbf{W}^{(\ell)}\)</span> mix channels and the nonlinearities are not diagonal in this basis, so the composition is not a spectral filter at all.</li>
+<li>Message passing in general is <strong>not</strong> low-pass. Nothing stops a layer from computing <span class="math inline">\(\mathbf{h}_i-\text{mean}_j\mathbf{h}_j\)</span>, which is high-pass; architectures for heterophily do exactly that.</li>
+<li>Low homophily does <strong>not</strong> by itself make a task hard. On the complete bipartite <span class="math inline">\(K_{4,4}\)</span> with one-hot class features and self-loops, propagation sends one class to <span class="math inline">\([0.2,0.8]\)</span> and the other to <span class="math inline">\([0.8,0.2]\)</span> — perfectly separable by a linear readout, at <span class="math inline">\(H(\mathcal{G})=0\)</span>.</li>
+</ul>
+<p>What survives is the useful practical statement: the <em>specific</em> aggregation GCN and GAT use is a smoothing one, so they carry a homophily prior, and low homophily is a reason to check the architecture rather than a proof that it will fail.</p>
 <div class="figure-panel">
 <div id="fig-spectral" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Left, curves of mu to the power L for L equal to 1, 2, 8, and 32; right, a histogram of eigenvalues between -0.5 and 1">
 <figure class="quarto-float quarto-float-fig figure">
@@ -1097,7 +1127,7 @@ Figure&nbsp;23: Long-range dependencies force messages through the few edges tha
 </section>
 <section id="practical-remedies" class="level3" data-number="13.4">
 <h3 data-number="13.4" class="anchored" data-anchor-id="practical-remedies"><span class="header-section-number">13.4</span> Practical remedies</h3>
-<p><strong>PairNorm</strong> <span class="citation" data-cites="zhao2019pairnorm">(<a href="#ref-zhao2019pairnorm" role="doc-biblioref">Zhao and Akoglu 2020</a>)</span> attacks over-smoothing directly by forbidding the embeddings to converge. It centers and rescales the representations between layers:</p>
+<p><strong>PairNorm</strong> <span class="citation" data-cites="zhao2019pairnorm">(<a href="#ref-zhao2019pairnorm" role="doc-biblioref">Zhao and Akoglu 2020</a>)</span> attacks over-smoothing directly by forbidding the embeddings to collapse to a point. It centers and rescales the representations between layers:</p>
 <p><span class="math display">\[
 \mathbf{x}_i^{c}=\mathbf{x}_i-\frac{1}{N}\sum_{j\in\mathcal{V}}\mathbf{x}_j
 \quad\text{(centering)},
@@ -1105,16 +1135,16 @@ Figure&nbsp;23: Long-range dependencies force messages through the few edges tha
 \mathbf{x}'_i=s\,\frac{\mathbf{x}_i^{c}}{\sqrt{\frac{1}{N}\sum_{j\in\mathcal{V}}\Vert\mathbf{x}_j^{c}\Vert_2^{2}}}
 \quad\text{(scaling)},
 \]</span></p>
-<p>with <span class="math inline">\(s\)</span> a scale hyperparameter. The total pairwise distance is held constant, so the cloud cannot contract to a point.</p>
+<p>with <span class="math inline">\(s\)</span> a scale hyperparameter. What this holds constant is the <strong>total pairwise squared distance</strong> of the representations — equivalently their total variance — so the cloud cannot contract to a point. That is not the same quantity as the normalized Dirichlet energy plotted below, which also depends on how the remaining variation is distributed over the graph.</p>
 <p><strong>DropEdge</strong> <span class="citation" data-cites="rong2020dropedge">(<a href="#ref-rong2020dropedge" role="doc-biblioref">Rong et al. 2020</a>)</span> removes a random fraction of edges at every training step. It slows the mixing of the underlying chain, and as a side benefit reduces the cost of a layer, since the complexity is proportional to <span class="math inline">\(O(|\mathcal{E}|)\)</span>.</p>
 <div class="figure-panel">
-<div id="fig-remedies" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three curves on a logarithmic axis: plain propagation decaying steeply, DropEdge decaying slowly, PairNorm flat">
+<div id="fig-remedies" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three curves on a logarithmic axis: plain propagation decaying steeply, DropEdge decaying slowly, PairNorm falling then flattening">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-remedies-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../../assets/figures/over-smoothing-remedies.svg" class="img-fluid figure-img" alt="Three curves on a logarithmic axis: plain propagation decaying steeply, DropEdge decaying slowly, PairNorm flat">
+<img src="../../assets/figures/over-smoothing-remedies.svg" class="img-fluid figure-img" alt="Three curves on a logarithmic axis: plain propagation decaying steeply, DropEdge decaying slowly, PairNorm falling then flattening">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-remedies-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;24: The same propagation experiment as <a href="#fig-over-smoothing" class="quarto-xref">Figure&nbsp;21</a>, repeated with PairNorm and with DropEdge at rate <span class="math inline">\(0.5\)</span>. Plain propagation decays geometrically; DropEdge slows the decay; PairNorm holds the energy at a constant level by construction.
+Figure&nbsp;24: The same propagation experiment as <a href="#fig-over-smoothing" class="quarto-xref">Figure&nbsp;21</a>, repeated with PairNorm and with DropEdge at rate <span class="math inline">\(0.5\)</span>. Plain propagation decays geometrically; DropEdge slows the decay; PairNorm falls from <span class="math inline">\(0.420\)</span> to <span class="math inline">\(0.200\)</span> over the first step and then plateaus near <span class="math inline">\(0.076\)</span>. Note that the plateau is an <strong>observation in this experiment</strong>, not a guarantee: PairNorm fixes the total pairwise distance, not this normalized Dirichlet energy, and the energy does drop by a factor of about <span class="math inline">\(5.6\)</span> before levelling off.
 </figcaption>
 </figure>
 </div>
@@ -1255,9 +1285,10 @@ Figure&nbsp;25: SJLR <span class="citation" data-cites="giraldo2023trade">(<a hr
 <h3 data-number="15.5" class="anchored" data-anchor-id="exercise-5-gcn-coefficients"><span class="header-section-number">15.5</span> Exercise 5 — GCN coefficients</h3>
 <p>For the neighborhood in <a href="#fig-gcn-vs-gat" class="quarto-xref">Figure&nbsp;18</a>, verify the GCN coefficients <span class="math inline">\(a_{ij}/\sqrt{(d_i+1)(d_j+1)}\)</span> by hand using the degrees printed in the figure, and confirm that the reported values are these coefficients after normalization. Then state what would change if node <span class="math inline">\(3\)</span> gained fifty new neighbors elsewhere in the graph — under GCN, and under GAT.</p>
 </section>
-<section id="exercise-6-homophily" class="level3" data-number="15.6">
-<h3 data-number="15.6" class="anchored" data-anchor-id="exercise-6-homophily"><span class="header-section-number">15.6</span> Exercise 6 — Homophily</h3>
-<p>Construct a graph on eight nodes with two classes and <span class="math inline">\(H(\mathcal{G})=0\)</span>. Compute the output of one GCN layer with <span class="math inline">\(\mathbf{W}=\mathbf{I}\)</span> on the one-hot label signal, and explain why a classifier reading that output performs worse than one reading the raw features.</p>
+<section id="exercise-6-homophily-investigation" class="level3" data-number="15.6">
+<h3 data-number="15.6" class="anchored" data-anchor-id="exercise-6-homophily-investigation"><span class="header-section-number">15.6</span> Exercise 6 — Homophily (investigation)</h3>
+<p>Take the complete bipartite graph <span class="math inline">\(K_{4,4}\)</span> with the two sides as the two classes, so <span class="math inline">\(H(\mathcal{G})=0\)</span>, and one-hot class features. Add self-loops and compute the output of one propagation step <span class="math inline">\(\hat{\mathbf{A}}_{\mathrm{sl}}\mathbf{X}\)</span> by hand.</p>
+<p>You should find <span class="math inline">\([0.2,0.8]\)</span> for one class and <span class="math inline">\([0.8,0.2]\)</span> for the other. Is this output linearly separable? Now answer the real question: <strong>does zero homophily always destroy the signal?</strong> Construct a second eight-node graph, also with <span class="math inline">\(H(\mathcal{G})=0\)</span>, on which one propagation step <em>does</em> make the classes inseparable, and identify what differs between the two cases. What does this tell you about using <span class="math inline">\(H(\mathcal{G})\)</span> alone to predict whether a GNN will work?</p>
 </section>
 <section id="exercise-7-over-smoothing-in-practice" class="level3" data-number="15.7">
 <h3 data-number="15.7" class="anchored" data-anchor-id="exercise-7-over-smoothing-in-practice"><span class="header-section-number">15.7</span> Exercise 7 — Over-smoothing in practice</h3>
@@ -1270,10 +1301,10 @@ Figure&nbsp;25: SJLR <span class="citation" data-cites="giraldo2023trade">(<a hr
 <li>A convolution is a <strong>polynomial in a shift operator</strong>; time and space are just special graphs, so the definition transfers to any graph unchanged.</li>
 <li>Graph filters are <strong>local</strong>, have a <strong>fixed number of parameters</strong>, and are <strong>permutation equivariant</strong> — the three properties that shallow embeddings could not deliver.</li>
 <li>A GNN composes graph filters with pointwise nonlinearities; with a directed line graph it reduces exactly to a CNN.</li>
-<li>The exact filter is expensive, since powers of <span class="math inline">\(\mathbf{S}\)</span> fill in and the recursion cannot be parallelized. Practical architectures approximate it.</li>
+<li>A <span class="math inline">\(K\)</span>-tap filter costs <span class="math inline">\(O(K|\mathcal{E}|)\)</span> — linear in the edge count for fixed <span class="math inline">\(K\)</span>. What high order really costs is a longer sequential dependency chain and a bigger neighborhood to fetch; forming <span class="math inline">\(\mathbf{S}^{k}\)</span> to avoid that destroys sparsity. Practical architectures keep <span class="math inline">\(K\)</span> small.</li>
 <li><strong>GCN</strong> is the cheapest such approximation: one hop, one shared weight matrix, self-loops for stability. It is inductive, costs <span class="math inline">\(O(|\mathcal{E}|)\)</span>, and should be your first baseline.</li>
 <li><strong>Message passing</strong> is the general framework; <strong>GAT</strong> stays inside it and replaces the degree-based coefficients by learned attention.</li>
-<li>Message-passing models are low-pass filters. They assume <strong>homophily</strong>, they <strong>over-smooth</strong> with depth, and they <strong>over-squash</strong> long-range information. PairNorm, DropEdge, and curvature-based rewiring mitigate these, and none of them solves the problem completely.</li>
+<li>The aggregation GCN and GAT use is a <strong>smoothing</strong> one, so they carry a homophily prior, <strong>over-smooth</strong> with depth, and <strong>over-squash</strong> long-range information. This is a property of these architectures, not of message passing in general. PairNorm, DropEdge, and curvature-based rewiring mitigate the symptoms; none of them solves the problem completely.</li>
 <li>Plenty of open problems remain — which is good news if you are looking for a research topic.</li>
 </ol>
 </section>

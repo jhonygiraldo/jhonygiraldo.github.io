@@ -276,6 +276,7 @@ window.Quarto = {
   <li><a href="#exercise-5-the-collapse" id="toc-exercise-5-the-collapse" class="nav-link" data-scroll-target="#exercise-5-the-collapse"><span class="header-section-number">8.5</span> Exercise 5 — The collapse</a></li>
   <li><a href="#exercise-6-diffusion-depth" id="toc-exercise-6-diffusion-depth" class="nav-link" data-scroll-target="#exercise-6-diffusion-depth"><span class="header-section-number">8.6</span> Exercise 6 — Diffusion depth</a></li>
   <li><a href="#exercise-7-parameter-counts" id="toc-exercise-7-parameter-counts" class="nav-link" data-scroll-target="#exercise-7-parameter-counts"><span class="header-section-number">8.7</span> Exercise 7 — Parameter counts</a></li>
+  <li><a href="#exercise-8-the-missing-baselines-investigation" id="toc-exercise-8-the-missing-baselines-investigation" class="nav-link" data-scroll-target="#exercise-8-the-missing-baselines-investigation"><span class="header-section-number">8.8</span> Exercise 8 — The missing baselines (investigation)</a></li>
   </ul></li>
   <li><a href="#main-takeaways" id="toc-main-takeaways" class="nav-link" data-scroll-target="#main-takeaways"><span class="header-section-number">9</span> Main takeaways</a></li>
   <li><a href="#references-and-provenance" id="toc-references-and-provenance" class="nav-link" data-scroll-target="#references-and-provenance">References and provenance</a></li>
@@ -324,7 +325,7 @@ window.Quarto = {
     <a class="button-link secondary" href="../../teaching/machine-learning-with-graphs/index.html">Back to the course</a>
   </div>
 </header>
-<p>Netflix carries more than ten thousand films. Amazon lists twelve million products directly and some 350 million on its marketplace. Spotify holds seventy million tracks, YouTube more than ten billion videos, Pinterest more than two hundred billion images. No user can explore a catalogue of that size, so <strong>personalized recommendation</strong> — surfacing a handful of interesting items for each individual — is what makes such a platform usable at all.</p>
+<p>Catalogues are enormous and still growing — as of 2026, Spotify’s own company page reports over 100 million tracks, Amazon lists millions of products directly and hundreds of millions across its marketplace, and YouTube and Pinterest count their items in the billions. No user can explore a catalogue of that size, so <strong>personalized recommendation</strong> — surfacing a handful of interesting items for each individual — is what makes such a platform usable at all.</p>
 <p>This note treats recommendation as a graph problem. The data is a bipartite user–item graph; the task is link prediction on it; and the two architectures we study, NGCF and LightGCN, are the machinery of Lectures 2 and 3 applied to that graph. But the interesting part is not the architecture. It is that the <strong>metric we care about is not differentiable</strong>, and almost everything in the design follows from what we do about that.</p>
 <section id="learning-objectives" class="level2" data-number="1">
 <h2 data-number="1" class="anchored" data-anchor-id="learning-objectives"><span class="header-section-number">1</span> Learning objectives</h2>
@@ -437,7 +438,8 @@ Figure&nbsp;4: Candidate generation is cheap and approximate — typically an ap
 <div class="checkpoint">
 <p><strong>Check 2 — Societal risk is a consequence of the objective</strong></p>
 <p>How many times have you opened TikTok, Instagram, or YouTube “just for five minutes” and lost half an hour?</p>
-<p>That is not an accident. It is a direct consequence of the objective functions in this note. Recommender systems are trained on engagement — clicks, watch time, interactions — and Recall@<span class="math inline">\(k\)</span> rewards giving users exactly what they are most likely to engage with. If a user’s history shows a pull toward content that is harmful or addictive, a system optimizing this objective will <strong>amplify</strong> it, because amplifying it is what the metric rewards.</p>
+<p>That is not an accident, and the objective functions in this note are part of the reason. Recommender systems are typically trained on engagement — clicks, watch time, interactions — and Recall@<span class="math inline">\(k\)</span> rewards showing users what they are most likely to interact with.</p>
+<p>The risk is a <strong>feedback loop</strong>, and it is worth stating as a mechanism rather than a theorem. The model is trained on interactions that the previous model’s recommendations helped produce. If it surfaces a kind of content, engagement with that content rises, the next training set reflects that, and the pattern can reinforce itself. Whether it does depends on the candidate generation, the exploration policy, the re-ranking and diversity constraints on top, and what “engagement” was defined to mean. Recall@<span class="math inline">\(k\)</span> alone does not <em>imply</em> harmful amplification; it removes any pressure against it.</p>
 <p>Going further is outside this course, but there are active research communities on fairness, diversity, filter bubbles, and engagement-versus-wellbeing objectives. Know that the metric you optimize is a choice, and that this one has consequences.</p>
 </div>
 </section>
@@ -489,13 +491,13 @@ Figure&nbsp;6: The model has three sets of parameters: a user encoder, an item e
 <p><span class="math display">\[
 \mathcal{E}_{\text{neg}}=\{(u,v)\ \vert\ (u,v)\notin\mathcal{E},\ u\in\mathcal{U},\ v\in\mathcal{V}\}
 \]</span></p>
-<p>the negative ones. The binary loss classifies edges as positive or negative using <span class="math inline">\(\sigma(F_\theta(\mathbf{u},\mathbf{v}))\)</span>:</p>
+<p>the <strong>candidate negatives</strong>. That name matters: an unobserved pair is one the user has not interacted with, which is overwhelmingly because they never saw it. Treating it as an established dislike is a modelling assumption, and a strong one — it is why the sampling distribution for negatives is itself a design choice. The binary loss classifies edges as positive or negative using <span class="math inline">\(\sigma(F_\theta(\mathbf{u},\mathbf{v}))\)</span>:</p>
 <p><span class="math display">\[
 -\frac{1}{|\mathcal{E}|}\sum_{(u,v)\in\mathcal{E}}\log\sigma\!\left(F_\theta(\mathbf{u},\mathbf{v})\right)
 -\frac{1}{|\mathcal{E}_{\text{neg}}|}\sum_{(u,v)\in\mathcal{E}_{\text{neg}}}\log\!\left(1-\sigma\!\left(F_\theta(\mathbf{u},\mathbf{v})\right)\right).
 \]</span></p>
 </div>
-<p>This pushes positive-edge scores up and negative-edge scores down, which sounds exactly right — positives are what we want recalled. But look at what “up” and “down” mean here: <strong>all</strong> positives above <strong>all</strong> negatives, across the entire dataset at once.</p>
+<p>This pushes positive-edge scores up and negative-edge scores down, which sounds exactly right — positives are what we want recalled. But note what kind of loss it is: <strong>pointwise</strong>. Each term depends on the score of one pair alone, and asks that <span class="math inline">\(\sigma(F_\theta)\)</span> be a calibrated probability of interaction. That is a different request from “rank this user’s items well”.</p>
 <div class="figure-panel">
 <div id="fig-binary-counterexample" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two users connected to two items, annotated with scores 1.0, -1.0, 2.0, and 4.0, with positive edges solid and negative edges dashed">
 <figure class="quarto-float quarto-float-fig figure">
@@ -503,16 +505,59 @@ Figure&nbsp;6: The model has three sets of parameters: a user encoder, an item e
 <img src="../../assets/figures/binary-loss-counterexample.svg" class="img-fluid figure-img" alt="Two users connected to two items, annotated with scores 1.0, -1.0, 2.0, and 4.0, with positive edges solid and negative edges dashed">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-binary-counterexample-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;7: Two users, two items, and the model’s scores. Recall@1 is <span class="math inline">\(1.0\)</span> — a perfect score: <span class="math inline">\(v_1\)</span> is correctly the top recommendation for <span class="math inline">\(u_1\)</span>, and <span class="math inline">\(v_2\)</span> for <span class="math inline">\(u_2\)</span>. Yet the binary loss still penalizes this model, because the negative edge <span class="math inline">\((u_2,v_1)\)</span> scores <span class="math inline">\(2.0\)</span>, higher than the positive edge <span class="math inline">\((u_1,v_1)\)</span> at <span class="math inline">\(1.0\)</span>.
+Figure&nbsp;7: Two users, two items, and the model’s scores. Recall@1 is <span class="math inline">\(1.0\)</span> — a perfect score: <span class="math inline">\(v_1\)</span> is correctly the top recommendation for <span class="math inline">\(u_1\)</span>, and <span class="math inline">\(v_2\)</span> for <span class="math inline">\(u_2\)</span>. Yet the binary loss still penalizes this model heavily.
 </figcaption>
 </figure>
 </div>
 </div>
+<p>Work the numbers through, because the reason for the penalty is easy to get wrong:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>pair</th>
+<th>label</th>
+<th style="text-align: right;">score</th>
+<th style="text-align: right;"><span class="math inline">\(\sigma(\text{score})\)</span></th>
+<th style="text-align: right;">BCE term</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\((u_1,v_1)\)</span></td>
+<td>positive</td>
+<td style="text-align: right;"><span class="math inline">\(1.0\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(0.731\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(0.313\)</span></td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\((u_1,v_2)\)</span></td>
+<td>negative</td>
+<td style="text-align: right;"><span class="math inline">\(-1.0\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(0.269\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(0.313\)</span></td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\((u_2,v_1)\)</span></td>
+<td>negative</td>
+<td style="text-align: right;"><span class="math inline">\(2.0\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(0.881\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(\mathbf{2.127}\)</span></td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\((u_2,v_2)\)</span></td>
+<td>positive</td>
+<td style="text-align: right;"><span class="math inline">\(4.0\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(0.982\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(0.018\)</span></td>
+</tr>
+</tbody>
+</table>
 <div class="checkpoint">
 <p><strong>Check 3 — Read the counterexample carefully</strong></p>
-<p>The model in <a href="#fig-binary-counterexample" class="quarto-xref">Figure&nbsp;7</a> is <strong>perfect</strong> by the metric we care about, and the loss punishes it anyway.</p>
-<p>The reason is a mismatch of scope. The binary loss compares positives and negatives <strong>across all users at once</strong> — it is <em>non-personalized</em>. Recall@<span class="math inline">\(k\)</span> compares items <strong>within one user</strong> — it is <em>personalized</em>. Comparing <span class="math inline">\((u_2,v_1)\)</span> against <span class="math inline">\((u_1,v_1)\)</span> is a comparison the metric never makes and never rewards, so the loss is strictly stricter than the objective.</p>
-<p>Note that this is a proof, not an observation. One counterexample is enough to establish the misalignment.</p>
+<p>The model in <a href="#fig-binary-counterexample" class="quarto-xref">Figure&nbsp;7</a> is <strong>perfect</strong> by the metric we care about, and the loss punishes it anyway. But the reason is not that the loss compares <span class="math inline">\((u_2,v_1)\)</span> against <span class="math inline">\((u_1,v_1)\)</span> — it never does. Binary cross-entropy is pointwise; no term in it involves two users.</p>
+<p>The <span class="math inline">\(2.127\)</span> appears because <span class="math inline">\(\sigma(2.0)=0.881\)</span> declares that pair <strong>88% likely to be positive</strong> while its label is negative. The loss is doing exactly its job: fitting probabilities. It is <em>our</em> objective that is different.</p>
+<p>The real mismatch is an <strong>invariance</strong>. Add a constant to every score of one user and Recall@<span class="math inline">\(k\)</span> does not change at all — the within-user ordering is untouched. Do the same to the binary loss and it changes, because each score is being read as an absolute probability. A loss that is not invariant to something the metric is invariant to will spend capacity on a distinction the metric never rewards.</p>
+<p>So the lesson is not “BCE is non-personalized”. It is: <strong>probability calibration and within-user ranking are different objectives</strong>, and a top-<span class="math inline">\(k\)</span> ranking metric asks only for the second.</p>
 </div>
 </section>
 <section id="the-bpr-loss" class="level3" data-number="4.2">
@@ -542,7 +587,14 @@ Figure&nbsp;8: Rooted edges. For a fixed user <span class="math inline">\(u^*\)<
 \tag{1}\]</span></span></p>
 <p>and the total loss is <span class="math inline">\(\frac{1}{|\mathcal{U}|}\sum_{u^*\in\mathcal{U}}\text{Loss}(u^*)\)</span>.</p>
 </div>
-<p>The whole design is in the <strong>difference</strong> <span class="math inline">\(F_\theta(u^*,v_{\text{pos}})-F_\theta(u^*,v_{\text{neg}})\)</span>. Only scores belonging to the same user are ever compared, so the loss is invariant to shifting one user’s scores up or down — precisely the invariance Recall@<span class="math inline">\(k\)</span> has. Applied to <a href="#fig-binary-counterexample" class="quarto-xref">Figure&nbsp;7</a>, the BPR loss is happy: within <span class="math inline">\(u_1\)</span>, <span class="math inline">\(v_1\)</span> outranks <span class="math inline">\(v_2\)</span>; within <span class="math inline">\(u_2\)</span>, <span class="math inline">\(v_2\)</span> outranks <span class="math inline">\(v_1\)</span>; nothing else is checked.</p>
+<p>The whole design is in the <strong>difference</strong> <span class="math inline">\(F_\theta(u^*,v_{\text{pos}})-F_\theta(u^*,v_{\text{neg}})\)</span> <span class="citation" data-cites="rendle2009bpr">(<a href="#ref-rendle2009bpr" role="doc-biblioref">Rendle et al. 2009</a>)</span>. Only scores belonging to the same user are ever compared, so the loss is invariant to shifting one user’s scores up or down — precisely the invariance we just found Recall@<span class="math inline">\(k\)</span> has and the binary loss lacks. Applied to <a href="#fig-binary-counterexample" class="quarto-xref">Figure&nbsp;7</a>, both users have margin <span class="math inline">\(2.0\)</span> and the loss is small and equal for each.</p>
+<div class="checkpoint">
+<p><strong>Check 4 — BPR is a better surrogate, not the metric</strong></p>
+<p>Sharing one invariance does not make two objectives the same, and it is worth being precise about the gap.</p>
+<p>On <a href="#fig-binary-counterexample" class="quarto-xref">Figure&nbsp;7</a> the BPR loss is <span class="math inline">\(-\log\sigma(2.0)=0.127\)</span> per user — <strong>small, but not zero, and with a nonzero gradient</strong>. BPR keeps pushing an already-correctly-ordered pair toward a larger margin; Recall@<span class="math inline">\(k\)</span> stopped caring the moment the ordering was right.</p>
+<p>It also differs in <em>where</em> in the ranking it looks. Recall@<span class="math inline">\(k\)</span> only sees the top <span class="math inline">\(k\)</span>: promoting an item from rank 900 to rank 400 changes nothing. BPR treats every positive–negative pair alike, so it will happily spend gradient on that move. Losses that weight the head of the ranking more heavily (WARP, LambdaRank) exist for exactly this reason.</p>
+<p>BPR is the right default here because it is differentiable, cheap to sample, and shares the invariance that matters. It is a <strong>surrogate</strong>, not a reformulation of the metric.</p>
+</div>
 <div class="figure-panel">
 <div id="fig-bpr-minibatch" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A bipartite graph with a few users highlighted and their sampled positive and negative items marked">
 <figure class="quarto-float quarto-float-fig figure">
@@ -579,9 +631,10 @@ Figure&nbsp;10: <strong>Collaborative filtering</strong>: recommend for a user b
 </div>
 <p>The mechanism is a capacity argument, and it is worth stating precisely.</p>
 <div class="checkpoint">
-<p><strong>Check 4 — Low dimension is a feature, not a limitation</strong></p>
-<p>A <span class="math inline">\(D\)</span>-dimensional embedding table has <span class="math inline">\(O((|\mathcal{U}|+|\mathcal{V}|)D)\)</span> parameters, whereas the interaction matrix has <span class="math inline">\(|\mathcal{U}|\times|\mathcal{V}|\)</span> entries. When <span class="math inline">\(D\)</span> is small the model <strong>cannot memorize</strong> the interactions.</p>
-<p>Being unable to memorize, it is forced to explain the data with structure it can represent — which means placing similar users near each other and similar items near each other. That compression <em>is</em> collaborative filtering, and it is what lets the model say anything about a pair it has never observed.</p>
+<p><strong>Check 5 — Low dimension is a feature, not a limitation</strong></p>
+<p>A <span class="math inline">\(D\)</span>-dimensional embedding table has <span class="math inline">\(O((|\mathcal{U}|+|\mathcal{V}|)D)\)</span> parameters, whereas the interaction matrix has <span class="math inline">\(|\mathcal{U}|\times|\mathcal{V}|\)</span> entries. Since the score matrix <span class="math inline">\(\mathbf{U}\mathbf{V}^{\top}\)</span> has rank at most <span class="math inline">\(D\)</span>, the model cannot represent an arbitrary interaction pattern.</p>
+<p>Being unable to represent everything, it is pushed toward explaining the data with structure it <em>can</em> represent — placing similar users near each other and similar items near each other. That compression is the mechanism behind collaborative filtering, and it is what lets the model say anything about a pair it has never observed.</p>
+<p>Two honest caveats. A rank constraint on the full matrix does not mean the <strong>observed</strong> entries cannot be fit closely: interaction data is extremely sparse, and a low-rank model can often fit a sparse set of observations well while generalizing poorly. And low rank alone does not make the learned geometry <em>meaningful</em> — regularization, the negative-sampling distribution, data density, and the evaluation protocol all matter. Low dimension creates the pressure; it does not guarantee the result.</p>
 </div>
 </section>
 <section id="neural-graph-collaborative-filtering" class="level2" data-number="6">
@@ -599,10 +652,10 @@ Figure&nbsp;11: Conventional collaborative filtering: a learnable shallow embedd
 </div>
 </div>
 <div class="checkpoint">
-<p><strong>Check 5 — What shallow encoders miss</strong></p>
+<p><strong>Check 6 — What shallow encoders miss</strong></p>
 <p>The graph enters a shallow model <strong>only through the training objective</strong> — through which pairs are positive. It never enters the model itself.</p>
 <p>And the objective only ever looks at <strong>first-order</strong> structure: individual edges. A <span class="math inline">\(K\)</span>-hop path between a user and an item — the very thing that says “people like you, who liked things like this, went on to like that” — is never represented.</p>
-<p>This is exactly the limitation Lecture 2 identified for DeepWalk, in a new setting.</p>
+<p>This echoes Lecture 2’s complaint about shallow encoders, though the two are not identical: DeepWalk’s random-walk contexts do reach beyond immediate edges, whereas the loss here looks only at observed pairs.</p>
 </div>
 <p>We want a model that captures graph structure <strong>explicitly</strong> and at <strong>higher order</strong>. GNNs do both.</p>
 <div class="figure-panel">
@@ -618,14 +671,33 @@ Figure&nbsp;12: NGCF <span class="citation" data-cites="wang2019neural">(<a href
 </div>
 </div>
 <div class="definition">
-<p><strong>Definition 6 — NGCF propagation</strong></p>
+<p><strong>Definition 6 — Generic bipartite message passing</strong></p>
 <p>With shallow embeddings as the initial features, <span class="math inline">\(\mathbf{h}_u^{(0)}\)</span> and <span class="math inline">\(\mathbf{h}_v^{(0)}\)</span>, iterate</p>
 <p><span class="math display">\[
 \mathbf{h}_v^{(k+1)}=\operatorname{COMBINE}\!\left(\mathbf{h}_v^{(k)},\ \operatorname{AGGR}\!\left(\left\{\mathbf{h}_u^{(k)}\right\}_{u\in\mathcal{N}(v)}\right)\right),
 \]</span> <span class="math display">\[
-\mathbf{h}_u^{(k+1)}=\operatorname{COMBINE}\!\left(\mathbf{h}_u^{(k)},\ \operatorname{AGGR}\!\left(\left\{\mathbf{h}_v^{(k)}\right\}_{v\in\mathcal{N}(u)}\right)\right).
+\mathbf{h}_u^{(k+1)}=\operatorname{COMBINE}\!\left(\mathbf{h}_u^{(k)},\ \operatorname{AGGR}\!\left(\left\{\mathbf{h}_v^{(k)}\right\}_{v\in\mathcal{N}(u)}\right)\right),
 \]</span></p>
-<p>A typical choice is <span class="math inline">\(\operatorname{AGGR}=\operatorname{MEAN}\)</span> and <span class="math inline">\(\operatorname{COMBINE}(\mathbf{x},\mathbf{y})=\operatorname{ReLU}(\operatorname{Linear}(\operatorname{Concat}(\mathbf{x},\mathbf{y})))\)</span>.</p>
+<p>with, say, <span class="math inline">\(\operatorname{AGGR}=\operatorname{MEAN}\)</span> and <span class="math inline">\(\operatorname{COMBINE}(\mathbf{x},\mathbf{y})=\operatorname{ReLU}(\operatorname{Linear}(\operatorname{Concat}(\mathbf{x},\mathbf{y})))\)</span>.</p>
+<p>This is the <strong>general shape</strong> of a graph recommender, and it is what to keep in mind. It is not yet NGCF.</p>
+</div>
+<div class="definition">
+<p><strong>Definition 7 — NGCF, as actually specified</strong></p>
+<p>NGCF <span class="citation" data-cites="wang2019neural">(<a href="#ref-wang2019neural" role="doc-biblioref">Wang et al. 2019</a>)</span> fixes two things that Definition 6 leaves open, and both matter.</p>
+<p><strong>The message carries an interaction term.</strong> The message from item <span class="math inline">\(v\)</span> to user <span class="math inline">\(u\)</span> is not the neighbor’s state but</p>
+<p><span class="math display">\[
+\mathbf{m}_{u\leftarrow v}=\frac{1}{\sqrt{|\mathcal{N}(u)|\,|\mathcal{N}(v)|}}
+\Big(\mathbf{W}_1\mathbf{h}_v^{(k)}+\mathbf{W}_2\big(\mathbf{h}_v^{(k)}\odot\mathbf{h}_u^{(k)}\big)\Big),
+\]</span></p>
+<p>where <span class="math inline">\(\odot\)</span> is the elementwise product. The second term is the point of the model: it makes the message depend on <strong>how well the user and item already agree</strong>, which a mean aggregation cannot express. There is also a self-message <span class="math inline">\(\mathbf{m}_{u\leftarrow u}=\mathbf{W}_1\mathbf{h}_u^{(k)}\)</span>, and the update is</p>
+<p><span class="math display">\[
+\mathbf{h}_u^{(k+1)}=\operatorname{LeakyReLU}\Big(\mathbf{m}_{u\leftarrow u}+\textstyle\sum_{v\in\mathcal{N}(u)}\mathbf{m}_{u\leftarrow v}\Big).
+\]</span></p>
+<p><strong>The readout concatenates every depth.</strong> The final embedding is not <span class="math inline">\(\mathbf{h}_u^{(K)}\)</span> but</p>
+<p><span class="math display">\[
+\mathbf{h}_u^{*}=\mathbf{h}_u^{(0)}\,\Vert\,\mathbf{h}_u^{(1)}\,\Vert\cdots\Vert\,\mathbf{h}_u^{(K)},
+\]</span></p>
+<p>so information from every hop count reaches the score. Keep this in view: LightGCN will replace the concatenation with a weighted average, and drop everything else.</p>
 </div>
 <div class="figure-panel">
 <div id="fig-ngcf-aggregation" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A bipartite graph with green arrows from items to users and blue arrows from users to items">
@@ -639,7 +711,7 @@ Figure&nbsp;13: Because the graph is bipartite, users aggregate from items and i
 </figure>
 </div>
 </div>
-<p>After <span class="math inline">\(K\)</span> rounds we set <span class="math inline">\(\mathbf{u}\leftarrow\mathbf{h}_u^{(K)}\)</span> and <span class="math inline">\(\mathbf{v}\leftarrow\mathbf{h}_v^{(K)}\)</span>, and score by inner product.</p>
+<p>After <span class="math inline">\(K\)</span> rounds we set <span class="math inline">\(\mathbf{u}\leftarrow\mathbf{h}_u^{*}\)</span> and <span class="math inline">\(\mathbf{v}\leftarrow\mathbf{h}_v^{*}\)</span> — the concatenations over all depths — and score by inner product.</p>
 <div class="figure-panel">
 <div id="fig-ngcf-final" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A bipartite graph whose nodes carry final graph-aware embedding vectors">
 <figure class="quarto-float quarto-float-fig figure">
@@ -656,7 +728,7 @@ Figure&nbsp;14: The final embeddings are explicitly graph-aware. NGCF trains <st
 <section id="lightgcn" class="level2" data-number="7">
 <h2 data-number="7" class="anchored" data-anchor-id="lightgcn"><span class="header-section-number">7</span> LightGCN</h2>
 <div class="checkpoint">
-<p><strong>Check 6 — Count the parameters before adding machinery</strong></p>
+<p><strong>Check 7 — Count the parameters before adding machinery</strong></p>
 <p>NGCF learns shallow embeddings <strong>and</strong> GNN weights. Compare their sizes:</p>
 <table class="caption-top table">
 <thead>
@@ -731,9 +803,15 @@ Figure&nbsp;16: <span class="math inline">\(\tilde{\mathbf{A}}^{k}\mathbf{E}\)</
 \tag{3}\]</span></span></p>
 <p>The coefficients are hyperparameters; LightGCN simply takes them uniform, <span class="math inline">\(\alpha_i=\frac{1}{k+1}\)</span>.</p>
 <div class="checkpoint">
-<p><strong>Check 7 — Why average across scales?</strong></p>
-<p>Keeping <span class="math inline">\(\mathbf{E}^{(0)}\)</span> in the sum means the un-diffused embedding always survives with weight <span class="math inline">\(\frac{1}{k+1}\)</span>. This is a direct structural defence against the failure mode of Lecture 2: however much the deep terms over-smooth, the model retains a path back to the node’s own identity.</p>
-<p>It is the same idea as a residual connection, and it is why LightGCN tolerates more propagation steps than a plain GCN would.</p>
+<p><strong>Check 8 — Why average across scales?</strong></p>
+<p>Keeping <span class="math inline">\(\mathbf{E}^{(0)}\)</span> in the sum means the un-diffused embedding always survives with weight <span class="math inline">\(\frac{1}{k+1}\)</span>. This is a structural defence against the failure mode of Lecture 2: however much the deep terms smooth, the model retains a path back to the node’s own identity.</p>
+<p>It is the same idea as a residual connection. But note the weight: <span class="math inline">\(\frac{1}{k+1}\)</span> <strong>shrinks as <span class="math inline">\(k\)</span> grows</strong>, so this mitigates over-smoothing rather than preventing it. At large <span class="math inline">\(k\)</span> the un-diffused term is a vanishing share of the sum.</p>
+<div class="checkpoint">
+<p><strong>Check 9 — LightGCN is not SGC on a bipartite graph</strong></p>
+<p>The resemblance is real — both delete the nonlinearity and the projection — but one difference changes the engineering completely.</p>
+<p>SGC’s <span class="math inline">\(\tilde{\mathbf{X}}=\hat{\mathbf{A}}^{\ell}\mathbf{X}\)</span> is computed from <strong>fixed input features</strong>, so it is preprocessing: compute once, then train an ordinary classifier on the rows. In LightGCN the input <span class="math inline">\(\mathbf{E}\)</span> is <strong>the parameter being learned</strong>. Every gradient step changes it, so the diffusion must be recomputed on every forward pass and differentiated through on every backward pass. There is no one-time preprocessing to be had.</p>
+<p>Two more differences worth noting: LightGCN averages over all depths where SGC uses a single depth, and LightGCN omits self-loops. The self-loop omission is not simply because the graph is bipartite — it is because the layer combination of <a href="#eq-lightgcn-multiscale" class="quarto-xref">Equation&nbsp;3</a> already retains <span class="math inline">\(\mathbf{E}^{(0)}\)</span>, so a self-loop inside each propagation would be redundant with it.</p>
+</div>
 </div>
 </section>
 <section id="the-model-end-to-end" class="level3" data-number="7.4">
@@ -798,17 +876,18 @@ Figure&nbsp;20: What the diffusion is worth, measured. A LightGCN trained end to
 </div>
 </div>
 <div class="checkpoint">
-<p><strong>Check 8 — What <a href="#fig-lightgcn-depth" class="quarto-xref">Figure&nbsp;20</a> does and does not show</strong></p>
+<p><strong>Check 10 — What <a href="#fig-lightgcn-depth" class="quarto-xref">Figure&nbsp;20</a> does and does not show</strong></p>
 <p>It shows the central claim: <strong>diffusion is the whole of what LightGCN adds over a shallow encoder</strong>, and it is worth a large factor. The <span class="math inline">\(k=0\)</span> point is a shallow model trained identically, so the gap is attributable to the propagation alone.</p>
-<p>It does <strong>not</strong> show a turning point. In this small, clean, strongly homophilous synthetic graph, recall was still improving at the largest depth tested — the multi-scale average of <a href="#eq-lightgcn-multiscale" class="quarto-xref">Equation&nbsp;3</a> is doing its job. On real data, and without that average, more layers eventually hurt for the reasons Lecture 2 measured. Do not read this curve as licence to stack layers indefinitely; read it as evidence that the diffusion is where the value is. Exercise 6 asks you to look for the turnover.</p>
+<p>It does <strong>not</strong> show a turning point. In this small, clean, strongly homophilous synthetic graph, recall was still improving at the largest depth tested — the multi-scale average of <a href="#eq-lightgcn-multiscale" class="quarto-xref">Equation&nbsp;3</a> is doing its job. On real data, and without that average, more layers eventually hurt for the reasons Lecture 2 measured.</p>
+<p>And it is one experiment, so treat it accordingly: <strong>one random interaction split, one seed, and the same hyperparameters at every depth</strong>, on synthetic data whose group structure was built in by construction. There is no validation-selected setting, no popularity baseline, and no matrix-factorization baseline to compare against. It is evidence that the diffusion is where the value is in this setup — not a general ranking of models. Exercise 6 asks you to look for the turnover, and Exercise 8 to add the missing baselines.</p>
 </div>
 <div class="checkpoint">
-<p><strong>Check 9 — Why the simple thing works</strong></p>
+<p><strong>Check 11 — Why the simple thing works</strong></p>
 <p>The diffusion directly pulls together the embeddings of users who share many item neighbors. Two users who interacted with many of the same items get similar final embeddings, and therefore similar recommendations.</p>
 <p>That is a mechanical restatement of collaborative filtering — the assumption we started from. LightGCN works because its inductive bias <em>is</em> the assumption of the problem, and it needs no parameters to express it.</p>
 </div>
 <div class="checkpoint">
-<p><strong>Check 10 — NGCF, LightGCN, and shallow encoders</strong></p>
+<p><strong>Check 12 — NGCF, LightGCN, and shallow encoders</strong></p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 25%">
@@ -857,7 +936,7 @@ Figure&nbsp;20: What the diffusion is worth, measured. A LightGCN trained end to
 </section>
 <section id="exercise-2-the-counterexample-generalized" class="level3" data-number="8.2">
 <h3 data-number="8.2" class="anchored" data-anchor-id="exercise-2-the-counterexample-generalized"><span class="header-section-number">8.2</span> Exercise 2 — The counterexample, generalized</h3>
-<p><a href="#fig-binary-counterexample" class="quarto-xref">Figure&nbsp;7</a> uses two users and two items. Construct a family of examples with <span class="math inline">\(n\)</span> users in which training Recall@1 is perfect but the binary loss is arbitrarily large. What property of the score matrix are you exploiting?</p>
+<p><a href="#fig-binary-counterexample" class="quarto-xref">Figure&nbsp;7</a> uses two users and two items. Construct a family of examples with <span class="math inline">\(n\)</span> users in which Recall@1 is perfect but the binary loss is arbitrarily large. You are not exploiting a comparison across users — the loss makes none — so say precisely which property of the individual scores you are exploiting, and why Recall@<span class="math inline">\(k\)</span> is blind to it.</p>
 </section>
 <section id="exercise-3-invariance" class="level3" data-number="8.3">
 <h3 data-number="8.3" class="anchored" data-anchor-id="exercise-3-invariance"><span class="header-section-number">8.3</span> Exercise 3 — Invariance</h3>
@@ -873,11 +952,16 @@ Figure&nbsp;20: What the diffusion is worth, measured. A LightGCN trained end to
 </section>
 <section id="exercise-6-diffusion-depth" class="level3" data-number="8.6">
 <h3 data-number="8.6" class="anchored" data-anchor-id="exercise-6-diffusion-depth"><span class="header-section-number">8.6</span> Exercise 6 — Diffusion depth</h3>
-<p>Reproduce <a href="#fig-lightgcn-depth" class="quarto-xref">Figure&nbsp;20</a> with <code>scripts/figures/lecture_05_figures.py</code>. Then remove the multi-scale average — score with <span class="math inline">\(\mathbf{E}^{(k)}\)</span> alone instead of the average of <a href="#eq-lightgcn-multiscale" class="quarto-xref">Equation&nbsp;3</a> — and re-run the sweep. Does a turning point appear? Explain the result using Check 7.</p>
+<p>Reproduce <a href="#fig-lightgcn-depth" class="quarto-xref">Figure&nbsp;20</a> with <code>scripts/figures/lecture_05_figures.py</code>. Then remove the multi-scale average — score with <span class="math inline">\(\mathbf{E}^{(k)}\)</span> alone instead of the average of <a href="#eq-lightgcn-multiscale" class="quarto-xref">Equation&nbsp;3</a> — and re-run the sweep. Does a turning point appear? Explain the result using Check 8.</p>
 </section>
 <section id="exercise-7-parameter-counts" class="level3" data-number="8.7">
 <h3 data-number="8.7" class="anchored" data-anchor-id="exercise-7-parameter-counts"><span class="header-section-number">8.7</span> Exercise 7 — Parameter counts</h3>
 <p>A platform has <span class="math inline">\(10^{7}\)</span> users, <span class="math inline">\(10^{6}\)</span> items and <span class="math inline">\(D=64\)</span>. Count the parameters of a shallow encoder, of LightGCN, and of NGCF with a 3-layer GNN. Then state which of the three you would deploy first, and why the answer does not follow from the parameter count alone.</p>
+</section>
+<section id="exercise-8-the-missing-baselines-investigation" class="level3" data-number="8.8">
+<h3 data-number="8.8" class="anchored" data-anchor-id="exercise-8-the-missing-baselines-investigation"><span class="header-section-number">8.8</span> Exercise 8 — The missing baselines (investigation)</h3>
+<p><a href="#fig-lightgcn-depth" class="quarto-xref">Figure&nbsp;20</a> compares LightGCN against itself at <span class="math inline">\(k=0\)</span>. That is not enough to conclude the model is good. Extend <code>scripts/figures/lecture_05_figures.py</code> with two baselines: <strong>most-popular</strong> (rank every user’s candidates by global interaction count, ignoring the user) and <strong>matrix factorization</strong> (the <span class="math inline">\(k=0\)</span> model, but with its own tuned dimension and regularization). Re-run over five seeds and report the mean and spread of Recall@10.</p>
+<p>Does LightGCN still win? By how much, relative to the seed-to-seed spread? Which baseline is harder to beat, and what does that tell you about how much of the signal is popularity rather than personalization?</p>
 </section>
 </section>
 <section id="main-takeaways" class="level2" data-number="9">
@@ -886,8 +970,8 @@ Figure&nbsp;20: What the diffusion is worth, measured. A LightGCN trained end to
 <li>A recommender system is a <strong>bipartite user–item graph</strong>, and recommendation is <strong>link prediction</strong> on it.</li>
 <li>We recommend <span class="math inline">\(k \ll |\mathcal{V}|\)</span> items and evaluate with <strong>Recall@<span class="math inline">\(k\)</span></strong>, which is defined <strong>per user</strong> and then averaged.</li>
 <li>Recall@<span class="math inline">\(k\)</span> is not differentiable, so training uses a <strong>surrogate loss</strong> — and the choice of surrogate is where the alignment with the metric is won or lost.</li>
-<li>The <strong>binary loss</strong> compares positives and negatives across all users. One two-user counterexample shows it penalizes a model with perfect Recall@1.</li>
-<li>The <strong>BPR loss</strong> compares items only within a user, matching the metric’s personalization exactly.</li>
+<li>The <strong>binary loss</strong> is pointwise: it fits calibrated probabilities. A two-user counterexample shows it penalizing a model with perfect Recall@1 — not because it compares users, but because probability calibration and ranking are different objectives.</li>
+<li>The <strong>BPR loss</strong> compares items only within a user, so it shares Recall@<span class="math inline">\(k\)</span>’s invariance to per-user score shifts. It is a better surrogate, not the metric: it still rewards larger margins on pairs that are already correctly ordered, and it weights the whole ranking rather than the top <span class="math inline">\(k\)</span>.</li>
 <li>Embeddings work because they are <strong>too small to memorize</strong>, which forces them to encode user and item similarity — collaborative filtering.</li>
 <li><strong>NGCF</strong> propagates shallow embeddings over the bipartite graph with a GNN, capturing high-order structure the training objective alone cannot.</li>
 <li><strong>LightGCN</strong> removes the GNN’s parameters entirely, keeping only diffusion plus a multi-scale average. It has fewer parameters than NGCF and performs better — and the multi-scale average is what keeps depth safe.</li>
@@ -900,6 +984,9 @@ Figure&nbsp;20: What the diffusion is worth, measured. A LightGCN trained end to
 <div id="refs" class="references-small references csl-bib-body hanging-indent" role="list">
 <div id="ref-he2020lightgcn" class="csl-entry" role="listitem">
 He, Xiangnan, Kuan Deng, Xiang Wang, Yan Li, Yongdong Zhang, and Meng Wang. 2020. <span>“<span>LightGCN</span>: Simplifying and Powering Graph Convolution Network for Recommendation.”</span> <em>International ACM SIGIR Conference on Research and Development in Information Retrieval</em>. <a href="https://doi.org/10.1145/3397271.3401063">https://doi.org/10.1145/3397271.3401063</a>.
+</div>
+<div id="ref-rendle2009bpr" class="csl-entry" role="listitem">
+Rendle, Steffen, Christoph Freudenthaler, Zeno Gantner, and Lars Schmidt-Thieme. 2009. <span>“<span>BPR</span>: Bayesian Personalized Ranking from Implicit Feedback.”</span> <em>Proceedings of the 25th Conference on Uncertainty in Artificial Intelligence</em>.
 </div>
 <div id="ref-wang2019neural" class="csl-entry" role="listitem">
 Wang, Xiang, Xiangnan He, Meng Wang, Fuli Feng, and Tat-Seng Chua. 2019. <span>“Neural Graph Collaborative Filtering.”</span> <em>International ACM SIGIR Conference on Research and Development in Information Retrieval</em>. <a href="https://doi.org/10.1145/3331184.3331267">https://doi.org/10.1145/3331184.3331267</a>.

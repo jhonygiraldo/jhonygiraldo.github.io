@@ -4,7 +4,7 @@
   <defs>
     <marker id="arr" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#97aaae"/></marker>
     <style>
-      .box{fill:#fff;stroke:#dbe2df;stroke-width:2}.edge{stroke:#71878c;stroke-width:6}.node{fill:#0f6c78;stroke:#fff;stroke-width:5}.n{font:700 22px system-ui,sans-serif;fill:#fff;text-anchor:middle;dominant-baseline:middle}.label{font:700 27px system-ui,sans-serif;fill:#16343c;text-anchor:middle}.mono{font:600 21px ui-monospace,SFMono-Regular,monospace;fill:#33474f}.arrow{stroke:#97aaae;stroke-width:4;marker-end:url(#arr)}.cell{fill:#edf6f5;stroke:#b8cbcd}.one{fill:#d2644b;font:800 21px ui-monospace,monospace;text-anchor:middle;dominant-baseline:middle}.zero{fill:#73878b;font:500 21px ui-monospace,monospace;text-anchor:middle;dominant-baseline:middle}
+      .box{fill:#fff;stroke:#dbe2df;stroke-width:2}.edge{fill:none;stroke:#71878c;stroke-width:6}.node{fill:#0f6c78;stroke:#fff;stroke-width:5}.n{font:700 22px system-ui,sans-serif;fill:#fff;text-anchor:middle;dominant-baseline:middle}.label{font:700 27px system-ui,sans-serif;fill:#16343c;text-anchor:middle}.mono{font:600 21px ui-monospace,SFMono-Regular,monospace;fill:#33474f}.arrow{stroke:#97aaae;stroke-width:4;marker-end:url(#arr)}.cell{fill:#edf6f5;stroke:#b8cbcd}.one{fill:#d2644b;font:800 21px ui-monospace,monospace;text-anchor:middle;dominant-baseline:middle}.zero{fill:#73878b;font:500 21px ui-monospace,monospace;text-anchor:middle;dominant-baseline:middle}
     </style>
   </defs>
   <rect class="box" x="20" y="55" width="320" height="410" rx="24"/><rect class="box" x="440" y="55" width="270" height="410" rx="24"/><rect class="box" x="810" y="55" width="370" height="410" rx="24"/>

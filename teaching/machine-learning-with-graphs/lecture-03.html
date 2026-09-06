@@ -390,6 +390,10 @@ Figure&nbsp;3: An academic graph such as the Microsoft Academic Graph carries pa
 </section>
 <section id="why-the-usual-training-recipe-fails" class="level2" data-number="3">
 <h2 data-number="3" class="anchored" data-anchor-id="why-the-usual-training-recipe-fails"><span class="header-section-number">3</span> Why the usual training recipe fails</h2>
+<div class="checkpoint">
+<p><strong>Notation in this lecture</strong></p>
+<p><span class="math inline">\(M\)</span> here is the <strong>mini-batch size</strong>, not the edge count — Lecture 1 used <span class="math inline">\(M=|\mathcal{E}|\)</span> and Lecture 4 will use <span class="math inline">\(M\)</span> for the number of time samples. Edge count is written <span class="math inline">\(|\mathcal{E}|\)</span> throughout this note. <span class="math inline">\(N\)</span> is the number of nodes, <span class="math inline">\(K\)</span> the number of layers, <span class="math inline">\(H\)</span> the neighbor-sampling fan-out, and <span class="math inline">\(C\)</span> the number of partitions.</p>
+</div>
 <p>Recall how a deep model is trained on a large dataset — a CNN on ImageNet, say. The objective is an average over <span class="math inline">\(N\)</span> samples,</p>
 <p><span class="math display">\[
 \mathcal{L}(\boldsymbol{\Theta})=\frac{1}{N}\sum_{i=0}^{N-1}\mathcal{L}_i(\boldsymbol{\Theta}),
@@ -428,7 +432,8 @@ Figure&nbsp;5: Measured on a 4000-node graph with 19 960 edges. Left: the fracti
 <div class="worked-example">
 <p><strong>Worked example — The memory wall</strong></p>
 <p>Lecture 2 computed that a graph with <span class="math inline">\(N=25\,000\,000\)</span> nodes and <span class="math inline">\(300\)</span> neighbors per node needs about <span class="math inline">\(120\)</span> GB as an edge list. A server CPU can hold that.</p>
-<p>Training needs a <strong>GPU</strong>. Current top-end accelerators carry <span class="math inline">\(40\)</span>–<span class="math inline">\(80\)</span> GB, and the model, activations, and optimizer state must fit alongside the graph. A single GPU cannot hold the graph, let alone a full-batch forward and backward pass over it.</p>
+<p>Training is normally done on a <strong>GPU</strong>, and accelerator memory is the binding constraint. Take an NVIDIA H200 as an illustrative device: 141 GB of HBM3e. The graph alone is 120 GB of that, before any node features, activations, gradients, or optimizer state — and a full-batch backward pass has to store activations for every node at every layer. It does not fit, and the next graph up will not fit on the next accelerator either.</p>
+<p>(Nothing here <em>requires</em> a GPU: SGC’s preprocessing in <strong>?@sec-sgc</strong> runs perfectly well on a CPU with far more RAM, which is part of its appeal. What requires a GPU is training a deep nonlinear model in reasonable time.)</p>
 <p>And <span class="math inline">\(25\)</span> million nodes is modest: a European customer graph at Amazon scale is larger.</p>
 </div>
 <p>So: uniform mini-batches destroy the structure, and full batches do not fit. Everything below is a way out of that squeeze.</p>
@@ -541,8 +546,9 @@ Figure&nbsp;11: Neighbor sampling with <span class="math inline">\(H=2\)</span>,
 <li><strong>Size bound.</strong> A <span class="math inline">\(K\)</span>-layer GNN touches at most <span class="math inline">\(H^{K}\)</span> leaves, and <span class="math inline">\(\sum_{k=0}^{K}H^{k}\)</span> nodes in total. The hub problem is gone: <span class="math inline">\(H\)</span> caps the fan-out no matter how large a degree the sampler encounters.</li>
 <li><strong>Variance trade-off.</strong> A small <span class="math inline">\(H\)</span> is cheap but makes the neighborhood aggregate noisy, which destabilizes training. A large <span class="math inline">\(H\)</span> is stable and expensive. <span class="math inline">\(H\)</span> is the knob.</li>
 <li><strong>Still exponential.</strong> <span class="math inline">\(H^{K}\)</span> is bounded but it is bounded by an exponential. Adding one layer multiplies the cost by <span class="math inline">\(H\)</span>.</li>
-<li><strong>Sampling uniformly is not optimal.</strong> Uniform sampling is fast but often picks uninformative neighbors. Sampling proportionally to the random-walk matrix <span class="math inline">\(\mathbf{D}^{-1}\mathbf{A}\)</span> — the transition matrix from Lecture 1 — concentrates on structurally relevant neighbors and works better in practice.</li>
+<li><strong>Uniform is the default, and beating it takes real work.</strong> Note first what uniform sampling <em>is</em>: on an unweighted graph every neighbor in a row of <span class="math inline">\(\mathbf{D}^{-1}\mathbf{A}\)</span> has probability <span class="math inline">\(1/d_u\)</span>, so “sampling from the random-walk matrix” <strong>is</strong> uniform neighbor sampling — not an improvement on it.</li>
 </ol>
+<p>To sample non-uniformly you need genuinely non-uniform weights: edge weights, multi-step random-walk or personalized-PageRank scores, or a learned importance. And then the aggregate is no longer an unbiased estimate of the mean, so the sampling probabilities have to be divided back out — an importance-weighted estimator — or the layer computes something other than what it claims to.</p>
 </div>
 <div class="figure-panel">
 <div id="fig-comp-growth" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Log-scale plot of computational graph size against number of layers, with the measured curve saturating at N and three straight sampling bounds">
@@ -551,7 +557,7 @@ Figure&nbsp;11: Neighbor sampling with <span class="math inline">\(H=2\)</span>,
 <img src="../../assets/figures/computational-graph-growth.svg" class="img-fluid figure-img" alt="Log-scale plot of computational graph size against number of layers, with the measured curve saturating at N and three straight sampling bounds">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-comp-growth-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;12: Measured on a 4000-node graph. The red curve is the true <span class="math inline">\(K\)</span>-hop neighborhood, which reaches the entire graph by <span class="math inline">\(K=4\)</span>. Sampling replaces it with <span class="math inline">\(\sum_k H^{k}\)</span>, which is far smaller at every depth — but note the log axis: all four curves are straight lines, so the growth in <span class="math inline">\(K\)</span> remains exponential. At <span class="math inline">\(H=10\)</span> the bound already exceeds the graph itself by <span class="math inline">\(K=4\)</span>, and the sampler is doing no work.
+Figure&nbsp;12: Two different quantities on one axis, so read it carefully. The red curve is a <strong>measurement</strong>: the mean number of distinct nodes within <span class="math inline">\(K\)</span> hops on a 4000-node graph, which saturates at <span class="math inline">\(N\)</span> by <span class="math inline">\(K=4\)</span> because it cannot exceed the graph. The three straight lines are <strong>upper bounds</strong> on the sampled tree, <span class="math inline">\(\sum_k H^{k}\)</span>, which count leaves <em>with multiplicity</em> and so keep growing past <span class="math inline">\(N\)</span> — a bound above <span class="math inline">\(N\)</span> means the bound has stopped being informative, not that sampling costs more than the graph. The straight lines are exponential in <span class="math inline">\(K\)</span> by construction; the measured curve is not, and its saturation is the graph running out of nodes.
 </figcaption>
 </figure>
 </div>
@@ -637,8 +643,14 @@ Figure&nbsp;17: A large graph decomposed into communities. Edges are dense insid
 <div class="definition">
 <p><strong>Definition 3 — Cluster-GCN</strong></p>
 <p><strong>Pre-processing.</strong> Partition <span class="math inline">\(\mathcal{V}\)</span> into <span class="math inline">\(C\)</span> groups <span class="math inline">\(\mathcal{V}_1,\dots,\mathcal{V}_C\)</span> with <span class="math inline">\(\bigcup_{i}\mathcal{V}_i=\mathcal{V}\)</span>, chosen to respect community structure. Each <span class="math inline">\(\mathcal{V}_i\)</span> induces a sub-graph <span class="math inline">\(\mathcal{G}_i=(\mathcal{V}_i,\mathcal{E}_i)\)</span>.</p>
-<p><strong>Training.</strong> Treat each <span class="math inline">\(\mathcal{G}_i\)</span> as a mini-batch: run the ordinary layer-wise update inside it, compute the loss on its nodes, and take a gradient step.</p>
+<p><strong>Training (single-cluster form).</strong> Treat each <span class="math inline">\(\mathcal{G}_i\)</span> as a mini-batch: run the ordinary layer-wise update inside it, compute the loss on its nodes, and take a gradient step.</p>
 <p>Note that in general <span class="math inline">\(\bigcup_i\mathcal{E}_i\neq\mathcal{E}\)</span>, because <strong>between-group edges belong to no sub-graph</strong> <span class="citation" data-cites="chiang2019cluster">(<a href="#ref-chiang2019cluster" role="doc-biblioref">Chiang et al. 2019</a>)</span>.</p>
+</div>
+<p>This is the simplified version, and it is the one to understand first. The paper’s actual method adds a step that matters.</p>
+<div class="definition">
+<p><strong>Definition 4 — Cluster-GCN with stochastic multiple partitions</strong></p>
+<p>Partition into a <strong>larger</strong> number <span class="math inline">\(C\)</span> of small clusters than a batch needs. At each step, sample a set <span class="math inline">\(\mathcal{B}\)</span> of <span class="math inline">\(q\)</span> clusters and build the batch sub-graph on <span class="math inline">\(\bigcup_{i\in\mathcal{B}}\mathcal{V}_i\)</span>, <strong>including the edges between the chosen clusters</strong> <span class="citation" data-cites="chiang2019cluster">(<a href="#ref-chiang2019cluster" role="doc-biblioref">Chiang et al. 2019</a>)</span>.</p>
+<p>Two things improve at once. Edges between clusters that happen to be sampled together are restored, so the batch is a better approximation of the full neighborhood. And the batch is a union of <span class="math inline">\(q\)</span> clusters drawn from across the graph rather than one contiguous community, so it is a far more representative sample and the gradient variance drops.</p>
 </div>
 <div class="figure-panel">
 <div id="fig-cluster-partition" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A community-structured network with its communities separated into distinct colored groups">
@@ -679,10 +691,12 @@ Figure&nbsp;20: Measured on a 1500-node graph with 7461 edges. Partitioning by c
 </figure>
 </div>
 </div>
-<p>There is a second, less visible cost. The nodes in one cluster are similar to each other by construction, so a cluster is <strong>not a representative sample</strong> of the graph. The gradient computed on it points in a systematically particular direction; from batch to batch the gradient fluctuates widely, and this high variance slows SGD’s convergence.</p>
+<p>There is a second, less visible cost. The nodes in one cluster are similar to each other by construction, so a single cluster is <strong>not a representative sample</strong> of the graph. The gradient computed on it points in a systematically particular direction; from batch to batch the gradient fluctuates widely, and this high variance slows SGD’s convergence.</p>
+<p>Both costs are what the multiple-partition scheme of Definition 4 is designed to reduce — and it reduces them without removing them. Edges between clusters that are <em>not</em> sampled together are still missing from that step, so the approximation remains; it is now controlled by <span class="math inline">\(q\)</span> rather than absent.</p>
 <div class="checkpoint">
 <p><strong>Check 5 — Cluster-GCN in one paragraph</strong></p>
-<p>Partition the nodes into community-aligned groups, treat each induced sub-graph as a mini-batch, and run ordinary layer-wise message passing inside it. This removes the redundancy of neighbor sampling and is markedly more efficient for deep models. The price is a <strong>systematically biased gradient</strong>: cross-community edges are never traversed, and each batch sees an unrepresentative slice of the graph.</p>
+<p>Partition the nodes into community-aligned groups, treat the induced sub-graph as a mini-batch, and run ordinary layer-wise message passing inside it. This removes the redundancy of neighbor sampling and is markedly more efficient for deep models.</p>
+<p>The price is an <strong>approximation of the neighborhood</strong>: edges leaving the batch are not traversed. In the single-cluster form this is a fixed, systematic omission — the same edges are missing every time that cluster is used. Sampling several small clusters per batch (Definition 4) restores the edges among the chosen clusters and makes the batch representative, which is why it is the version actually used. The remaining bias is then a function of how many clusters you can afford per batch.</p>
 </div>
 </section>
 </section>
@@ -693,26 +707,26 @@ Figure&nbsp;20: Measured on a 1500-node graph with 7461 edges. Partitioning by c
 <h3 data-number="7.1" class="anchored" data-anchor-id="unrolling-a-gcn"><span class="header-section-number">7.1</span> Unrolling a GCN</h3>
 <p>Write the GCN propagation rule from Lecture 2 with <span class="math inline">\(\hat{\mathbf{A}}\)</span> standing for the normalized adjacency with self-loops:</p>
 <p><span class="math display">\[
-\mathbf{H}^{(\ell+1)}=\sigma\!\left(\hat{\mathbf{A}}\mathbf{H}^{(\ell)}\mathbf{W}^{(\ell)}\right).
+\mathbf{H}^{(\ell+1)}=\sigma\!\left(\hat{\mathbf{A}}\mathbf{H}^{(\ell)}\mathbf{W}^{(\ell)}\right),\qquad \ell=0,\dots,K-1.
 \]</span></p>
-<p>Unrolling <span class="math inline">\(\ell\)</span> layers gives a nest of alternating propagations and nonlinearities:</p>
+<p>Unrolling <span class="math inline">\(K\)</span> layers gives a nest of alternating propagations and nonlinearities:</p>
 <p><span class="math display">\[
-\mathbf{H}^{(\ell+1)}
-=\sigma\!\Big(\hat{\mathbf{A}}\,\sigma\big(\hat{\mathbf{A}}\,\sigma(\hat{\mathbf{A}}\cdots\mathbf{X}\mathbf{W}^{(0)}\cdots)\mathbf{W}^{(\ell-1)}\big)\mathbf{W}^{(\ell)}\Big).
+\mathbf{H}^{(K)}
+=\sigma\!\Big(\hat{\mathbf{A}}\,\sigma\big(\hat{\mathbf{A}}\,\sigma(\hat{\mathbf{A}}\cdots\mathbf{X}\mathbf{W}^{(0)}\cdots)\mathbf{W}^{(K-2)}\big)\mathbf{W}^{(K-1)}\Big).
 \]</span></p>
 <p>Now <strong>delete every intermediate <span class="math inline">\(\sigma\)</span></strong> <span class="citation" data-cites="wu2019simplifying">(<a href="#ref-wu2019simplifying" role="doc-biblioref">Wu et al. 2019</a>)</span>. The expression collapses:</p>
 <p><span class="math display">\[
-\mathbf{H}^{(\ell+1)}
-=\hat{\mathbf{A}}\big(\hat{\mathbf{A}}(\hat{\mathbf{A}}\cdots\mathbf{X}\mathbf{W}^{(0)}\cdots)\mathbf{W}^{(\ell-1)}\big)\mathbf{W}^{(\ell)}
-=\hat{\mathbf{A}}^{\ell}\,\mathbf{X}\,\underbrace{\mathbf{W}^{(0)}\cdots\mathbf{W}^{(\ell)}}_{\textstyle =\ \mathbf{W}}.
+\mathbf{H}^{(K)}
+=\hat{\mathbf{A}}\big(\hat{\mathbf{A}}(\hat{\mathbf{A}}\cdots\mathbf{X}\mathbf{W}^{(0)}\cdots)\mathbf{W}^{(K-2)}\big)\mathbf{W}^{(K-1)}
+=\hat{\mathbf{A}}^{K}\,\mathbf{X}\,\underbrace{\mathbf{W}^{(0)}\cdots\mathbf{W}^{(K-1)}}_{\textstyle =\ \mathbf{W}}.
 \]</span></p>
 <p>A product of linear maps is a linear map, so the whole stack of weight matrices collapses into a single <span class="math inline">\(\mathbf{W}\)</span>. Keeping only the final activation gives the <strong>Simple Graph Convolution</strong>:</p>
 <div class="definition">
-<p><strong>Definition 4 — SGC</strong></p>
+<p><strong>Definition 5 — SGC</strong></p>
 <p><span id="eq-sgc"><span class="math display">\[
 \begin{aligned}
 \bar{\mathbf{Y}}=f(\mathbf{X};\mathbf{A},\boldsymbol{\Theta})
-&amp;=\operatorname{softmax}\!\left(\hat{\mathbf{A}}^{\ell}\mathbf{X}\mathbf{W}\right),\\[4pt]
+&amp;=\operatorname{softmax}\!\left(\hat{\mathbf{A}}^{K}\mathbf{X}\mathbf{W}\right),\\[4pt]
 \hat{\mathbf{A}}&amp;=\tilde{\mathbf{D}}^{-1/2}\tilde{\mathbf{A}}\tilde{\mathbf{D}}^{-1/2},
 \qquad
 \tilde{\mathbf{A}}=\mathbf{A}+\mathbf{I}.
@@ -722,7 +736,7 @@ Figure&nbsp;20: Measured on a 1500-node graph with 7461 edges. Partitioning by c
 </section>
 <section id="why-this-is-so-cheap" class="level3" data-number="7.2">
 <h3 data-number="7.2" class="anchored" data-anchor-id="why-this-is-so-cheap"><span class="header-section-number">7.2</span> Why this is so cheap</h3>
-<p>The term <span class="math inline">\(\hat{\mathbf{A}}^{\ell}\mathbf{X}\)</span> is the <strong>diffusion sequence</strong> from Lecture 2, evaluated on the input features.</p>
+<p>The term <span class="math inline">\(\hat{\mathbf{A}}^{K}\mathbf{X}\)</span> is the <strong>diffusion sequence</strong> from Lecture 2, evaluated on the input features.</p>
 <div class="figure-panel">
 <div id="fig-sgc-diffusion" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A sensor network with an impulse spreading over successive diffusion steps">
 <figure class="quarto-float quarto-float-fig figure">
@@ -739,17 +753,18 @@ Figure&nbsp;21: The diffusion sequence again. In SGC it is applied to <span clas
 <p><span class="math display">\[
 \mathbf{X}\leftarrow\hat{\mathbf{A}}\mathbf{X},
 \qquad
-\text{repeated } \ell \text{ times.}
+\text{repeated } K \text{ times.}
 \]</span></p>
-<p>Each step is one sparse matrix product costing <span class="math inline">\(O(|\mathcal{E}|F)\)</span>. And here is the decisive point: <strong><span class="math inline">\(\mathbf{X}\)</span> is data, not a parameter.</strong> Nothing in <span class="math inline">\(\hat{\mathbf{A}}^{\ell}\mathbf{X}\)</span> depends on <span class="math inline">\(\mathbf{W}\)</span>, so it does not change during training. It is computed <strong>once</strong>, as pre-processing, and it can be computed on a CPU.</p>
+<p>Each step is one sparse matrix product costing <span class="math inline">\(O(|\mathcal{E}|F)\)</span>. And here is the decisive point: <strong><span class="math inline">\(\mathbf{X}\)</span> is data, not a parameter.</strong> Nothing in <span class="math inline">\(\hat{\mathbf{A}}^{K}\mathbf{X}\)</span> depends on <span class="math inline">\(\mathbf{W}\)</span>, so it does not change during training. It is computed <strong>once</strong>, as pre-processing, and it can be computed on a CPU.</p>
 <div class="checkpoint">
 <p><strong>Check 6 — What is left after pre-processing</strong></p>
-<p>Let <span class="math inline">\(\tilde{\mathbf{X}}=\hat{\mathbf{A}}^{\ell}\mathbf{X}\)</span>, with row <span class="math inline">\(i\)</span> the pre-processed feature vector of node <span class="math inline">\(i\)</span>. Then <a href="#eq-sgc" class="quarto-xref">Equation&nbsp;1</a> reads</p>
+<p>Let <span class="math inline">\(\tilde{\mathbf{X}}=\hat{\mathbf{A}}^{K}\mathbf{X}\)</span>, with row <span class="math inline">\(i\)</span> the pre-processed feature vector of node <span class="math inline">\(i\)</span>. Then <a href="#eq-sgc" class="quarto-xref">Equation&nbsp;1</a> reads</p>
 <p><span class="math display">\[
 \bar{\mathbf{Y}}=\operatorname{softmax}(\tilde{\mathbf{X}}\mathbf{W}),
 \]</span></p>
 <p>which is <strong>ordinary multiclass classification on the rows of a feature matrix</strong>. The graph has left the model entirely; it survives only inside <span class="math inline">\(\tilde{\mathbf{X}}\)</span>.</p>
-<p>Three things follow. Any scalable classifier can be used — linear model, MLP, gradient boosting. Ordinary mini-batch SGD applies, because the rows really are independent now. And retrieving a node’s representation is a <strong>row lookup in constant time</strong>: no computational graph, no sampling.</p>
+<p>Three things follow. Any scalable classifier can be used — linear model, MLP, gradient boosting. Ordinary mini-batch SGD applies. And retrieving a node’s representation is a <strong>row lookup in constant time</strong>: no computational graph, no sampling.</p>
+<p>Be careful about <em>why</em> mini-batching works here, because the obvious explanation is wrong. Preprocessing does not make the rows statistically independent — neighboring rows of <span class="math inline">\(\tilde{\mathbf{X}}\)</span> share the features they were built from, and are strongly correlated. What it does is make each row <strong>fixed</strong>: a loss term can be evaluated without recomputing any neighbor’s activation. That is all mini-batch SGD needs. An unbiased gradient estimate for a finite sum over <span class="math inline">\(n\)</span> terms requires only that the terms be sampled uniformly; it never required the terms to be independent random variables.</p>
 </div>
 </section>
 <section id="the-price-and-why-it-is-often-small" class="level3" data-number="7.3">
@@ -757,28 +772,35 @@ Figure&nbsp;21: The diffusion sequence again. In SGC it is applied to <span clas
 <p>SGC has no nonlinearity between propagations, so it is strictly less expressive than a GCN. Yet on standard node-classification benchmarks it performs comparably. Why?</p>
 <p>The answer is <strong>homophily</strong>, from Lecture 2. The pre-processing <span class="math inline">\(\mathbf{X}\leftarrow\hat{\mathbf{A}}\mathbf{X}\)</span> repeatedly averages each node with its neighbors, so adjacent nodes end up with similar rows of <span class="math inline">\(\tilde{\mathbf{X}}\)</span>, so a linear classifier on <span class="math inline">\(\tilde{\mathbf{X}}\)</span> tends to give adjacent nodes the same label. That is a strong prior — and on a homophilous graph it is the <em>correct</em> prior. Citation networks (a paper shares its citations’ category) and social recommendation (friends like the same films) satisfy it well.</p>
 <div class="figure-panel">
-<div id="fig-sgc-homophily" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Four curves of class separability against diffusion steps; one rises steeply then falls, three stay flat near zero">
+<div id="fig-sgc-homophily" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Four curves of class separability against diffusion steps; the highest and lowest homophily both rise steeply, the two intermediate ones stay flat">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-sgc-homophily-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../../assets/figures/sgc-homophily.svg" class="img-fluid figure-img" alt="Four curves of class separability against diffusion steps; one rises steeply then falls, three stay flat near zero">
+<img src="../../assets/figures/sgc-homophily.svg" class="img-fluid figure-img" alt="Four curves of class separability against diffusion steps; the highest and lowest homophily both rise steeply, the two intermediate ones stay flat">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-sgc-homophily-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;22: The mechanism, measured. Four graphs of identical size and density but different homophily; the vertical axis is how separable the two classes are in <span class="math inline">\(\hat{\mathbf{A}}^{\ell}\mathbf{X}\)</span> (between-class distance over within-class spread), which is essentially how easy a linear classifier’s job is. At <span class="math inline">\(H(\mathcal{G})\approx0.95\)</span> diffusion improves separability by a factor of about 18 before over-smoothing sets in. Below <span class="math inline">\(H(\mathcal{G})\approx0.5\)</span> it never helps at all — diffusion mixes the classes together instead of separating them.
+Figure&nbsp;22: The mechanism, measured — and it is not monotone in homophily. Four graphs of identical size and density; the vertical axis is how separable the two classes are in <span class="math inline">\(\hat{\mathbf{A}}^{K}\mathbf{X}\)</span> (between-class distance over within-class spread). At <span class="math inline">\(H(\mathcal{G})\approx0.95\)</span> diffusion improves separability about <span class="math inline">\(19\times\)</span> before over-smoothing sets in. But look at <span class="math inline">\(H(\mathcal{G})\approx0.05\)</span>: it improves about <span class="math inline">\(12\times\)</span> too. The cases that fail are the <strong>intermediate</strong> ones, <span class="math inline">\(H\approx0.30\)</span> and <span class="math inline">\(H\approx0.70\)</span>, which barely move. See Check 7.
 </figcaption>
 </figure>
 </div>
 </div>
-<p>Note the two failure modes in that figure. Too many diffusion steps over-smooth even a homophilous graph — the same collapse Lecture 2 measured. And on a heterophilous graph the pre-processing is not merely unhelpful; it actively destroys the signal, which is why <span class="math inline">\(\ell\)</span> must be tuned and why <span class="math inline">\(H(\mathcal{G})\)</span> is worth measuring first.</p>
 <div class="checkpoint">
-<p><strong>Check 7 — SGC in one paragraph</strong></p>
-<p>Remove the nonlinearities from a GCN and it collapses to a fixed feature transformation <span class="math inline">\(\tilde{\mathbf{X}}=\hat{\mathbf{A}}^{\ell}\mathbf{X}\)</span> followed by a linear classifier. The graph work becomes a one-off pre-processing step, and everything after it is standard machine learning. It works well when the graph is homophilous, and it is the natural first thing to try on a graph too large for anything else. The same idea, under the name LightGCN, is used at scale in industrial recommender systems <span class="citation" data-cites="he2020lightgcn">(<a href="#ref-he2020lightgcn" role="doc-biblioref">He et al. 2020</a>)</span>.</p>
+<p><strong>Check 7 — Why the lowest homophily is not the worst case</strong></p>
+<p>The measured curves refuse the tidy story, and the reason is instructive.</p>
+<p>Diffusion by <span class="math inline">\(\hat{\mathbf{A}}\)</span> scales each spectral component of the features by its eigenvalue. A <strong>strongly homophilous</strong> graph puts the class signal at the top of the spectrum, near <span class="math inline">\(\mu\approx1\)</span>, where repeated multiplication preserves it while everything else shrinks — the signal survives by being the slowest to decay.</p>
+<p>A <strong>strongly heterophilous</strong> graph is close to bipartite, and a near-bipartite graph has eigenvalues close to <span class="math inline">\(-1\)</span>. The class signal now sits at the <em>bottom</em> of the spectrum, and <span class="math inline">\(|\mu|\approx1\)</span> there too. It also survives — it just flips sign at every step. The separability measure used here is blind to that sign, and so is a linear classifier, which can simply learn a negative weight.</p>
+<p>What is left in between? At <span class="math inline">\(H\approx0.5\)</span> the class signal is spread across the middle of the spectrum where <span class="math inline">\(|\mu|&lt;1\)</span>, and it decays. <strong>Diffusion helps when the labels align with an extreme eigenvalue and hurts when they do not</strong>, which is a statement about the spectrum, not about homophily as a scalar.</p>
+<p>Two practical consequences. Too many steps eventually over-smooth even the good cases — every curve turns over. And <span class="math inline">\(H(\mathcal{G})\)</span> on its own is a poor predictor: it is worth measuring, but it does not settle whether diffusion will help.</p>
+</div>
+<div class="checkpoint">
+<p><strong>Check 8 — SGC in one paragraph</strong></p>
+<p>Remove the nonlinearities from a GCN and it collapses to a fixed feature transformation <span class="math inline">\(\tilde{\mathbf{X}}=\hat{\mathbf{A}}^{K}\mathbf{X}\)</span> followed by a linear classifier. The graph work becomes a one-off pre-processing step, and everything after it is standard machine learning. It works well when the graph is homophilous, and it is the natural first thing to try on a graph too large for anything else. The same idea, under the name LightGCN, is used at scale in industrial recommender systems <span class="citation" data-cites="he2020lightgcn">(<a href="#ref-he2020lightgcn" role="doc-biblioref">He et al. 2020</a>)</span>.</p>
 </div>
 </section>
 </section>
 <section id="choosing-among-the-three" class="level2" data-number="8">
 <h2 data-number="8" class="anchored" data-anchor-id="choosing-among-the-three"><span class="header-section-number">8</span> Choosing among the three</h2>
 <div class="checkpoint">
-<p><strong>Check 8 — A decision rule</strong></p>
+<p><strong>Check 9 — A decision rule</strong></p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 16%">
@@ -804,7 +826,7 @@ Figure&nbsp;22: The mechanism, measured. Four graphs of identical size and densi
 <td>pruned neighborhood</td>
 <td><span class="math inline">\(O(H^{K})\)</span> per node</td>
 <td>high</td>
-<td>unbiased-ish, higher variance for small <span class="math inline">\(H\)</span></td>
+<td><strong>biased</strong> for a nonlinear layer; variance grows as <span class="math inline">\(H\)</span> shrinks</td>
 <td><span class="math inline">\(\times H\)</span> per layer</td>
 </tr>
 <tr class="even">
@@ -840,7 +862,8 @@ Figure&nbsp;22: The mechanism, measured. Four graphs of identical size and densi
 </section>
 <section id="exercise-3-the-variance-trade-off" class="level3" data-number="9.3">
 <h3 data-number="9.3" class="anchored" data-anchor-id="exercise-3-the-variance-trade-off"><span class="header-section-number">9.3</span> Exercise 3 — The variance trade-off</h3>
-<p>Let a node have <span class="math inline">\(d\)</span> neighbors with feature values <span class="math inline">\(x_1,\dots,x_d\)</span>. The exact mean aggregate is <span class="math inline">\(\bar{x}\)</span>. Compute the variance of the aggregate estimated from <span class="math inline">\(H\)</span> uniformly sampled neighbors, and use it to justify Remark 2 in Check 2.</p>
+<p>Let a node have <span class="math inline">\(d\)</span> neighbors with feature values <span class="math inline">\(x_1,\dots,x_d\)</span> and population variance <span class="math inline">\(\sigma^2\)</span>. The exact mean aggregate is <span class="math inline">\(\bar{x}\)</span>. Compute the variance of the aggregate estimated from <span class="math inline">\(H\)</span> uniformly sampled neighbors, <strong>with replacement</strong> (<span class="math inline">\(\sigma^2/H\)</span>) and <strong>without replacement</strong> (the same, times the finite-population correction <span class="math inline">\(\frac{d-H}{d-1}\)</span>). State which one a practical sampler uses and why the two agree when <span class="math inline">\(H\ll d\)</span>. Then use the result to justify Remark 2 in Check 2.</p>
+<p>Finally, a subtlety worth stating: the sampled <em>mean</em> is an unbiased estimate of <span class="math inline">\(\bar{x}\)</span>, but a GNN layer applies a nonlinearity <span class="math inline">\(\sigma\)</span> afterwards, and <span class="math inline">\(\mathbb{E}[\sigma(\hat{m})]\neq\sigma(\mathbb{E}[\hat{m}])\)</span> in general. Is the layer output unbiased? Is the gradient?</p>
 </section>
 <section id="exercise-4-cluster-gcns-bias" class="level3" data-number="9.4">
 <h3 data-number="9.4" class="anchored" data-anchor-id="exercise-4-cluster-gcns-bias"><span class="header-section-number">9.4</span> Exercise 4 — Cluster-GCN’s bias</h3>
@@ -848,15 +871,17 @@ Figure&nbsp;22: The mechanism, measured. Four graphs of identical size and densi
 </section>
 <section id="exercise-5-unrolling" class="level3" data-number="9.5">
 <h3 data-number="9.5" class="anchored" data-anchor-id="exercise-5-unrolling"><span class="header-section-number">9.5</span> Exercise 5 — Unrolling</h3>
-<p>Verify the SGC collapse explicitly for <span class="math inline">\(\ell=2\)</span>: expand <span class="math inline">\(\mathbf{H}^{(2)}\)</span> with and without the intermediate <span class="math inline">\(\sigma\)</span>, and identify precisely which step fails when <span class="math inline">\(\sigma\)</span> is present.</p>
+<p>Verify the SGC collapse explicitly for <span class="math inline">\(K=2\)</span>: expand <span class="math inline">\(\mathbf{H}^{(2)}\)</span> with and without the intermediate <span class="math inline">\(\sigma\)</span>, and identify precisely which step fails when <span class="math inline">\(\sigma\)</span> is present.</p>
 </section>
 <section id="exercise-6-sgc-parameter-count" class="level3" data-number="9.6">
 <h3 data-number="9.6" class="anchored" data-anchor-id="exercise-6-sgc-parameter-count"><span class="header-section-number">9.6</span> Exercise 6 — SGC parameter count</h3>
-<p>For a graph with <span class="math inline">\(N=10^{6}\)</span>, <span class="math inline">\(F=500\)</span> features, <span class="math inline">\(C=10\)</span> classes and <span class="math inline">\(\ell=2\)</span>, count the parameters of SGC and of a two-layer GCN with hidden width <span class="math inline">\(64\)</span>. Then count the <em>floating-point operations per training epoch</em> for each, and explain where SGC’s advantage actually comes from — it is not the parameter count.</p>
+<p>For a graph with <span class="math inline">\(N=10^{6}\)</span> nodes, <span class="math inline">\(|\mathcal{E}|=10^{7}\)</span> edges, <span class="math inline">\(F=500\)</span> features, <span class="math inline">\(C=10\)</span> classes, <span class="math inline">\(10^{4}\)</span> labelled nodes and <span class="math inline">\(K=2\)</span>, count the parameters of SGC and of a two-layer GCN with hidden width <span class="math inline">\(64\)</span>.</p>
+<p>Then count <em>floating-point operations per training epoch</em> for each. State your conventions before you start: count a multiply–add as one FLOP, take the backward pass as twice the forward pass, and treat a sparse product <span class="math inline">\(\hat{\mathbf{A}}\mathbf{Z}\)</span> with <span class="math inline">\(\mathbf{Z}\in\mathbb{R}^{N\times F'}\)</span> as <span class="math inline">\(|\mathcal{E}|F'\)</span> FLOPs. Remember that SGC’s diffusion happens <strong>once, before training</strong>, not once per epoch. Explain where SGC’s advantage actually comes from — it is not the parameter count.</p>
 </section>
 <section id="exercise-7-when-sgc-fails" class="level3" data-number="9.7">
 <h3 data-number="9.7" class="anchored" data-anchor-id="exercise-7-when-sgc-fails"><span class="header-section-number">9.7</span> Exercise 7 — When SGC fails</h3>
-<p>Reproduce <a href="#fig-sgc-homophily" class="quarto-xref">Figure&nbsp;22</a> with <code>scripts/figures/lecture_03_figures.py</code>. Add a curve at <span class="math inline">\(H(\mathcal{G})=0.05\)</span> (strong heterophily) and explain, using Lecture 2’s spectral argument, why the separability does not recover for any <span class="math inline">\(\ell\)</span>.</p>
+<p>Reproduce <a href="#fig-sgc-homophily" class="quarto-xref">Figure&nbsp;22</a> with <code>scripts/figures/lecture_03_figures.py</code>. The curves are not ordered by homophily — investigate why.</p>
+<p>Compute the spectrum of <span class="math inline">\(\hat{\mathbf{A}}\)</span> for the <span class="math inline">\(H\approx0.95\)</span>, <span class="math inline">\(H\approx0.50\)</span> and <span class="math inline">\(H\approx0.05\)</span> graphs and plot the three histograms. Project the class-indicator vector onto the eigenbasis in each case and report where its energy sits. Use that to predict which curves rise and which stay flat, then check your prediction against the measured curves. Finally: does a <em>linear readout</em> care whether the surviving component alternates sign from step to step? What does your answer imply about using <span class="math inline">\(H(\mathcal{G})\)</span> alone to decide whether to diffuse?</p>
 </section>
 </section>
 <section id="main-takeaways" class="level2" data-number="10">

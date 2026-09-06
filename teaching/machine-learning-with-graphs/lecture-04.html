@@ -345,6 +345,10 @@ window.Quarto = {
 </section>
 <section id="time-varying-graph-signals" class="level2" data-number="2">
 <h2 data-number="2" class="anchored" data-anchor-id="time-varying-graph-signals"><span class="header-section-number">2</span> Time-varying graph signals</h2>
+<div class="checkpoint">
+<p><strong>Notation in this lecture</strong></p>
+<p><span class="math inline">\(M\)</span> here is the <strong>number of time samples</strong>, not the edge count as in Lecture 1 or the mini-batch size as in Lecture 3; edge count is written <span class="math inline">\(|\mathcal{E}|\)</span>. <span class="math inline">\(N\)</span> is the number of nodes, so <span class="math inline">\(\mathbf{X}\in\mathbb{R}^{N\times M}\)</span> is nodes-by-time. Graphs are undirected with nonnegative weights, and <span class="math inline">\(\mathbf{L}\)</span> is the symmetric Laplacian unless stated otherwise. <span class="math inline">\(k\)</span> counts polynomial <em>terms</em>, whose degree is <span class="math inline">\(k-1\)</span>.</p>
+</div>
 <div class="definition">
 <p><strong>Definition 1 — Time-varying graph signal</strong></p>
 <p>Let <span class="math inline">\(\mathcal{G}\)</span> have <span class="math inline">\(N\)</span> nodes. A <strong>time-varying graph signal</strong> is</p>
@@ -436,7 +440,8 @@ Figure&nbsp;4: A signal, its frequency content, and the sinusoids that compose i
 <p>The graph Fourier transform is the same idea with the sinusoids replaced by the eigenvectors of the shift operator.</p>
 <div class="definition">
 <p><strong>Definition 3 — Graph Fourier transform</strong></p>
-<p>Let <span class="math inline">\(\mathbf{S}\)</span> be diagonalizable, <span class="math inline">\(\mathbf{S}=\mathbf{U}\boldsymbol{\Lambda}\mathbf{U}^{-1}\)</span>. The eigenvectors <span class="math inline">\(\mathbf{u}_i\)</span> form a basis of <span class="math inline">\(\mathbb{R}^{N}\)</span>, so any graph signal can be written as</p>
+<p>Throughout this section, take <span class="math inline">\(\mathcal{G}\)</span> <strong>undirected with nonnegative weights</strong> and <span class="math inline">\(\mathbf{S}\)</span> its symmetric Laplacian <span class="math inline">\(\mathbf{L}\)</span> (or <span class="math inline">\(\hat{\mathbf{L}}\)</span>). Symmetry is what guarantees a real spectrum and a real orthonormal eigenbasis; a general diagonalizable shift operator can have complex eigenvalues and eigenvectors, and choosing an undirected graph does not by itself force every shift operator on it to be symmetric.</p>
+<p>With that fixed, write <span class="math inline">\(\mathbf{S}=\mathbf{U}\boldsymbol{\Lambda}\mathbf{U}^{-1}\)</span>. The eigenvectors <span class="math inline">\(\mathbf{u}_i\)</span> form a basis of <span class="math inline">\(\mathbb{R}^{N}\)</span>, so any graph signal can be written as</p>
 <p><span class="math display">\[
 \mathbf{x}=\mathbf{U}\hat{\mathbf{x}},
 \qquad
@@ -494,7 +499,7 @@ Figure&nbsp;6: The GFT on a 220-node sensor graph. Left: coefficient magnitudes 
 <div class="checkpoint">
 <p><strong>Check 2 — The trade-off between spectral and spatial</strong></p>
 <p>The catch is <span class="math inline">\(\mathbf{U}\)</span>. Obtaining it requires an <strong>eigendecomposition, costing <span class="math inline">\(O(N^{3})\)</span></strong>, and <span class="math inline">\(\mathbf{U}\)</span> is dense even when <span class="math inline">\(\mathbf{S}\)</span> is sparse. Compare with the vertex domain, where a <span class="math inline">\(K\)</span>-tap filter costs <span class="math inline">\(O(K|\mathcal{E}|)\)</span> and touches only <span class="math inline">\(K\)</span>-hop neighborhoods.</p>
-<p>So the spectral view is a modeling tool for small and medium graphs, and an analysis tool for large ones. It is also not transferable: <span class="math inline">\(\mathbf{U}\)</span> belongs to one graph, so a model defined directly on <span class="math inline">\(\boldsymbol{\Lambda}\)</span> is not inductive.</p>
+<p>So the spectral view is a modeling tool for small and medium graphs, and an analysis tool for large ones. Transfer is also limited, though the reason is specific: <span class="math inline">\(\mathbf{U}\)</span> and the eigenvalue <em>indices</em> belong to one graph, so a model whose parameters are attached to them — one free coefficient per index, as in the earliest spectral GNNs — cannot move to another graph. A model that learns a <strong>function of <span class="math inline">\(\lambda\)</span></strong>, such as a polynomial, has no such problem: ChebConv’s coefficients transfer perfectly well. Non-inductivity is a property of the parameterization, not of the spectral viewpoint.</p>
 </div>
 </section>
 <section id="chebyshev-graph-convolutions" class="level3" data-number="3.3">
@@ -515,7 +520,12 @@ Figure&nbsp;6: The GFT on a 220-node sensor graph. Left: coefficient magnitudes 
 \]</span></p>
 <p>and the rescaled Laplacian <span class="math inline">\(\tilde{\mathbf{L}}=\dfrac{2\mathbf{L}}{\lambda_N}-\mathbf{I}\)</span>.</p>
 </div>
-<p>Two details explain the design. The rescaling maps the spectrum of <span class="math inline">\(\mathbf{L}\)</span> from <span class="math inline">\([0,\lambda_N]\)</span> onto <span class="math inline">\([-1,1]\)</span>, which is where the Chebyshev polynomials are defined and where they are numerically well behaved. And the three-term recursion <span class="math inline">\(T_i(x)=2xT_{i-1}(x)-T_{i-2}(x)\)</span> is exactly the recursion satisfied by <span class="math inline">\(\mathbf{Z}_i\)</span> — so a degree-<span class="math inline">\(k\)</span> response costs <span class="math inline">\(k\)</span> sparse matrix products and no eigendecomposition at all.</p>
+<p>Two details explain the design. The rescaling maps the spectrum of <span class="math inline">\(\mathbf{L}\)</span> from <span class="math inline">\([0,\lambda_N]\)</span> onto <span class="math inline">\([-1,1]\)</span>, which is where the Chebyshev polynomials are defined and where they are numerically well behaved. And the three-term recursion <span class="math inline">\(T_m(x)=2xT_{m-1}(x)-T_{m-2}(x)\)</span> is exactly the recursion satisfied by the <span class="math inline">\(\mathbf{Z}_i\)</span>.</p>
+<p>Mind the offset, because it is easy to be one out. With <span class="math inline">\(\mathbf{Z}_1=\mathbf{H}^{(\ell)}\)</span> the indexing is</p>
+<p><span class="math display">\[
+\mathbf{Z}_i=T_{i-1}(\tilde{\mathbf{L}})\,\mathbf{H}^{(\ell)},
+\]</span></p>
+<p>so a sum over <span class="math inline">\(i=1,\dots,k\)</span> has <span class="math inline">\(k\)</span> <strong>terms</strong> but degree <span class="math inline">\(k-1\)</span>, and costs <span class="math inline">\(k-1\)</span> sparse products. Throughout this note <span class="math inline">\(k\)</span> counts terms; when a paper says “order <span class="math inline">\(K\)</span>” it usually means the degree, one less.</p>
 <div class="figure-panel">
 <div id="fig-chebyshev" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Left, six oscillating polynomial curves on the interval minus one to one; right, a decreasing low-pass curve and a peaked band-pass curve">
 <figure class="quarto-float quarto-float-fig figure">
@@ -531,7 +541,7 @@ Figure&nbsp;7: Left: the Chebyshev polynomials <span class="math inline">\(T_0,\
 <p>Swapping the polynomial family gives other models: Gegenbauer polynomials yield GegenConv <span class="citation" data-cites="castro2024gegenbauer">(<a href="#ref-castro2024gegenbauer" role="doc-biblioref">Castro-Correa et al. 2024</a>)</span>, Jacobi polynomials yield JacobiConv <span class="citation" data-cites="wang2022powerful">(<a href="#ref-wang2022powerful" role="doc-biblioref">Wang and Zhang 2022</a>)</span>.</p>
 <div class="checkpoint">
 <p><strong>Check 3 — Spectral GNNs in one paragraph</strong></p>
-<p>The GFT diagonalizes graph filters, turning convolution into pointwise multiplication by <span class="math inline">\(h(\lambda)\)</span> and making “graph frequency” precise. Working on the spectrum directly costs an <span class="math inline">\(O(N^{3})\)</span> eigendecomposition. ChebConv recovers an arbitrary degree-<span class="math inline">\(k\)</span> response using only sparse products, through the Chebyshev recursion — and GCN is the special case <span class="math inline">\(k=1\)</span> with tied coefficients.</p>
+<p>The GFT diagonalizes graph filters, turning convolution into pointwise multiplication by <span class="math inline">\(h(\lambda)\)</span> and making “graph frequency” precise. Working on the spectrum directly costs an <span class="math inline">\(O(N^{3})\)</span> eigendecomposition. ChebConv recovers an arbitrary polynomial response using only sparse products, through the Chebyshev recursion — and GCN is the two-term case with tied coefficients, i.e.&nbsp;degree one.</p>
 </div>
 </section>
 </section>
@@ -570,9 +580,13 @@ Figure&nbsp;8: A star on four nodes with edge weights <span class="math inline">
 \mathbf{x}^{\top}\mathbf{L}\mathbf{x}
 =a_{12}(x_1-x_2)^{2}+a_{13}(x_1-x_3)^{2}+a_{14}(x_1-x_4)^{2}.
 \]</span></p>
-<p>Note what is <strong>absent</strong>: no term in <span class="math inline">\((x_3-x_4)\)</span>. Nodes 3 and 4 may differ freely at no cost, because they are not adjacent. Variation is measured along edges, not between arbitrary pairs.</p>
+<p>Note what is <strong>absent</strong>: no <em>direct</em> term in <span class="math inline">\((x_3-x_4)\)</span>. Variation is measured along edges, not between arbitrary pairs. That does not make nodes 3 and 4 free of one another — both are tied to the centre, so pushing them apart still costs through <span class="math inline">\(x_1\)</span>. What it means is that the penalty is a sum over edges, so a difference between two non-adjacent nodes is only ever penalized indirectly, through the paths joining them.</p>
 <p><strong>Minimum.</strong> Take <span class="math inline">\(x_1=x_2=x_3=x_4=1\)</span>. Every difference vanishes, so <span class="math inline">\(\mathbf{x}^{\top}\mathbf{L}\mathbf{x}=0\)</span>. Since <span class="math inline">\(a_{ij}\geq0\)</span> makes every term nonnegative, this is the global minimum — and it is the constant eigenvector <span class="math inline">\(\mathbf{u}_1\)</span> with <span class="math inline">\(\lambda_1=0\)</span> from <a href="#fig-eigenvectors" class="quarto-xref">Figure&nbsp;5</a>.</p>
-<p><strong>Maximum.</strong> Maximize the sign changes across edges: <span class="math inline">\(x_1=1\)</span>, <span class="math inline">\(x_2=x_3=x_4=-1\)</span>. Each difference is <span class="math inline">\(2\)</span>, so</p>
+<p><strong>Maximum — but only under a constraint.</strong> There is no unconstrained maximum: replacing <span class="math inline">\(\mathbf{x}\)</span> by <span class="math inline">\(c\mathbf{x}\)</span> multiplies the form by <span class="math inline">\(c^{2}\)</span>, so it grows without bound. The question has to be posed on a bounded set, and the answer depends which one:</p>
+<ul>
+<li>Under <span class="math inline">\(\Vert\mathbf{x}\Vert_2=1\)</span>, the maximum is <span class="math inline">\(\lambda_{\max}(\mathbf{L})\)</span>, attained at the top eigenvector. This is the Rayleigh-quotient statement and the one to remember.</li>
+<li>Under <span class="math inline">\(x_i\in[-1,1]\)</span>, maximizing the sign changes across edges works: <span class="math inline">\(x_1=1\)</span>, <span class="math inline">\(x_2=x_3=x_4=-1\)</span> makes every difference <span class="math inline">\(2\)</span>, giving</li>
+</ul>
 <p><span class="math display">\[
 \mathbf{x}^{\top}\mathbf{L}\mathbf{x}=4(a_{12}+a_{13}+a_{14}).
 \]</span></p>
@@ -588,7 +602,7 @@ E(\mathbf{X})=\sum_{s=1}^{M}\mathbf{x}_s^{\top}\mathbf{L}\mathbf{x}_s=\operatorn
 <p><span class="math display">\[
 E(\mathbf{X}\mathbf{D}_h)=\sum_{s=2}^{M}(\mathbf{x}_s-\mathbf{x}_{s-1})^{\top}\mathbf{L}(\mathbf{x}_s-\mathbf{x}_{s-1}).
 \]</span></p>
-<p>The intuition is physical. A temperature field can have large spatial gradients — a valley is genuinely colder than a ridge — so <span class="math inline">\(\mathbf{x}_s\)</span> need not be smooth. But when the sampling rate is high, <em>how much things changed since the last reading</em> varies gently across the network, because neighboring sensors experience the same weather. Nature rarely moves abruptly, and even more rarely does so at one node and not its neighbor.</p>
+<p>The intuition is physical. A temperature field can have large spatial gradients — a valley is genuinely colder than a ridge — so <span class="math inline">\(\mathbf{x}_s\)</span> need not be smooth. But when the sampling rate is high, <em>how much things changed since the last reading</em> is small and varies gently across the network, because neighboring sensors experience the same weather.</p>
 <div class="figure-panel">
 <div id="fig-sobolev-intuition" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A signal matrix, two consecutive columns being subtracted, and the difference evaluated on a small graph">
 <figure class="quarto-float quarto-float-fig figure">
@@ -602,16 +616,23 @@ Figure&nbsp;9: The quantity being regularized: at each step, take the difference
 </div>
 </div>
 <div class="figure-panel">
-<div id="fig-temporal-difference" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A log-scale curve of per-step variation, with the difference curve well below the signal curve, and a bar chart of the totals">
+<div id="fig-temporal-difference" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A per-step variation curve, a bar chart of unnormalized totals, and a bar chart of energy-normalized quotients pointing the opposite way">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-temporal-difference-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../../assets/figures/temporal-difference-smoothness.svg" class="img-fluid figure-img" alt="A log-scale curve of per-step variation, with the difference curve well below the signal curve, and a bar chart of the totals">
+<img src="../../assets/figures/temporal-difference-smoothness.svg" class="img-fluid figure-img" alt="A per-step variation curve, a bar chart of unnormalized totals, and a bar chart of energy-normalized quotients pointing the opposite way">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-temporal-difference-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;10: The assumption, checked. On a 220-node sensor graph with a slowly evolving field, the temporal difference is markedly smoother than the signal itself at every time step, and about <span class="math inline">\(4\times\)</span> smoother in total. This is the entire justification for putting <span class="math inline">\(\mathbf{X}\mathbf{D}_h\)</span> rather than <span class="math inline">\(\mathbf{X}\)</span> inside the regularizer.
+Figure&nbsp;10: The assumption, checked — and only half confirmed. On a 220-node sensor graph with a slowly evolving synthetic field: <strong>left</strong>, the per-step quadratic form of the temporal difference sits well below that of the signal; <strong>middle</strong>, its total is <span class="math inline">\(3.8\times\)</span> smaller, which is what the regularizer of <a href="#eq-tgsr" class="quarto-xref">Equation&nbsp;1</a> actually penalizes; <strong>right</strong>, the same comparison after dividing out the energy, where the difference is <span class="math inline">\(21\times\)</span> <strong>rougher</strong>. Both numbers are correct and they measure different things — see Check 4.
 </figcaption>
 </figure>
 </div>
+</div>
+<div class="checkpoint">
+<p><strong>Check 4 — “Smoother” has two meanings, and only one of them holds here</strong></p>
+<p>This is worth slowing down for, because it is the kind of claim that is easy to assert and easy to get wrong.</p>
+<p>The temporal difference has <span class="math inline">\(3.8\times\)</span> less total variation than the signal. But it also has <span class="math inline">\(78\times\)</span> less <strong>energy</strong>: differencing consecutive snapshots of a slowly evolving field produces something small. Divide the variation by the energy and the difference comes out <span class="math inline">\(21\times\)</span> rougher, not smoother. So the gap in the middle panel is overwhelmingly a statement about <strong>amplitude</strong>, not about relative frequency content.</p>
+<p>Does that break the method? No — because the regularizer penalizes the <em>unnormalized</em> quantity. A prior works by placing the true signal near the minimizer of the penalty, and <span class="math inline">\(\mathbf{X}\mathbf{D}_h\)</span> genuinely lands closer than <span class="math inline">\(\mathbf{X}\)</span> does. The reconstruction experiment below confirms this directly, and that is the evidence that counts.</p>
+<p>But state the claim carefully. “The temporal difference is smoother on the graph” is <strong>not</strong> what this experiment shows, and on this synthetic field it is false in the normalized sense — differencing is a high-pass operation in time, and here it amplifies the faster-varying modes regardless of how smooth they are in space. For the normalized claim to hold you would need the fast-changing components to also be the spatially smooth ones, which is a real physical assumption about the data, not a property of the operator <span class="math inline">\(\mathbf{D}_h\)</span>.</p>
 </div>
 </section>
 <section id="the-optimization-problem" class="level3" data-number="4.3">
@@ -651,7 +672,17 @@ Figure&nbsp;12: The full pipeline: build the graph from sensor coordinates by <s
 </section>
 <section id="solving-it" class="level3" data-number="4.4">
 <h3 data-number="4.4" class="anchored" data-anchor-id="solving-it"><span class="header-section-number">4.4</span> Solving it</h3>
-<p><a href="#eq-tgsr" class="quarto-xref">Equation&nbsp;1</a> is a convex quadratic, so it has a closed-form solution — which requires inverting an <span class="math inline">\(MN\times MN\)</span> matrix. For <span class="math inline">\(N=1000\)</span> sensors over <span class="math inline">\(M=500\)</span> time steps that is a <span class="math inline">\(500\,000\times500\,000\)</span> inverse. Not a good idea.</p>
+<p><a href="#eq-tgsr" class="quarto-xref">Equation&nbsp;1</a> is a convex quadratic, so its stationary condition is a linear system. Solving it directly would mean handling an <span class="math inline">\(MN\times MN\)</span> operator: for <span class="math inline">\(N=1000\)</span> sensors over <span class="math inline">\(M=500\)</span> time steps, <span class="math inline">\(500\,000\times500\,000\)</span>. Not a good idea.</p>
+<div class="checkpoint">
+<p><strong>Check 5 — Convex does not mean uniquely solvable</strong></p>
+<p>Being convex gives a global minimum; it does not give a <em>unique</em> one. Vectorizing, the Hessian is</p>
+<p><span class="math display">\[
+\mathbf{H}=\operatorname{diag}(\operatorname{vec}\mathbf{J})+\upsilon\,(\mathbf{D}_h\mathbf{D}_h^{\top}\otimes\mathbf{L}),
+\]</span></p>
+<p>and the solution is unique exactly when <span class="math inline">\(\mathbf{H}\)</span> is positive definite. Both terms are only positive <strong>semi</strong>-definite, so uniqueness depends on their null spaces intersecting trivially.</p>
+<p>Here is the failure case to keep in mind. <span class="math inline">\(\mathbf{D}_h\mathbf{D}_h^{\top}\)</span> annihilates signals constant in time, and <span class="math inline">\(\mathbf{L}\)</span> annihilates signals constant over nodes. So if some sensor <span class="math inline">\(i\)</span> is <strong>unobserved at every time step</strong>, adding any constant offset to that sensor’s whole series changes neither the data term (it observes nothing there) nor the temporal-difference penalty (a constant offset has zero difference). That sensor’s level is unidentifiable, and no amount of convexity recovers it.</p>
+<p>Replacing <span class="math inline">\(\mathbf{L}\)</span> by a positive definite <span class="math inline">\((\mathbf{L}+\epsilon\mathbf{I})^{\beta}\)</span> fixes the <em>node</em> direction but not this one — the null space of <span class="math inline">\(\mathbf{D}_h\mathbf{D}_h^{\top}\)</span> survives. Reconstruction needs a sampling condition: every sensor observed at least once, and enough coverage for the smoothness prior to bridge the gaps.</p>
+</div>
 <p>Use gradient descent instead. Writing <span class="math inline">\(f_u(\tilde{\mathbf{X}})\)</span> for the objective,</p>
 <p><span class="math display">\[
 \nabla_{\tilde{\mathbf{X}}}f_u(\tilde{\mathbf{X}})
@@ -666,7 +697,7 @@ Figure&nbsp;12: The full pipeline: build the graph from sensor coordinates by <s
 <img src="../../assets/figures/reconstruction-smoothness.svg" class="img-fluid figure-img" alt="Left, three error curves against observed fraction with the temporal-difference curve far below the others; right, condition number against epsilon on log axes">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-reconstruction-smoothness-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;13: The claim, measured. A 220-node graph, 60 time steps, entries deleted at random. Doing nothing leaves the error near 1. Regularizing <span class="math inline">\(\mathbf{X}\)</span> itself helps. Regularizing <span class="math inline">\(\mathbf{X}\mathbf{D}_h\)</span> is in a different class: at 10% of entries observed it reaches 20% error, where smoothing the signal directly reaches 67%. The regularization weight <span class="math inline">\(\upsilon\)</span> was tuned separately for each, so this compares the two priors, not two hyperparameters.
+Figure&nbsp;13: <strong>An oracle-tuned synthetic illustration</strong>, not a validation protocol. A 220-node random geometric graph, 60 time steps, a synthetic field built from slowly evolving low-frequency modes, entries deleted at random. Doing nothing leaves the error near 1; regularizing <span class="math inline">\(\mathbf{X}\)</span> itself helps; regularizing <span class="math inline">\(\mathbf{X}\mathbf{D}_h\)</span> reaches 20% error at 10% observed where smoothing the signal directly reaches 67%. Read two caveats with it. The weight <span class="math inline">\(\upsilon\)</span> was chosen for each method by minimizing error against the <strong>complete ground truth, including the hidden entries</strong> — an oracle choice no real deployment can make; a validation-mask protocol would give worse absolute numbers for every method. And the field was <em>constructed</em> to have slowly evolving low-frequency modes, which is exactly the assumption the temporal-difference prior encodes.
 </figcaption>
 </figure>
 </div>
@@ -676,7 +707,7 @@ Figure&nbsp;13: The claim, measured. A 220-node graph, 60 time steps, entries de
 <h3 data-number="4.5" class="anchored" data-anchor-id="sobolev-smoothness"><span class="header-section-number">4.5</span> Sobolev smoothness</h3>
 <p>Giraldo et al. <span class="citation" data-cites="giraldo2022reconstruction">(<a href="#ref-giraldo2022reconstruction" role="doc-biblioref">Giraldo et al. 2022</a>)</span> observed that <a href="#eq-tgsr" class="quarto-xref">Equation&nbsp;1</a> is ill-posed in a specific sense, and that this slows convergence.</p>
 <div class="checkpoint">
-<p><strong>Check 4 — Why <span class="math inline">\(\mathbf{L}\)</span> conditions the problem badly</strong></p>
+<p><strong>Check 6 — Why <span class="math inline">\(\mathbf{L}\)</span> conditions the problem badly</strong></p>
 <p>The condition number of a square matrix,</p>
 <p><span class="math display">\[
 \kappa(\mathbf{L})=\frac{|\lambda_{\max}(\mathbf{L})|}{|\lambda_{\min}(\mathbf{L})|},
@@ -712,7 +743,7 @@ Figure&nbsp;14: Why conditioning matters for gradient descent. On a well-conditi
 </div>
 </div>
 <div class="checkpoint">
-<p><strong>Check 5 — What is and is not shown here</strong></p>
+<p><strong>Check 7 — What is and is not shown here</strong></p>
 <p><a href="#fig-reconstruction-smoothness" class="quarto-xref">Figure&nbsp;13</a> establishes two things directly: the temporal-difference prior is dramatically better than the static one, and <span class="math inline">\(\kappa(\mathbf{L}+\epsilon\mathbf{I})^{\beta}\)</span> is finite while <span class="math inline">\(\kappa(\mathbf{L})\)</span> is not.</p>
 <p>It does <strong>not</strong> show a convergence speed-up from the Sobolev term. On this small synthetic problem the data term already supplies curvature in the directions that matter, so the two objectives descend at nearly the same rate. The empirical advantage reported in <span class="citation" data-cites="giraldo2022reconstruction">(<a href="#ref-giraldo2022reconstruction" role="doc-biblioref">Giraldo et al. 2022</a>)</span> is measured on real datasets, and you should read the paper rather than take it from a 220-node simulation. Reproducing it — or failing to — is Exercise 6.</p>
 </div>
@@ -739,20 +770,20 @@ Figure&nbsp;15: Applications of these methods: global COVID-19 case counts on a 
 <img src="../../assets/figures/gegenbauer-reconstruction-pipeline.png" class="img-fluid figure-img" alt="A pipeline from an underwater experiment through a k-NN graph and encoder-decoder architecture to a reconstructed signal matrix">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gegenbauer-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;16: The learned pipeline: build the graph, sample the signal, pass it through a Chebyshev-based autoencoder, and recover the full time-varying signal. Source: <span class="citation" data-cites="castro2024gegenbauer">(<a href="#ref-castro2024gegenbauer" role="doc-biblioref">Castro-Correa et al. 2024</a>)</span>.
+Figure&nbsp;16: The learned pipeline, <strong>reproduced from GegenGNN</strong> <span class="citation" data-cites="castro2024gegenbauer">(<a href="#ref-castro2024gegenbauer" role="doc-biblioref">Castro-Correa et al. 2024</a>)</span>: build the <span class="math inline">\(k\)</span>-NN graph from sensor coordinates, sample the signal, pass it through an encoder–decoder, and recover the full time-varying signal. Note two differences from the simplified model described below: the published architecture uses <strong>Gegenbauer</strong> polynomials <span class="math inline">\(C_k^{(\alpha)}\)</span> rather than Chebyshev, and it feeds the temporal difference into the loss as shown. We keep the pipeline shape and substitute Chebyshev branches, which are the family introduced in <a href="#sec-spectral" class="quarto-xref">Section&nbsp;3</a>.
 </figcaption>
 </figure>
 </div>
 </div>
 <p>Each layer is a <strong>cascade of Chebyshev convolutions</strong> of increasing order <span class="math inline">\(\rho=0,\dots,\zeta-1\)</span>, combined linearly.</p>
 <div class="figure-panel">
-<div id="fig-cheb-layer" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A block diagram with the Laplacian and signal feeding several Chebyshev convolution branches merged by a linear combination block">
+<div id="fig-cheb-layer" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A block diagram with the Laplacian and signal feeding several polynomial convolution branches merged by a linear combination block">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-cheb-layer-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../../assets/figures/chebyshev-cascade-layer.png" class="img-fluid figure-img" alt="A block diagram with the Laplacian and signal feeding several Chebyshev convolution branches merged by a linear combination block">
+<img src="../../assets/figures/chebyshev-cascade-layer.png" class="img-fluid figure-img" alt="A block diagram with the Laplacian and signal feeding several polynomial convolution branches merged by a linear combination block">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cheb-layer-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;17: One layer: the signal enters <span class="math inline">\(\zeta\)</span> branches, branch <span class="math inline">\(\rho\)</span> applying a Chebyshev convolution of order <span class="math inline">\(\rho\)</span>, and the outputs are merged by a learned linear combination.
+Figure&nbsp;17: One layer: the signal enters <span class="math inline">\(\zeta\)</span> branches, branch <span class="math inline">\(\rho\)</span> applying a polynomial convolution of order <span class="math inline">\(\rho\)</span>, and the outputs are merged by a learned linear combination <span class="math inline">\(\sum_\rho\mu_\rho^{(\ell)}\mathbf{Z}_\rho^{(\ell)}\)</span>. This panel is <strong>taken from the GegenGNN paper</strong>, so the symbols inside it are Gegenbauer: <span class="math inline">\(C_k^{(\alpha)}\)</span> and <span class="math inline">\(2\alpha\tilde{\mathbf{L}}\)</span> where the simplified model in the text would have <span class="math inline">\(T_k\)</span> and <span class="math inline">\(2\tilde{\mathbf{L}}\)</span>. The cascade-and-combine structure is the same; only the polynomial family differs.
 </figcaption>
 </figure>
 </div>
@@ -786,10 +817,11 @@ Figure&nbsp;18: The autoencoder: hidden width contracts to a latent space and ex
 \]</span></p>
 <p>An MSE term on the observed entries plus the Sobolev term from <a href="#eq-sobolev" class="quarto-xref">Equation&nbsp;2</a>. Train it with Adam or SGD.</p>
 <div class="checkpoint">
-<p><strong>Check 6 — Optimization or network?</strong></p>
+<p><strong>Check 8 — Optimization or network?</strong></p>
 <p>They solve the same problem with the same prior, and the difference is where the effort goes.</p>
 <p>The <strong>optimization</strong> approach has no training data, no training phase, and few hyperparameters (<span class="math inline">\(\upsilon\)</span>, <span class="math inline">\(\epsilon\)</span>, <span class="math inline">\(\beta\)</span>); it needs a bespoke solver, and it starts from scratch on every new signal.</p>
-<p>The <strong>network</strong> approach reuses a standard optimizer and amortizes the cost across signals once trained; but hyperparameter tuning is harder, and it needs data to train on.</p>
+<p>The <strong>network</strong> approach reuses a standard optimizer and can amortize the cost across signals; but hyperparameter tuning is harder, and it needs data to train on.</p>
+<p>Be precise about that amortization, because it does not come for free from using a network. Reuse across signals requires a <strong>training protocol</strong> in which the model sees a collection of signals — a set of incomplete matrices with known held-out entries — and is evaluated on signals it did not train on. If instead you fit the network to one incomplete matrix and read off its reconstruction, you have used a neural network as an optimizer for a single instance, and you have amortized nothing. Both setups appear in the literature; they answer different questions. You also have to specify how missing entries enter the input — a fill value, and whether the mask <span class="math inline">\(\mathbf{J}\)</span> is itself given to the network as a channel.</p>
 </div>
 </section>
 </section>
@@ -835,7 +867,7 @@ x_m=\sum_{i=1}^{K}\phi_i x_{m-i}+\epsilon_m,
 \tag{3}\]</span></span></p>
 <p>with <span class="math inline">\((p+1)K\)</span> parameters regardless of <span class="math inline">\(N\)</span>. Reading it off: the value at a node at time <span class="math inline">\(m\)</span> depends on its own past <span class="math inline">\(K\)</span> values <strong>and</strong> on the past values of its <span class="math inline">\(p\)</span>-hop neighborhood. Setting <span class="math inline">\(p=1\)</span> gives the simplest useful case, <span class="math inline">\(\mathbf{x}_m=\sum_i(h_{0,i}\mathbf{I}+h_{1,i}\mathbf{S})\mathbf{x}_{m-i}+\boldsymbol{\epsilon}_m\)</span> — each node’s own history plus its immediate neighbors’.</p>
 <div class="checkpoint">
-<p><strong>Check 7 — Two axes, not one</strong></p>
+<p><strong>Check 9 — Two axes, not one</strong></p>
 <p>An ordinary time series has one axis of dependence: the past. A spatiotemporal graph signal has two, and <a href="#eq-graph-ar" class="quarto-xref">Equation&nbsp;3</a> has one index for each — <span class="math inline">\(i\)</span> runs over time lags and <span class="math inline">\(j\)</span> over graph hops. Traffic at an intersection depends on that intersection an hour ago <em>and</em> on the upstream intersections a few minutes ago.</p>
 </div>
 </section>
@@ -868,12 +900,12 @@ Figure&nbsp;20: The architecture of <a href="#eq-forecast-gnn" class="quarto-xre
 <section id="multiple-horizons" class="level3" data-number="5.3">
 <h3 data-number="5.3" class="anchored" data-anchor-id="multiple-horizons"><span class="header-section-number">5.3</span> Multiple horizons</h3>
 <p>Predicting <span class="math inline">\(H\)</span> steps ahead rather than one admits two designs.</p>
-<p><strong>MLP head.</strong> Produce all <span class="math inline">\(H\)</span> horizons in one forward pass by projecting the shared representation:</p>
+<p><strong>MLP head.</strong> Produce all <span class="math inline">\(H\)</span> horizons in one forward pass by projecting a shared hidden representation. Let the graph layers produce <span class="math inline">\(\mathbf{Z}_m\in\mathbb{R}^{N\times F}\)</span>, with <span class="math inline">\(F\)</span> hidden channels per node, and read out with <span class="math inline">\(\mathbf{W}_h\in\mathbb{R}^{F\times H}\)</span>:</p>
 <p><span class="math display">\[
-\tilde{\mathbf{X}}_m=\sigma\!\left(\left[\sum_{i=1}^{K}\alpha_i\sigma\!\left(\sum_{j=0}^{p}h_{j,i}\mathbf{S}^{j}\mathbf{x}_{m-i}\right)\right]\mathbf{w}_h^{\top}\right)
-\in\mathbb{R}^{N\times H},
+\tilde{\mathbf{X}}_m=\sigma\!\left(\mathbf{Z}_m\mathbf{W}_h\right)\in\mathbb{R}^{N\times H},
 \]</span></p>
-<p>with <span class="math inline">\(\mathbf{w}_h\in\mathbb{R}^{H\times1}\)</span> learnable, and MSE taken between the matrices <span class="math inline">\(\tilde{\mathbf{X}}_m\)</span> and <span class="math inline">\(\mathbf{X}_m\)</span>.</p>
+<p>with MSE taken between <span class="math inline">\(\tilde{\mathbf{X}}_m\)</span> and <span class="math inline">\(\mathbf{X}_m\)</span>.</p>
+<p>The width <span class="math inline">\(F\)</span> matters. If the hidden representation is a single value per node — <span class="math inline">\(\mathbf{z}_m\in\mathbb{R}^{N\times1}\)</span> and <span class="math inline">\(\mathbf{w}_h\in\mathbb{R}^{1\times H}\)</span> — then the preactivation <span class="math inline">\(\mathbf{z}_m\mathbf{w}_h\)</span> has <strong>rank one</strong>: every node’s forecast is the same <span class="math inline">\(H\)</span>-step profile scaled by one number. That is a severe restriction, not a general head, and it is worth recognizing when you see it.</p>
 <p><strong>Recursive.</strong> Feed the model’s own prediction back in. Writing <span class="math inline">\(\texttt{GNN}_{\mathcal{G},\boldsymbol{\theta}}(\cdot)\)</span> for <a href="#eq-forecast-gnn" class="quarto-xref">Equation&nbsp;4</a>,</p>
 <p><span class="math display">\[
 \tilde{\mathbf{x}}_m=\texttt{GNN}_{\mathcal{G},\boldsymbol{\theta}}(\mathbf{x}_{m-1},\ldots,\mathbf{x}_{m-K}),
@@ -882,12 +914,12 @@ Figure&nbsp;20: The architecture of <a href="#eq-forecast-gnn" class="quarto-xre
 \]</span></p>
 <p>and so on for <span class="math inline">\(H-1\)</span> steps, assembling <span class="math inline">\(\tilde{\mathbf{X}}_m\in\mathbb{R}^{N\times H}\)</span>.</p>
 <div class="checkpoint">
-<p><strong>Check 8 — Two things to notice about the recursion</strong></p>
+<p><strong>Check 10 — Two things to notice about the recursion</strong></p>
 <ol type="1">
 <li><strong>The window shifts.</strong> Each step drops the oldest true observation and prepends the newest prediction, so the input stays <span class="math inline">\(K\)</span> wide and grows progressively more synthetic.</li>
 <li><strong>The parameters are shared.</strong> The same <span class="math inline">\(\boldsymbol{\theta}\)</span> is used at every horizon — one model, applied <span class="math inline">\(H\)</span> times, not <span class="math inline">\(H\)</span> models.</li>
 </ol>
-<p>The recursive formulation works better in practice. It also compounds its own errors, which is why forecast accuracy degrades with the horizon.</p>
+<p>Which is better is an empirical question, not a settled one. The recursive rollout shares parameters across horizons and matches the one-step training objective, but it is trained on true inputs and run on its own predictions — an exposure mismatch that compounds errors as <span class="math inline">\(H\)</span> grows. The direct head avoids that compounding and can specialize per horizon, at the cost of more parameters and no guarantee of consistency between horizons. Recursive tends to do better at short horizons and on smooth, strongly auto-correlated signals; direct tends to do better at long horizons. Standard practice is to try both.</p>
 </div>
 </section>
 <section id="graphcast" class="level3" data-number="5.4">
@@ -895,7 +927,7 @@ Figure&nbsp;20: The architecture of <a href="#eq-forecast-gnn" class="quarto-xre
 <p>The clearest large-scale demonstration is <strong>GraphCast</strong> <span class="citation" data-cites="lam2023learning">(<a href="#ref-lam2023learning" role="doc-biblioref"><span class="nocase">Lam et al.</span> 2023</a>)</span>, DeepMind’s medium-range weather model.</p>
 <ul>
 <li>It forecasts up to <strong>10 days</strong> ahead, learning from historical reanalysis data instead of integrating the equations of motion numerically.</li>
-<li>The atmosphere is represented as a <strong>global multi-mesh graph</strong> built on hierarchical icosahedral meshes, not a latitude–longitude grid — which avoids the pole distortion a regular grid suffers.</li>
+<li>The atmosphere is <strong>encoded from</strong> a latitude–longitude grid onto a <strong>global multi-mesh graph</strong> built on hierarchical icosahedral meshes, processed there, then <strong>decoded back</strong> to the grid. The mesh is where the message passing happens, which avoids the pole distortion a regular grid suffers; the grid is still the input and output format.</li>
 <li>Message passing across mesh resolutions propagates information locally and globally in the same forward pass.</li>
 <li>It is <strong>auto-regressive</strong>, exactly as above: each output state is computed from previous states plus multi-resolution message passing.</li>
 <li>It produces a 10-day forecast in <strong>under a minute on one TPU</strong>, against roughly an hour for traditional numerical weather prediction.</li>
@@ -924,7 +956,7 @@ Figure&nbsp;20: The architecture of <a href="#eq-forecast-gnn" class="quarto-xre
 </section>
 <section id="exercise-5-chebyshev-recursion" class="level3" data-number="6.5">
 <h3 data-number="6.5" class="anchored" data-anchor-id="exercise-5-chebyshev-recursion"><span class="header-section-number">6.5</span> Exercise 5 — Chebyshev recursion</h3>
-<p>Verify that <span class="math inline">\(\mathbf{Z}_i=2\tilde{\mathbf{L}}\mathbf{Z}_{i-1}-\mathbf{Z}_{i-2}\)</span> implements <span class="math inline">\(T_i(\tilde{\mathbf{L}})\mathbf{H}^{(\ell)}\)</span>, and explain why <span class="math inline">\(\tilde{\mathbf{L}}=2\mathbf{L}/\lambda_N-\mathbf{I}\)</span> rather than <span class="math inline">\(\mathbf{L}\)</span> itself.</p>
+<p>Verify that <span class="math inline">\(\mathbf{Z}_i=2\tilde{\mathbf{L}}\mathbf{Z}_{i-1}-\mathbf{Z}_{i-2}\)</span> with <span class="math inline">\(\mathbf{Z}_1=\mathbf{H}^{(\ell)}\)</span> implements <span class="math inline">\(T_{i-1}(\tilde{\mathbf{L}})\mathbf{H}^{(\ell)}\)</span> — note the index offset. State the degree and the number of sparse products for a sum over <span class="math inline">\(i=1,\dots,k\)</span>. Then explain why <span class="math inline">\(\tilde{\mathbf{L}}=2\mathbf{L}/\lambda_N-\mathbf{I}\)</span> rather than <span class="math inline">\(\mathbf{L}\)</span> itself.</p>
 </section>
 <section id="exercise-6-does-the-sobolev-term-speed-things-up" class="level3" data-number="6.6">
 <h3 data-number="6.6" class="anchored" data-anchor-id="exercise-6-does-the-sobolev-term-speed-things-up"><span class="header-section-number">6.6</span> Exercise 6 — Does the Sobolev term speed things up?</h3>
@@ -936,7 +968,7 @@ Figure&nbsp;20: The architecture of <a href="#eq-forecast-gnn" class="quarto-xre
 </section>
 <section id="exercise-8-horizons" class="level3" data-number="6.8">
 <h3 data-number="6.8" class="anchored" data-anchor-id="exercise-8-horizons"><span class="header-section-number">6.8</span> Exercise 8 — Horizons</h3>
-<p>Explain why the recursive formulation compounds errors while the MLP head does not, and why the recursive one is nonetheless usually more accurate.</p>
+<p>Explain why the recursive rollout compounds errors while the direct head does not. Then set up the comparison rather than assuming its outcome: name two properties of a signal that would favour the recursive strategy and two that would favour the direct one, and describe the experiment — horizons, splits, baselines — that would decide between them for a given dataset. Persistence (predict <span class="math inline">\(\mathbf{x}_{m-1}\)</span> for every horizon) is the baseline both must beat.</p>
 </section>
 </section>
 <section id="main-takeaways" class="level2" data-number="7">
@@ -944,12 +976,12 @@ Figure&nbsp;20: The architecture of <a href="#eq-forecast-gnn" class="quarto-xre
 <ol type="1">
 <li>A <strong>time-varying graph signal</strong> <span class="math inline">\(\mathbf{X}\in\mathbb{R}^{N\times M}\)</span> carries a time series at every node; the temporal difference <span class="math inline">\(\mathbf{X}\mathbf{D}_h\)</span> is the object most of the modeling acts on.</li>
 <li>The <strong>GFT</strong> diagonalizes graph filters and makes “graph frequency” precise: the eigenvalue is the frequency, and smooth signals concentrate their energy at the low end.</li>
-<li>Working on the spectrum costs <span class="math inline">\(O(N^{3})\)</span> and is not inductive. <strong>ChebConv</strong> buys an arbitrary degree-<span class="math inline">\(k\)</span> response with sparse products only, and GCN is its <span class="math inline">\(k=1\)</span> special case.</li>
-<li><strong>Reconstruction</strong> is an error term on the observed entries plus a smoothness regularizer, and the regularizer belongs on <span class="math inline">\(\mathbf{X}\mathbf{D}_h\)</span> — a choice worth several factors of accuracy.</li>
-<li><span class="math inline">\(\kappa(\mathbf{L})=\infty\)</span> because <span class="math inline">\(\lambda_{\min}(\mathbf{L})=0\)</span>. <strong>Sobolev smoothness</strong> replaces <span class="math inline">\(\mathbf{L}\)</span> with <span class="math inline">\((\mathbf{L}+\epsilon\mathbf{I})^{\beta}\)</span> and makes the conditioning finite and tunable.</li>
-<li>The same problem solves with a <strong>Chebyshev autoencoder</strong> and the same loss. Optimization needs no data; the network amortizes across signals. Both are shallow, for the usual reason.</li>
+<li>Working on the spectrum directly costs an <span class="math inline">\(O(N^{3})\)</span> eigendecomposition, and parameterizing per eigenvalue <em>index</em> does not transfer between graphs. <strong>ChebConv</strong> learns a function of <span class="math inline">\(\lambda\)</span> instead, buying a polynomial response with sparse products only; GCN is its degree-one, tied-coefficient case.</li>
+<li><strong>Reconstruction</strong> is an error term on the observed entries plus a smoothness regularizer, and the regularizer belongs on <span class="math inline">\(\mathbf{X}\mathbf{D}_h\)</span> — worth several factors of accuracy here. The reason is that the temporal difference has far smaller <em>total variation</em>, which is what the penalty sees; it is not smoother in the energy-normalized sense, and Check 4 shows why the distinction matters.</li>
+<li><span class="math inline">\(\kappa(\mathbf{L})=\infty\)</span> because <span class="math inline">\(\lambda_{\min}(\mathbf{L})=0\)</span>. <strong>Sobolev smoothness</strong> replaces <span class="math inline">\(\mathbf{L}\)</span> with <span class="math inline">\((\mathbf{L}+\epsilon\mathbf{I})^{\beta}\)</span>, making that factor’s conditioning finite and tunable — but it does not remove the null space of <span class="math inline">\(\mathbf{D}_h\mathbf{D}_h^{\top}\)</span>, so uniqueness still needs a sampling condition (Check 5).</li>
+<li>The same problem solves with a <strong>polynomial-filter autoencoder</strong> and the same loss. Optimization needs no data; the network can amortize across signals, but only under a training protocol that actually trains on a collection of them. Both are shallow, for the usual reason.</li>
 <li><strong>Forecasting</strong> is auto-regressive modeling where the AR coefficients become graph filters, giving dependence on both past time steps and nearby nodes with a parameter count independent of <span class="math inline">\(N\)</span>.</li>
-<li>Multiple horizons come from an <strong>MLP head</strong> or a <strong>recursive</strong> rollout with shared parameters; the recursive version usually wins. <strong>GraphCast</strong> is this recipe at planetary scale.</li>
+<li>Multiple horizons come from a <strong>direct head</strong> on an <span class="math inline">\(N\times F\)</span> hidden representation or a <strong>recursive</strong> rollout with shared parameters; which wins is an empirical question, and both must beat persistence. <strong>GraphCast</strong> is this recipe at planetary scale, encoding from and decoding to a latitude–longitude grid while processing on a multimesh.</li>
 </ol>
 </section>
 <section id="references-and-provenance" class="level2 unnumbered">
