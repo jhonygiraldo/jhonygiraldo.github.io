@@ -66,7 +66,7 @@ div.csl-indent {
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-e3f251471e60ae6bf9c8e95d70d1e8a4.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-225b7576c4b18957a96cc2c9d56e1c7c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -710,12 +710,13 @@ Figure&nbsp;20: Measured on a 1500-node graph with 7461 edges. Partitioning by c
 <div class="definition">
 <p><strong>Definition 4 — SGC</strong></p>
 <p><span id="eq-sgc"><span class="math display">\[
+\begin{aligned}
 \bar{\mathbf{Y}}=f(\mathbf{X};\mathbf{A},\boldsymbol{\Theta})
-=\operatorname{softmax}\!\left(\hat{\mathbf{A}}^{\ell}\mathbf{X}\mathbf{W}\right),
+&amp;=\operatorname{softmax}\!\left(\hat{\mathbf{A}}^{\ell}\mathbf{X}\mathbf{W}\right),\\[4pt]
+\hat{\mathbf{A}}&amp;=\tilde{\mathbf{D}}^{-1/2}\tilde{\mathbf{A}}\tilde{\mathbf{D}}^{-1/2},
 \qquad
-\hat{\mathbf{A}}=\tilde{\mathbf{D}}^{-1/2}\tilde{\mathbf{A}}\tilde{\mathbf{D}}^{-1/2},
-\quad
 \tilde{\mathbf{A}}=\mathbf{A}+\mathbf{I}.
+\end{aligned}
 \tag{1}\]</span></span></p>
 </div>
 </section>

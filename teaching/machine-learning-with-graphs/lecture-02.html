@@ -101,7 +101,7 @@ div.csl-indent {
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-e3f251471e60ae6bf9c8e95d70d1e8a4.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-225b7576c4b18957a96cc2c9d56e1c7c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -828,15 +828,16 @@ Figure&nbsp;13: A graph neural network: each layer applies a graph filter <span 
 \]</span></p>
 <p>The second layer uses <span class="math inline">\(\mathbf{W}^{(1)}\in\mathbb{R}^{H_0\times C}\)</span> and yields <span class="math inline">\(\mathbf{H}^{(2)}\in\mathbb{R}^{N\times C}\)</span>. The vanilla two-layer GCN for node classification is therefore</p>
 <p><span class="math display">\[
+\begin{aligned}
 \bar{\mathbf{Y}}
 =f(\mathbf{X};\mathbf{A},\boldsymbol{\Theta})
-=\operatorname{softmax}\!\left(
+&amp;=\operatorname{softmax}\!\left(
 \hat{\mathbf{A}}_{\mathrm{sl}}\,
 \operatorname{ReLU}\!\left(\hat{\mathbf{A}}_{\mathrm{sl}}\mathbf{X}\mathbf{W}^{(0)}\right)
 \mathbf{W}^{(1)}
-\right),
-\qquad
-\hat{\mathbf{A}}_{\mathrm{sl}}=\tilde{\mathbf{D}}^{-1/2}\tilde{\mathbf{A}}\tilde{\mathbf{D}}^{-1/2}.
+\right),\\[4pt]
+\hat{\mathbf{A}}_{\mathrm{sl}}&amp;=\tilde{\mathbf{D}}^{-1/2}\tilde{\mathbf{A}}\tilde{\mathbf{D}}^{-1/2}.
+\end{aligned}
 \]</span></p>
 <p>Its parameter count is <span class="math inline">\(FH_0+H_0C\)</span> — it does <strong>not</strong> contain <span class="math inline">\(N\)</span>. For Cora (<span class="math inline">\(N=2708\)</span>, <span class="math inline">\(F=1433\)</span>, <span class="math inline">\(C=7\)</span>) with <span class="math inline">\(H_0=16\)</span>, that is <span class="math inline">\(1433\times16+16\times7=23\,040\)</span> parameters, whereas a shallow embedding of the same width would need <span class="math inline">\(16\times2708=43\,328\)</span> parameters and would still be unable to classify a new node.</p>
 </div>
