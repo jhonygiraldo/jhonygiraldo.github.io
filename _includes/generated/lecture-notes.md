@@ -14,7 +14,7 @@
 <li class="lecture-item is-published">
   <div class="lecture-index">02</div>
   <div class="lecture-body">
-    <h3>Introduction to graph neural networks</h3>
+    <h3>Graph neural networks</h3>
     <p>Convolutions as polynomials in a shift operator; graph signals and diffusion; graph convolutional filters; GCN; message passing; GAT; homophily, over-smoothing, and over-squashing; PyTorch Geometric.</p>
     <div class="button-row">
     <a class="button-link primary" href="/teaching/machine-learning-with-graphs/lecture-02.qmd">Read the web note</a>
@@ -22,60 +22,48 @@
     </div>
   </div>
 </li>
-<li class="lecture-item">
+<li class="lecture-item is-published">
   <div class="lecture-index">03</div>
   <div class="lecture-body">
-    <h3>Practical: graph neural networks</h3>
-    <p>Implementing, training, and debugging GNNs on real datasets with PyTorch Geometric.</p>
-    <p class="lecture-status">Web note in preparation.</p>
+    <h3>Scaling up graph neural networks</h3>
+    <p>Why mini-batching fails on graphs; computational graphs; GraphSAGE neighbor sampling; Cluster-GCN; SGC and LightGCN.</p>
+    <div class="button-row">
+    <a class="button-link primary" href="/teaching/machine-learning-with-graphs/lecture-03.qmd">Read the web note</a>
+    <a class="button-link secondary" href="/assets/pdf/Lecture-03-Scaling-Up-Graph-Neural-Networks.pdf">Original slides (PDF)</a>
+    </div>
   </div>
 </li>
-<li class="lecture-item">
+<li class="lecture-item is-published">
   <div class="lecture-index">04</div>
   <div class="lecture-body">
-    <h3>Scaling graph neural networks</h3>
-    <p>Sampling, mini-batching, and architectures for graphs too large to fit in memory.</p>
-    <p class="lecture-status">Web note in preparation.</p>
+    <h3>Spatiotemporal analysis with graphs</h3>
+    <p>Time-varying graph signals; the graph Fourier transform; spectral GNNs and ChebConv; reconstruction by optimization and by autoencoder; auto-regressive forecasting; GraphCast.</p>
+    <div class="button-row">
+    <a class="button-link primary" href="/teaching/machine-learning-with-graphs/lecture-04.qmd">Read the web note</a>
+    <a class="button-link secondary" href="/assets/pdf/Lecture-04-Spatiotemporal-Analysis-with-Graphs.pdf">Original slides (PDF)</a>
+    </div>
   </div>
 </li>
-<li class="lecture-item">
+<li class="lecture-item is-published">
   <div class="lecture-index">05</div>
   <div class="lecture-body">
-    <h3>Spatiotemporal analysis with graph neural networks</h3>
-    <p>Learning on graphs whose signals evolve in time: traffic, sensors, and dynamic systems.</p>
-    <p class="lecture-status">Web note in preparation.</p>
+    <h3>Recommender systems</h3>
+    <p>Bipartite user-item graphs; recommendation as link prediction; Recall@k; the binary and BPR losses; collaborative filtering; NGCF; LightGCN.</p>
+    <div class="button-row">
+    <a class="button-link primary" href="/teaching/machine-learning-with-graphs/lecture-05.qmd">Read the web note</a>
+    <a class="button-link secondary" href="/assets/pdf/Lecture-05-Recommender-Systems.pdf">Original slides (PDF)</a>
+    </div>
   </div>
 </li>
-<li class="lecture-item">
+<li class="lecture-item is-published">
   <div class="lecture-index">06</div>
   <div class="lecture-body">
-    <h3>Practical: spatiotemporal graph learning</h3>
-    <p>Building and evaluating a spatiotemporal graph model end to end.</p>
-    <p class="lecture-status">Web note in preparation.</p>
-  </div>
-</li>
-<li class="lecture-item">
-  <div class="lecture-index">07</div>
-  <div class="lecture-body">
-    <h3>Recommender systems using graphs</h3>
-    <p>User-item bipartite graphs, collaborative filtering, and graph-based recommendation.</p>
-    <p class="lecture-status">Web note in preparation.</p>
-  </div>
-</li>
-<li class="lecture-item">
-  <div class="lecture-index">08</div>
-  <div class="lecture-body">
     <h3>Graph generation</h3>
-    <p>Generative models for graphs and molecules, and how such models are evaluated.</p>
-    <p class="lecture-status">Web note in preparation.</p>
-  </div>
-</li>
-<li class="lecture-item">
-  <div class="lecture-index">09</div>
-  <div class="lecture-body">
-    <h3>Practical: graph generation</h3>
-    <p>Training a graph generative model and assessing the graphs it produces.</p>
-    <p class="lecture-status">Web note in preparation.</p>
+    <p>Properties of real-world graphs; Erdos-Renyi random graphs; deep generative models; GraphRNN; iterative local expansion by coarsening.</p>
+    <div class="button-row">
+    <a class="button-link primary" href="/teaching/machine-learning-with-graphs/lecture-06.qmd">Read the web note</a>
+    <a class="button-link secondary" href="/assets/pdf/Lecture-06-Graph-Generation.pdf">Original slides (PDF)</a>
+    </div>
   </div>
 </li>
 </ol>

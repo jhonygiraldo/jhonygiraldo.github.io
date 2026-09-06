@@ -234,6 +234,10 @@ def validate(news: list[dict[str, Any]], people: dict[str, Any], courses: list[d
             for field in ("number", "title", "topics"):
                 if not lecture.get(field):
                     errors.append(f"{label} is missing {field}")
+            if lecture.get("kind") not in (None, "lecture", "practical"):
+                errors.append(f"{label} has an unknown kind: {lecture['kind']}")
+            if lecture.get("kind") == "practical" and lecture.get("note"):
+                errors.append(f"{label} is a practical but declares a web note")
             note = lecture.get("note")
             if note and not (ROOT / note).exists():
                 errors.append(f"{label} points at a missing web note: {note}")
@@ -342,8 +346,14 @@ def slides_url(lecture: dict[str, Any]) -> str:
     return "/assets/pdf/" + lecture["slides"]
 
 
-def render_lecture_item(lecture: dict[str, Any]) -> list[str]:
-    number = f"{lecture['number']:02d}"
+def lecture_label(lecture: dict[str, Any], lecture_number: int | None) -> str:
+    if lecture.get("kind") == "practical":
+        return "TP"
+    return f"{lecture_number:02d}" if lecture_number is not None else f"{lecture['number']:02d}"
+
+
+def render_lecture_item(lecture: dict[str, Any], lecture_number: int | None = None) -> list[str]:
+    number = lecture_label(lecture, lecture_number)
     published = bool(lecture.get("note"))
     buttons: list[str] = []
     if published:
@@ -383,12 +393,23 @@ def render_lectures(courses: list[dict[str, Any]]) -> tuple[str, str]:
         return empty, empty
 
     lectures = course["lectures"]
+    numbering: dict[int, int] = {}
+    counter = 0
+    for index, lecture in enumerate(lectures):
+        if lecture.get("kind") != "practical":
+            counter += 1
+            numbering[index] = counter
+
     listing = ['<ol class="lecture-list">']
-    for lecture in lectures:
-        listing.extend(render_lecture_item(lecture))
+    for index, lecture in enumerate(lectures):
+        listing.extend(render_lecture_item(lecture, numbering.get(index)))
     listing.append("</ol>")
 
-    published = [lecture for lecture in lectures if lecture.get("note")]
+    published = [
+        dict(lecture, lecture_number=numbering[index])
+        for index, lecture in enumerate(lectures)
+        if lecture.get("note")
+    ]
     if not published:
         spotlight_lines = ["<!-- no web notes published yet -->"]
         return "\n".join(raw_block(listing)) + "\n", "\n".join(raw_block(spotlight_lines)) + "\n"
@@ -400,16 +421,16 @@ def render_lectures(courses: list[dict[str, Any]]) -> tuple[str, str]:
         '<section class="spotlight">',
         '  <div class="eyebrow">Web lecture notes</div>',
         f'  <h3>{html.escape(course["title"])}</h3>',
-        f'  <p><strong>Lecture {latest["number"]} · {html.escape(latest["title"])}.</strong> {html.escape(latest["topics"])}</p>',
+        f'  <p><strong>Lecture {latest["lecture_number"]} · {html.escape(latest["title"])}.</strong> {html.escape(latest["topics"])}</p>',
         '  <div class="button-row">',
-        f'    <a class="button-link primary" href="{internal_url(latest["note"])}">Read Lecture {latest["number"]}</a>',
+        f'    <a class="button-link primary" href="{internal_url(latest["note"])}">Read Lecture {latest["lecture_number"]}</a>',
         f'    <a class="button-link secondary" href="{course_link}">Open the course</a>',
         "  </div>",
     ]
     if earlier:
         shown = earlier[-3:]
         links = ", ".join(
-            f'<a href="{internal_url(lecture["note"])}">Lecture {lecture["number"]} · {html.escape(lecture["title"])}</a>'
+            f'<a href="{internal_url(lecture["note"])}">Lecture {lecture["lecture_number"]} · {html.escape(lecture["title"])}</a>'
             for lecture in shown
         )
         remainder = len(earlier) - len(shown)

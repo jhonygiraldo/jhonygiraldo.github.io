@@ -5,13 +5,13 @@ description: "Course hub for Machine Learning with Graphs, including web lecture
 toc: false
 ---
 
-This graduate course develops both the **fundamentals** and **practical use** of graph machine-learning models. It begins with graph representations and random-walk embeddings, then moves to graph neural networks, scaling, spatiotemporal learning, recommender systems, and graph generation.
+This graduate course develops the foundations of graph machine learning. It begins with graph representations and random-walk embeddings, then moves to graph neural networks, scaling, spatiotemporal learning, recommender systems, and graph generation.
 
 ```{=html}
 <div class="feature-grid">
   <article class="feature-card"><span class="number">Level</span><h3>MSc</h3><p>Master Data Science and Master Data & AI.</p></article>
   <article class="feature-card"><span class="number">Prerequisites</span><h3>Linear algebra + deep learning</h3><p>Comfort with vectors, matrices, probability, optimization, and basic neural networks.</p></article>
-  <article class="feature-card"><span class="number">Format</span><h3>Lectures + practicals</h3><p>Conceptual development, mathematical derivations, guided exercises, and implementation.</p></article>
+  <article class="feature-card"><span class="number">Format</span><h3>Six lectures</h3><p>Conceptual development, mathematical derivations, examples, and guided exercises.</p></article>
 </div>
 ```
 
@@ -27,7 +27,7 @@ By the end of the course, students should be able to:
 
 ## Course sequence
 
-The course runs over nine sessions. Web notes and slides appear below as each
+The course comprises six lectures. Web notes and slides appear below as each
 lecture is given.
 
 {{< include ../../_includes/generated/lecture-notes.md >}}

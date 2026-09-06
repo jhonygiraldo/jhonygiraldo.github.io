@@ -157,11 +157,6 @@ body.fullcontent #quarto-content > main.content,
   max-width: 220px;
 }
 
-.portrait-card-compact::after {
-  right: -10px;
-  bottom: -10px;
-}
-
 .portrait-card-compact figcaption {
   line-height: 1.45;
 }
@@ -280,18 +275,6 @@ body.fullcontent #quarto-content > main.content,
   position: relative;
   max-width: 360px;
   justify-self: end;
-}
-
-.portrait-card::after {
-  position: absolute;
-  z-index: -1;
-  right: -18px;
-  bottom: -18px;
-  width: 85%;
-  height: 85%;
-  border: 2px solid var(--coral);
-  border-radius: 1.2rem;
-  content: "";
 }
 
 .portrait-card img {

@@ -12,58 +12,15 @@ Outputs land in assets/figures/ as SVG.
 
 from __future__ import annotations
 
-from pathlib import Path
-
-import matplotlib
-
-matplotlib.use("Agg")
-
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 from matplotlib.lines import Line2D
 from matplotlib.patches import FancyArrowPatch
 
-ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / "assets" / "figures"
+from _style import CORAL, GOLD, INK, LINE, MUTED, PURPLE, TEAL, save, use_style
 
-INK = "#16202a"
-MUTED = "#586874"
-LINE = "#c9d4d2"
-TEAL = "#0f6c78"
-CORAL = "#d2644b"
-GOLD = "#c9982d"
-PURPLE = "#6d60a8"
-
-plt.rcParams.update(
-    {
-        "font.family": "serif",
-        "font.serif": ["Latin Modern Roman", "STIXGeneral", "DejaVu Serif"],
-        "mathtext.fontset": "cm",
-        "font.size": 11,
-        "axes.edgecolor": MUTED,
-        "axes.labelcolor": INK,
-        "axes.titlesize": 12,
-        "text.color": INK,
-        "xtick.color": MUTED,
-        "ytick.color": MUTED,
-        "axes.grid": True,
-        "grid.color": LINE,
-        "grid.linewidth": 0.7,
-        "grid.alpha": 0.9,
-        "legend.frameon": False,
-        "svg.fonttype": "path",
-        "figure.facecolor": "white",
-        "savefig.facecolor": "white",
-    }
-)
-
-
-def save(fig: plt.Figure, name: str) -> None:
-    path = OUT / f"{name}.svg"
-    fig.savefig(path, format="svg", bbox_inches="tight", pad_inches=0.12)
-    plt.close(fig)
-    print(f"{path.relative_to(ROOT)}  {path.stat().st_size / 1024:.0f} kB")
+use_style()
 
 
 # --------------------------------------------------------------------------
@@ -464,7 +421,6 @@ def figure_attention_weights() -> None:
 
 
 def main() -> None:
-    OUT.mkdir(parents=True, exist_ok=True)
     figure_spectral_response()
     figure_homophily()
     figure_over_smoothing()

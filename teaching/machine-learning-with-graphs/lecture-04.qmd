@@ -1,0 +1,611 @@
+---
+pagetitle: "Lecture 4 — Spatiotemporal Analysis with Graphs"
+description: "Web lecture note on spectral GNNs, the graph Fourier transform, and the reconstruction and forecasting of time-varying graph signals."
+body-classes: custom-title-page lecture-page
+date-modified: "2026-09-06"
+bibliography: references.bib
+number-sections: true
+toc: true
+toc-depth: 3
+crossref:
+  fig-title: Figure
+format:
+  html:
+    html-math-method: mathjax
+    code-fold: false
+---
+
+```{=html}
+<header class="lecture-header">
+  <div class="eyebrow">APM 5DS30 TP · Machine Learning with Graphs</div>
+  <h1>Spatiotemporal analysis with graphs</h1>
+  <p>Lecture 4 · Jhony H. Giraldo · Télécom Paris, Institut Polytechnique de Paris</p>
+  <div class="lecture-meta"><span>Original lecture: 18 February 2025</span><span>Web note revised: 6 September 2026</span><span>Mathematics rendered with MathJax</span></div>
+  <div class="button-row">
+    <a class="button-link primary" href="/assets/pdf/Lecture-04-Spatiotemporal-Analysis-with-Graphs.pdf">Download the original slides</a>
+    <a class="button-link secondary" href="/teaching/machine-learning-with-graphs/index.qmd">Back to the course</a>
+  </div>
+</header>
+```
+
+So far the data has been static: one signal on one graph. This note adds **time**. A sensor network reports a temperature every ten minutes, a road network reports a speed every five, a global monitoring system reports a case count every day. The graph describes *where*; the time series describes *when*; and the two are not independent.
+
+Two problems organize the note. **Reconstruction**: values are missing, and we want them back. **Forecasting**: we have the past, and we want the future. Both are solved twice — once by writing an optimization problem, once by training a network — and comparing the two is the point of the lecture. Along the way we need one tool we have so far avoided: the **spectral** view of a graph.
+
+## Learning objectives
+
+After studying this note, you should be able to:
+
+```{=html}
+<ol class="learning-objectives">
+  <li>define a time-varying graph signal and the temporal difference operator;</li>
+  <li>define the graph Fourier transform and interpret its coefficients as graph frequencies;</li>
+  <li>express a graph filter in the spectral domain and state the cost of doing so;</li>
+  <li>write the ChebConv recursion and explain why it avoids the eigendecomposition;</li>
+  <li>formulate reconstruction as a smoothness-regularized optimization problem and solve it by gradient descent;</li>
+  <li>formulate forecasting as auto-regressive modeling on a graph, and extend it to multiple horizons.</li>
+</ol>
+```
+
+## Time-varying graph signals
+
+::: {.definition}
+**Definition 1 — Time-varying graph signal**
+
+Let $\mathcal{G}$ have $N$ nodes. A **time-varying graph signal** is
+
+$$
+\mathbf{X}=[\mathbf{x}_1,\mathbf{x}_2,\ldots,\mathbf{x}_M]\in\mathbb{R}^{N\times M},
+$$
+
+where $\mathbf{x}_s\in\mathbb{R}^{N}$ is a graph signal on $\mathcal{G}$ at time $s$. Row $i$ is the time series observed at node $i$; column $s$ is a snapshot of the whole network.
+:::
+
+::: {.definition}
+**Definition 2 — Temporal difference operator**
+
+$\mathbf{D}_{h}\in\mathbb{R}^{M\times(M-1)}$ is the first-difference operator,
+
+$$
+\mathbf{D}_h=
+\begin{bmatrix}
+-1 & & &\\
+1 & -1 & &\\
+ & 1 & \ddots &\\
+ & & \ddots & -1\\
+ & & & 1
+\end{bmatrix},
+\qquad
+\mathbf{X}\mathbf{D}_h=[\mathbf{x}_2-\mathbf{x}_1,\ \mathbf{x}_3-\mathbf{x}_2,\ \ldots,\ \mathbf{x}_M-\mathbf{x}_{M-1}].
+$$
+:::
+
+::: {.figure-panel}
+![A time-varying graph signal: a graph whose nodes each carry a time series, collected into a matrix $\mathbf{X}\in\mathbb{R}^{N\times M}$, together with the temporal difference operator $\mathbf{D}_h$.](../../assets/figures/time-varying-graph-signal.svg){#fig-time-varying fig-alt="A graph with a time series attached to each node, the matrix X, and the difference operator matrix"}
+:::
+
+$\mathbf{X}\mathbf{D}_h$ looks like a technicality. It is not: it is the single modeling assumption that makes reconstruction work, and @sec-reconstruction measures why.
+
+### The two problems
+
+::: {.figure-panel}
+![**Reconstruction.** At each time step some nodes report nothing (black). The task is to fill them in, using both the graph and the temporal history.](../../assets/figures/problem-reconstruction.png){#fig-problem-reconstruction fig-alt="Two rows of network snapshots; the top row has black patches of missing sensors, the bottom row is fully colored"}
+:::
+
+::: {.figure-panel}
+![**Forecasting.** The signal is known up to time $t$ and entirely unknown at $t+n$. The task is to predict it.](../../assets/figures/problem-forecasting.png){#fig-problem-forecasting fig-alt="Two rows of network snapshots; the top-right snapshot is entirely black, the bottom row is fully colored"}
+:::
+
+::: {.checkpoint}
+**Check 1 — Which is which?**
+
+Both problems produce missing values, and it is worth being precise about the difference. In **reconstruction** the missing entries are *interior*: we know values before and after them, at the same node and at neighboring nodes, and we interpolate. In **forecasting** the missing entries are at the *boundary*: everything we know lies in the past, and we extrapolate.
+
+Interpolation can lean on smoothness in both directions. Extrapolation cannot, which is why the two get different machinery.
+:::
+
+## Spectral GNNs {#sec-spectral}
+
+Lecture 2 defined a graph filter as a polynomial in the shift operator, $\mathbf{z}=\sum_{k}h_k\mathbf{S}^{k}\mathbf{x}$, and worked entirely in the *vertex* domain. There is a second description, and for spatiotemporal problems it earns its keep: in practice spectral GNNs often outperform plain message passing on these tasks.
+
+### From Fourier to graph Fourier
+
+The classical Fourier transform decomposes a signal into sinusoids of increasing frequency, and the inverse transform reassembles it.
+
+::: {.figure-panel}
+![A signal, its frequency content, and the sinusoids that compose it. Each Fourier coefficient measures how much of one oscillation is present in the signal.](../../assets/figures/fourier-recap.svg){#fig-fourier fig-alt="A waveform, a bar chart of three frequency components, and the three sinusoids that sum to it"}
+:::
+
+The graph Fourier transform is the same idea with the sinusoids replaced by the eigenvectors of the shift operator.
+
+::: {.definition}
+**Definition 3 — Graph Fourier transform**
+
+Let $\mathbf{S}$ be diagonalizable, $\mathbf{S}=\mathbf{U}\boldsymbol{\Lambda}\mathbf{U}^{-1}$. The eigenvectors $\mathbf{u}_i$ form a basis of $\mathbb{R}^{N}$, so any graph signal can be written as
+
+$$
+\mathbf{x}=\mathbf{U}\hat{\mathbf{x}},
+\qquad
+\hat{\mathbf{x}}=\mathbf{U}^{-1}\mathbf{x},
+$$
+
+where $\hat{\mathbf{x}}$ is the **graph Fourier transform (GFT)** of $\mathbf{x}$.
+
+For an undirected graph $\mathbf{S}$ is symmetric, so $\mathbf{U}$ is orthogonal, $\mathbf{U}^{\top}\mathbf{U}=\mathbf{U}\mathbf{U}^{\top}=\mathbf{I}$, and the pair simplifies to $\mathbf{x}=\mathbf{U}\hat{\mathbf{x}}$, $\hat{\mathbf{x}}=\mathbf{U}^{\top}\mathbf{x}$.
+:::
+
+::: {.figure-panel}
+![Laplacian eigenvectors of a sensor network, ordered by eigenvalue. $\mathbf{u}_1$ with $\lambda_1=0$ is constant; higher eigenvalues carry eigenvectors that oscillate more and more across edges. The eigenvalue *is* the notion of frequency on a graph.](../../assets/figures/laplacian-eigenvectors.png){#fig-eigenvectors fig-alt="Three copies of a sensor network colored by the first, second, and tenth Laplacian eigenvector, with increasing spatial oscillation"}
+:::
+
+Because $\mathbf{U}$ is orthogonal, $\hat{x}(i)=\langle\mathbf{u}_i,\mathbf{x}\rangle$: **the $i$-th GFT coefficient measures how similar $\mathbf{x}$ is to the $i$-th eigenvector.** A signal whose energy sits in the first few coefficients is *smooth* — it barely changes across edges. A signal spread across the spectrum is rough.
+
+::: {.figure-panel}
+![The GFT on a 220-node sensor graph. Left: coefficient magnitudes for a smooth spatial field and for white noise. Right: cumulative energy against the fraction of the spectrum. The lowest 10% of graph frequencies carry 98% of the smooth field's energy, while noise tracks the diagonal — it is spread uniformly over the spectrum. This concentration is what every smoothness prior in this note exploits.](../../assets/figures/gft-spectrum.svg){#fig-gft fig-alt="Left, spiky noise coefficients against a smooth signal concentrated at low frequency; right, a cumulative energy curve rising almost immediately to 100% versus a diagonal line"}
+:::
+
+### Filters in the frequency domain
+
+::: {.definition}
+**Definition 4 — Graph filters in the spectral domain**
+
+Any graph filter defined as a polynomial in $\mathbf{S}$ can be written
+
+$$
+\mathbf{H}=h(\mathbf{S})=\sum_{i=0}^{k}h_i\mathbf{S}^{i}=\mathbf{U}\,h(\boldsymbol{\Lambda})\,\mathbf{U}^{-1},
+$$
+
+where $h(\boldsymbol{\Lambda})$ is diagonal with entries $h(\lambda_j)=\sum_{i=0}^{k}h_i\lambda_j^{i}$ [@ortega2022introduction].
+:::
+
+The proof is one line: $\mathbf{S}^{i}=\mathbf{U}\boldsymbol{\Lambda}^{i}\mathbf{U}^{-1}$ because the inner $\mathbf{U}^{-1}\mathbf{U}$ factors cancel; summing over $i$ gives the result.
+
+So filtering can be done in three steps: transform, multiply, transform back.
+
+$$
+\hat{\mathbf{x}}=\mathbf{U}^{-1}\mathbf{x},
+\qquad
+\hat{\mathbf{y}}=h(\boldsymbol{\Lambda})\hat{\mathbf{x}},
+\qquad
+\mathbf{y}=\mathbf{U}\hat{\mathbf{y}}.
+$$
+
+This is appealing: no matrix powers, no sequential recursion, and complete freedom over the response $h(\lambda)$ — it need not be a low-pass filter, which is exactly the limitation Lecture 2 identified in GCN.
+
+::: {.checkpoint}
+**Check 2 — The trade-off between spectral and spatial**
+
+The catch is $\mathbf{U}$. Obtaining it requires an **eigendecomposition, costing $O(N^{3})$**, and $\mathbf{U}$ is dense even when $\mathbf{S}$ is sparse. Compare with the vertex domain, where a $K$-tap filter costs $O(K|\mathcal{E}|)$ and touches only $K$-hop neighborhoods.
+
+So the spectral view is a modeling tool for small and medium graphs, and an analysis tool for large ones. It is also not transferable: $\mathbf{U}$ belongs to one graph, so a model defined directly on $\boldsymbol{\Lambda}$ is not inductive.
+:::
+
+### Chebyshev graph convolutions
+
+The way to keep the spectral expressiveness without paying $O(N^{3})$ is to approximate the response $h(\lambda)$ by a polynomial — which returns us to the vertex domain, where polynomials in $\mathbf{S}$ are sparse products. ChebConv [@defferrard2016convolutional] does this with the Chebyshev basis, and it is the direct predecessor of GCN.
+
+::: {.definition}
+**Definition 5 — ChebConv layer**
+
+$$
+\mathbf{H}^{(\ell+1)}=\sum_{i=1}^{k}\mathbf{Z}_i\mathbf{W}_i,
+$$
+
+with
+
+$$
+\mathbf{Z}_1=\mathbf{H}^{(\ell)},
+\qquad
+\mathbf{Z}_2=\tilde{\mathbf{L}}\mathbf{H}^{(\ell)},
+\qquad
+\mathbf{Z}_i=2\tilde{\mathbf{L}}\mathbf{Z}_{i-1}-\mathbf{Z}_{i-2},
+$$
+
+and the rescaled Laplacian $\tilde{\mathbf{L}}=\dfrac{2\mathbf{L}}{\lambda_N}-\mathbf{I}$.
+:::
+
+Two details explain the design. The rescaling maps the spectrum of $\mathbf{L}$ from $[0,\lambda_N]$ onto $[-1,1]$, which is where the Chebyshev polynomials are defined and where they are numerically well behaved. And the three-term recursion $T_i(x)=2xT_{i-1}(x)-T_{i-2}(x)$ is exactly the recursion satisfied by $\mathbf{Z}_i$ — so a degree-$k$ response costs $k$ sparse matrix products and no eigendecomposition at all.
+
+::: {.figure-panel}
+![Left: the Chebyshev polynomials $T_0,\ldots,T_5$ on $[-1,1]$. Right: two responses built as learned combinations of them. Unlike a stack of GCN layers, which can only realize $\mu^{L}$, a ChebConv layer can place its pass-band anywhere — including away from $\lambda=0$.](../../assets/figures/chebyshev-polynomials.svg){#fig-chebyshev fig-alt="Left, six oscillating polynomial curves on the interval minus one to one; right, a decreasing low-pass curve and a peaked band-pass curve"}
+:::
+
+Swapping the polynomial family gives other models: Gegenbauer polynomials yield GegenConv [@castro2024gegenbauer], Jacobi polynomials yield JacobiConv [@wang2022powerful].
+
+::: {.checkpoint}
+**Check 3 — Spectral GNNs in one paragraph**
+
+The GFT diagonalizes graph filters, turning convolution into pointwise multiplication by $h(\lambda)$ and making "graph frequency" precise. Working on the spectrum directly costs an $O(N^{3})$ eigendecomposition. ChebConv recovers an arbitrary degree-$k$ response using only sparse products, through the Chebyshev recursion — and GCN is the special case $k=1$ with tied coefficients.
+:::
+
+## Reconstruction of time-varying graph signals {#sec-reconstruction}
+
+::: {.definition}
+**Definition 6 — Reconstruction problem**
+
+Given $\mathcal{G}$ and a time-varying signal $\mathbf{X}\in\mathbb{R}^{N\times M}$ in which the entries indexed by a **known** set $\mathcal{S}=\{(i,j)\}$ are missing, and writing $\mathcal{T}=(\mathcal{V}\times\mathcal{M})\setminus\mathcal{S}$ for the observed entries, recover the values on $\mathcal{S}$.
+:::
+
+That $\mathcal{S}$ is known matters. We are not detecting outliers; we know exactly which sensors failed and when.
+
+### Measuring smoothness on a graph
+
+::: {.definition}
+**Definition 7 — Laplacian quadratic form**
+
+$$
+\Delta_{\mathbf{L}}(\mathbf{x})=\mathbf{x}^{\top}\mathbf{L}\mathbf{x}=\sum_{i\sim j}a_{ij}(x_i-x_j)^{2},
+$$
+
+summing over edges. Each edge contributes in proportion to its weight $a_{ij}$ and to the squared difference of the signal at its endpoints.
+:::
+
+::: {.figure-panel}
+![A star on four nodes with edge weights $a_{12}$, $a_{13}$, $a_{14}$.](../../assets/figures/laplacian-quadratic-form.svg){#fig-quadratic-form fig-alt="Node 1 at the centre connected to nodes 2, 3, and 4 with labelled edge weights"}
+:::
+
+::: {.worked-example}
+**Worked example — Computing $\mathbf{x}^{\top}\mathbf{L}\mathbf{x}$**
+
+For @fig-quadratic-form the only edges are $(1,2)$, $(1,3)$ and $(1,4)$, so
+
+$$
+\mathbf{x}^{\top}\mathbf{L}\mathbf{x}
+=a_{12}(x_1-x_2)^{2}+a_{13}(x_1-x_3)^{2}+a_{14}(x_1-x_4)^{2}.
+$$
+
+Note what is **absent**: no term in $(x_3-x_4)$. Nodes 3 and 4 may differ freely at no cost, because they are not adjacent. Variation is measured along edges, not between arbitrary pairs.
+
+**Minimum.** Take $x_1=x_2=x_3=x_4=1$. Every difference vanishes, so $\mathbf{x}^{\top}\mathbf{L}\mathbf{x}=0$. Since $a_{ij}\geq0$ makes every term nonnegative, this is the global minimum — and it is the constant eigenvector $\mathbf{u}_1$ with $\lambda_1=0$ from @fig-eigenvectors.
+
+**Maximum.** Maximize the sign changes across edges: $x_1=1$, $x_2=x_3=x_4=-1$. Each difference is $2$, so
+
+$$
+\mathbf{x}^{\top}\mathbf{L}\mathbf{x}=4(a_{12}+a_{13}+a_{14}).
+$$
+:::
+
+### From static to time-varying smoothness
+
+The obvious extension sums the quadratic form over time:
+
+$$
+E(\mathbf{X})=\sum_{s=1}^{M}\mathbf{x}_s^{\top}\mathbf{L}\mathbf{x}_s=\operatorname{tr}(\mathbf{X}^{\top}\mathbf{L}\mathbf{X}).
+$$
+
+Qiu et al. [@qiu2017time] observed that on real data this is the *wrong quantity*. What is smooth on the graph is not the signal but its **temporal difference**:
+
+$$
+E(\mathbf{X}\mathbf{D}_h)=\sum_{s=2}^{M}(\mathbf{x}_s-\mathbf{x}_{s-1})^{\top}\mathbf{L}(\mathbf{x}_s-\mathbf{x}_{s-1}).
+$$
+
+The intuition is physical. A temperature field can have large spatial gradients — a valley is genuinely colder than a ridge — so $\mathbf{x}_s$ need not be smooth. But when the sampling rate is high, *how much things changed since the last reading* varies gently across the network, because neighboring sensors experience the same weather. Nature rarely moves abruptly, and even more rarely does so at one node and not its neighbor.
+
+::: {.figure-panel}
+![The quantity being regularized: at each step, take the difference between consecutive snapshots and measure *its* variation on the graph.](../../assets/figures/sobolev-smoothness-intuition.png){#fig-sobolev-intuition fig-alt="A signal matrix, two consecutive columns being subtracted, and the difference evaluated on a small graph"}
+:::
+
+::: {.figure-panel}
+![The assumption, checked. On a 220-node sensor graph with a slowly evolving field, the temporal difference is markedly smoother than the signal itself at every time step, and about $4\times$ smoother in total. This is the entire justification for putting $\mathbf{X}\mathbf{D}_h$ rather than $\mathbf{X}$ inside the regularizer.](../../assets/figures/temporal-difference-smoothness.svg){#fig-temporal-difference fig-alt="A log-scale curve of per-step variation, with the difference curve well below the signal curve, and a bar chart of the totals"}
+:::
+
+### The optimization problem
+
+We need an error term as well. Let $\mathbf{J}\in\{0,1\}^{N\times M}$ be the **sampling matrix**, with $J_{ij}=1$ when the value at node $i$ and time $j$ is observed, let $\tilde{\mathbf{X}}$ be the matrix to recover, and $\mathbf{Y}$ the observations. Then $\|\mathbf{J}\circ\tilde{\mathbf{X}}-\mathbf{Y}\|_F^2$ penalizes disagreement **on the observed entries only** — the Hadamard product simply ignores everything else.
+
+::: {.definition}
+**Definition 8 — Time-varying graph signal reconstruction (TGSR)**
+
+$$
+\min_{\tilde{\mathbf{X}}}\ \frac{1}{2}\left\|\mathbf{J}\circ\tilde{\mathbf{X}}-\mathbf{Y}\right\|_F^{2}
++\frac{\upsilon}{2}\operatorname{tr}\!\left((\tilde{\mathbf{X}}\mathbf{D}_h)^{\top}\mathbf{L}\,\tilde{\mathbf{X}}\mathbf{D}_h\right).
+$$ {#eq-tgsr}
+:::
+
+::: {.figure-panel}
+![The error term. The observed entries pin the solution down; the smoothness term propagates information into the gaps.](../../assets/figures/reconstruction-error-intuition.png){#fig-error-intuition fig-alt="A graph with time series, a heavily subsampled signal matrix, and the reconstructed matrix"}
+:::
+
+::: {.figure-panel}
+![The full pipeline: build the graph from sensor coordinates by $k$-nearest neighbors, form $\mathbf{L}$, assemble the sampling matrix, and minimize the sum of the error and smoothness terms.](../../assets/figures/graphtrss-pipeline.png){#fig-graphtrss fig-alt="A block diagram from time-varying signal and coordinates through the temporal operator and Laplacian to the two-term objective"}
+:::
+
+### Solving it
+
+@eq-tgsr is a convex quadratic, so it has a closed-form solution — which requires inverting an $MN\times MN$ matrix. For $N=1000$ sensors over $M=500$ time steps that is a $500\,000\times500\,000$ inverse. Not a good idea.
+
+Use gradient descent instead. Writing $f_u(\tilde{\mathbf{X}})$ for the objective,
+
+$$
+\nabla_{\tilde{\mathbf{X}}}f_u(\tilde{\mathbf{X}})
+=\mathbf{J}\circ\tilde{\mathbf{X}}-\mathbf{Y}
++\upsilon\,\mathbf{L}\tilde{\mathbf{X}}\mathbf{D}_h\mathbf{D}_h^{\top},
+$$
+
+a formula built entirely from sparse products. The original paper uses conjugate gradient.
+
+::: {.figure-panel}
+![The claim, measured. A 220-node graph, 60 time steps, entries deleted at random. Doing nothing leaves the error near 1. Regularizing $\mathbf{X}$ itself helps. Regularizing $\mathbf{X}\mathbf{D}_h$ is in a different class: at 10% of entries observed it reaches 20% error, where smoothing the signal directly reaches 67%. The regularization weight $\upsilon$ was tuned separately for each, so this compares the two priors, not two hyperparameters.](../../assets/figures/reconstruction-smoothness.svg){#fig-reconstruction-smoothness fig-alt="Left, three error curves against observed fraction with the temporal-difference curve far below the others; right, condition number against epsilon on log axes"}
+:::
+
+### Sobolev smoothness
+
+Giraldo et al. [@giraldo2022reconstruction] observed that @eq-tgsr is ill-posed in a specific sense, and that this slows convergence.
+
+::: {.checkpoint}
+**Check 4 — Why $\mathbf{L}$ conditions the problem badly**
+
+The condition number of a square matrix,
+
+$$
+\kappa(\mathbf{L})=\frac{|\lambda_{\max}(\mathbf{L})|}{|\lambda_{\min}(\mathbf{L})|},
+$$
+
+measures how well-behaved its inversion is, and small condition numbers are associated with fast convergence of gradient methods. For a graph Laplacian $\lambda_{\min}(\mathbf{L})=0$ always — the constant eigenvector — so
+
+$$
+\kappa(\mathbf{L})=\infty .
+$$
+
+The regularizer supplies no curvature at all along the constant direction.
+:::
+
+The fix is to regularize the regularizer:
+
+$$
+\min_{\tilde{\mathbf{X}}}\ \frac{1}{2}\left\|\mathbf{J}\circ\tilde{\mathbf{X}}-\mathbf{Y}\right\|_F^{2}
++\frac{\upsilon}{2}\operatorname{tr}\!\left((\tilde{\mathbf{X}}\mathbf{D}_h)^{\top}(\mathbf{L}+\epsilon\mathbf{I})^{\beta}\,\tilde{\mathbf{X}}\mathbf{D}_h\right),
+$$ {#eq-sobolev}
+
+adding a positive definite $\epsilon\mathbf{I}$ so that every eigenvalue is bounded away from zero. This is called **Sobolev smoothness**, after its relationship to the Sobolev norm for static graph signals. The right panel of @fig-reconstruction-smoothness plots $\kappa\big((\mathbf{L}+\epsilon\mathbf{I})^{\beta}\big)$ against $\epsilon$: finite everywhere, and tunable through $\epsilon$ and $\beta$.
+
+The algorithm changes in exactly one place, the gradient:
+
+$$
+\nabla_{\tilde{\mathbf{X}}}f_u(\tilde{\mathbf{X}})
+=\mathbf{J}\circ\tilde{\mathbf{X}}-\mathbf{Y}
++\upsilon\,(\mathbf{L}+\epsilon\mathbf{I})^{\beta}\tilde{\mathbf{X}}\mathbf{D}_h\mathbf{D}_h^{\top}.
+$$
+
+::: {.figure-panel}
+![Why conditioning matters for gradient descent. On a well-conditioned problem the level sets are near-circular and the iterates head almost straight for the optimum; on an ill-conditioned one they are elongated and the iterates zig-zag across the valley.](../../assets/figures/conditioning-gradient-descent.svg){#fig-conditioning fig-alt="Two contour plots, one with circular level sets and a direct path, one with elongated level sets and an oscillating path"}
+:::
+
+::: {.checkpoint}
+**Check 5 — What is and is not shown here**
+
+@fig-reconstruction-smoothness establishes two things directly: the temporal-difference prior is dramatically better than the static one, and $\kappa(\mathbf{L}+\epsilon\mathbf{I})^{\beta}$ is finite while $\kappa(\mathbf{L})$ is not.
+
+It does **not** show a convergence speed-up from the Sobolev term. On this small synthetic problem the data term already supplies curvature in the directions that matter, so the two objectives descend at nearly the same rate. The empirical advantage reported in [@giraldo2022reconstruction] is measured on real datasets, and you should read the paper rather than take it from a 220-node simulation. Reproducing it — or failing to — is Exercise 6.
+:::
+
+::: {.figure-panel}
+![Applications of these methods: global COVID-19 case counts on a graph of countries, sea-surface temperature, and the SW06 underwater acoustics experiment. Air-quality monitoring (PM 2.5) is another standard use.](../../assets/figures/reconstruction-datasets.png){#fig-reconstruction-datasets fig-alt="Three panels: a world map with case data, a sea surface temperature map with a sensor graph, and a coastal experiment map"}
+:::
+
+### Reconstruction with a neural network
+
+The same problem can be solved by learning. Feed the Laplacian and the incomplete signal to a GNN with an **autoencoder** shape, and train it with a loss that is the previous objective in disguise.
+
+::: {.figure-panel}
+![The learned pipeline: build the graph, sample the signal, pass it through a Chebyshev-based autoencoder, and recover the full time-varying signal. Source: [@castro2024gegenbauer].](../../assets/figures/gegenbauer-reconstruction-pipeline.png){#fig-gegenbauer fig-alt="A pipeline from an underwater experiment through a k-NN graph and encoder-decoder architecture to a reconstructed signal matrix"}
+:::
+
+Each layer is a **cascade of Chebyshev convolutions** of increasing order $\rho=0,\dots,\zeta-1$, combined linearly.
+
+::: {.figure-panel}
+![One layer: the signal enters $\zeta$ branches, branch $\rho$ applying a Chebyshev convolution of order $\rho$, and the outputs are merged by a learned linear combination.](../../assets/figures/chebyshev-cascade-layer.png){#fig-cheb-layer fig-alt="A block diagram with the Laplacian and signal feeding several Chebyshev convolution branches merged by a linear combination block"}
+:::
+
+$$
+\mathbf{X}^{(\ell+1)}=\sum_{\rho=0}^{\zeta-1}\mu_{\rho}^{(\ell)}\mathbf{Z}_{\rho}^{(\ell)}\in\mathbb{R}^{N\times F_\ell},
+$$
+
+where $\mathbf{Z}_{\rho}^{(\ell)}\in\mathbb{R}^{N\times F_\ell}$ is branch $\rho$'s output and the $\mu_{\rho}^{(\ell)}$ are trainable. The number of branches $\zeta$ is a hyperparameter.
+
+::: {.worked-example}
+**Worked example — Shapes through the autoencoder**
+
+The input is the whole time-varying signal, $\mathbf{X}^{(0)}\in\mathbb{R}^{N\times M}$: each node's *feature vector is its time series*, so the feature dimension is $M$.
+
+The first layer's weights are $\mathbf{W}_{\rho}^{(0)}\in\mathbb{R}^{M\times F_0}$ for every branch $\rho$, with $F_0<M$ — the encoder compresses. Widths keep shrinking to the latent layer, then grow back, and the last layer uses $\mathbf{W}_{\rho}^{(\ell)}\in\mathbb{R}^{F_\ell\times M}$ so the output is again $N\times M$.
+
+These networks are **shallow** in practice. The reason is Lecture 2's: over-smoothing. Depth here buys receptive field on the graph, and pays for it in discriminative power.
+:::
+
+::: {.figure-panel}
+![The autoencoder: hidden width contracts to a latent space and expands back, while every layer applies the Chebyshev cascade on the graph.](../../assets/figures/chebconv-autoencoder.svg){#fig-autoencoder fig-alt="An encoder-decoder diagram narrowing to a latent layer and widening again, with the ChebConv propagation rule underneath"}
+:::
+
+The loss is the optimization objective, rewritten for training:
+
+$$
+\mathcal{L}=\frac{1}{|\mathcal{T}|}\sum_{(i,j)\in\mathcal{T}}\left(X_{ij}-\tilde{X}_{ij}\right)^{2}
++\lambda\operatorname{tr}\!\left((\tilde{\mathbf{X}}\mathbf{D}_h)^{\top}(\mathbf{L}+\epsilon\mathbf{I})\,\tilde{\mathbf{X}}\mathbf{D}_h\right).
+$$
+
+An MSE term on the observed entries plus the Sobolev term from @eq-sobolev. Train it with Adam or SGD.
+
+::: {.checkpoint}
+**Check 6 — Optimization or network?**
+
+They solve the same problem with the same prior, and the difference is where the effort goes.
+
+The **optimization** approach has no training data, no training phase, and few hyperparameters ($\upsilon$, $\epsilon$, $\beta$); it needs a bespoke solver, and it starts from scratch on every new signal.
+
+The **network** approach reuses a standard optimizer and amortizes the cost across signals once trained; but hyperparameter tuning is harder, and it needs data to train on.
+:::
+
+## Forecasting of time-varying graph signals
+
+::: {.definition}
+**Definition 9 — Forecasting problem**
+
+Given $\mathcal{G}$, a time-varying graph signal $\mathbf{X}\in\mathbb{R}^{N\times M}$, and a temporal window
+
+$$
+\mathbf{X}_K=[\mathbf{x}_{m-K},\ldots,\mathbf{x}_{m-1}]\in\mathbb{R}^{N\times K},
+\qquad K<M,
+$$
+
+predict $\mathbf{x}_m$. $K$ is the **auto-regressive order**.
+:::
+
+::: {.figure-panel}
+![The forecasting setup: a sliding window of $K$ past snapshots (grey) is used to predict the next one (pink).](../../assets/figures/forecasting-problem.svg){#fig-forecasting fig-alt="A graph with node time series, and the signal matrix with a K-wide window highlighted before the target column"}
+:::
+
+### Auto-regressive modeling
+
+The classical AR($K$) model for a scalar time series is
+
+$$
+x_m=\sum_{i=1}^{K}\phi_i x_{m-i}+\epsilon_m,
+$$
+
+a weighted sum of the last $K$ lags plus white noise. The order $K$ sets how much history is retained, the coefficients $\phi_i$ weight it — typically decaying with distance in time — and $\epsilon_m$ absorbs whatever the model cannot explain.
+
+On a graph, the scalar coefficients become matrices:
+
+$$
+\mathbf{x}_m=\sum_{i=1}^{K}\boldsymbol{\Phi}_i\mathbf{x}_{m-i}+\boldsymbol{\epsilon}_m,
+\qquad
+\boldsymbol{\Phi}_i\in\mathbb{R}^{N\times N}.
+$$
+
+Leaving $\boldsymbol{\Phi}_i$ arbitrary would be hopeless — $KN^{2}$ parameters, and no locality. But we know from Lecture 2 what a well-behaved $N\times N$ operator on a graph looks like: **a graph filter**. Take $\boldsymbol{\Phi}_i=\sum_{j=0}^{p}h_{j,i}\mathbf{S}^{j}$ and the model becomes
+
+$$
+\mathbf{x}_m=\sum_{i=1}^{K}\sum_{j=0}^{p}h_{j,i}\mathbf{S}^{j}\mathbf{x}_{m-i}+\boldsymbol{\epsilon}_m,
+$$ {#eq-graph-ar}
+
+with $(p+1)K$ parameters regardless of $N$. Reading it off: the value at a node at time $m$ depends on its own past $K$ values **and** on the past values of its $p$-hop neighborhood. Setting $p=1$ gives the simplest useful case, $\mathbf{x}_m=\sum_i(h_{0,i}\mathbf{I}+h_{1,i}\mathbf{S})\mathbf{x}_{m-i}+\boldsymbol{\epsilon}_m$ — each node's own history plus its immediate neighbors'.
+
+::: {.checkpoint}
+**Check 7 — Two axes, not one**
+
+An ordinary time series has one axis of dependence: the past. A spatiotemporal graph signal has two, and @eq-graph-ar has one index for each — $i$ runs over time lags and $j$ over graph hops. Traffic at an intersection depends on that intersection an hour ago *and* on the upstream intersections a few minutes ago.
+:::
+
+### Forecasting with GNNs
+
+Add nonlinearities to @eq-graph-ar and it becomes a network:
+
+$$
+\tilde{\mathbf{x}}_m=\sum_{i=1}^{K}\alpha_i\,\sigma\!\left(\sum_{j=0}^{p}h_{j,i}\mathbf{S}^{j}\mathbf{x}_{m-i}\right),
+$$ {#eq-forecast-gnn}
+
+where each lag is filtered on the graph, passed through $\sigma$, and the $K$ results are combined with learnable weights $\alpha_i$.
+
+::: {.figure-panel}
+![The architecture of @eq-forecast-gnn: each of the $K$ lags in the window is graph-filtered and passed through a nonlinearity, the branches are summed, and the prediction is compared with the true next snapshot by the MSE loss.](../../assets/figures/forecasting-gnn-architecture.svg){#fig-forecasting-gnn fig-alt="A diagram from a graph and its signal matrix through K parallel filter branches into a summation and an MSE loss"}
+:::
+
+The loss is mean squared error over the nodes,
+
+$$
+\mathcal{L}_{\mathrm{MSE}}(\mathbf{x}_m,\tilde{\mathbf{x}}_m)
+=\frac{1}{N}\sum_{i=1}^{N}\left(x_m(i)-\tilde{x}_m(i)\right)^{2},
+$$
+
+and training is ordinary SGD or Adam.
+
+### Multiple horizons
+
+Predicting $H$ steps ahead rather than one admits two designs.
+
+**MLP head.** Produce all $H$ horizons in one forward pass by projecting the shared representation:
+
+$$
+\tilde{\mathbf{X}}_m=\sigma\!\left(\left[\sum_{i=1}^{K}\alpha_i\sigma\!\left(\sum_{j=0}^{p}h_{j,i}\mathbf{S}^{j}\mathbf{x}_{m-i}\right)\right]\mathbf{w}_h^{\top}\right)
+\in\mathbb{R}^{N\times H},
+$$
+
+with $\mathbf{w}_h\in\mathbb{R}^{H\times1}$ learnable, and MSE taken between the matrices $\tilde{\mathbf{X}}_m$ and $\mathbf{X}_m$.
+
+**Recursive.** Feed the model's own prediction back in. Writing $\texttt{GNN}_{\mathcal{G},\boldsymbol{\theta}}(\cdot)$ for @eq-forecast-gnn,
+
+$$
+\tilde{\mathbf{x}}_m=\texttt{GNN}_{\mathcal{G},\boldsymbol{\theta}}(\mathbf{x}_{m-1},\ldots,\mathbf{x}_{m-K}),
+\qquad
+\tilde{\mathbf{x}}_{m+1}=\texttt{GNN}_{\mathcal{G},\boldsymbol{\theta}}(\tilde{\mathbf{x}}_m,\mathbf{x}_{m-1},\ldots,\mathbf{x}_{m-K+1}),
+$$
+
+and so on for $H-1$ steps, assembling $\tilde{\mathbf{X}}_m\in\mathbb{R}^{N\times H}$.
+
+::: {.checkpoint}
+**Check 8 — Two things to notice about the recursion**
+
+1. **The window shifts.** Each step drops the oldest true observation and prepends the newest prediction, so the input stays $K$ wide and grows progressively more synthetic.
+2. **The parameters are shared.** The same $\boldsymbol{\theta}$ is used at every horizon — one model, applied $H$ times, not $H$ models.
+
+The recursive formulation works better in practice. It also compounds its own errors, which is why forecast accuracy degrades with the horizon.
+:::
+
+### GraphCast
+
+The clearest large-scale demonstration is **GraphCast** [@lam2023learning], DeepMind's medium-range weather model.
+
+- It forecasts up to **10 days** ahead, learning from historical reanalysis data instead of integrating the equations of motion numerically.
+- The atmosphere is represented as a **global multi-mesh graph** built on hierarchical icosahedral meshes, not a latitude–longitude grid — which avoids the pole distortion a regular grid suffers.
+- Message passing across mesh resolutions propagates information locally and globally in the same forward pass.
+- It is **auto-regressive**, exactly as above: each output state is computed from previous states plus multi-resolution message passing.
+- It produces a 10-day forecast in **under a minute on one TPU**, against roughly an hour for traditional numerical weather prediction.
+
+GraphCast has a good deal of additional machinery. The part that matters here is that its skeleton is @eq-forecast-gnn.
+
+Traffic forecasting is the other standard benchmark family: **MetrLA** (four months of speeds on 207 Los Angeles County highway sensors at 5-minute resolution) and **PemsBay** (six months at 325 Bay Area stations, also 5-minute).
+
+## Exercises
+
+### Exercise 1 — Reading the GFT
+
+Take the path graph on 6 nodes. Compute $\mathbf{L}$, its eigenvalues and eigenvectors, and verify that the eigenvector for $\lambda_1=0$ is constant and that the number of sign changes grows with $\lambda$.
+
+### Exercise 2 — Quadratic form
+
+For @fig-quadratic-form with $a_{12}=2$, $a_{13}=1$, $a_{14}=1$ and $\mathbf{x}=[1,0,-1,2]^{\top}$, compute $\mathbf{x}^{\top}\mathbf{L}\mathbf{x}$ directly from the edge sum, then again as a matrix product, and confirm they agree.
+
+### Exercise 3 — Why the difference is smoother
+
+Let each node carry $x_s(i)=f(i)+g(s)$: a fixed spatial pattern plus a spatially uniform temporal drift. Show that $\mathbf{x}_s^{\top}\mathbf{L}\mathbf{x}_s$ is generally nonzero while $(\mathbf{x}_s-\mathbf{x}_{s-1})^{\top}\mathbf{L}(\mathbf{x}_s-\mathbf{x}_{s-1})=0$ exactly. Relate this to @fig-temporal-difference.
+
+### Exercise 4 — The gradient
+
+Derive $\nabla_{\tilde{\mathbf{X}}}f_u$ for @eq-tgsr. You will need $\nabla_{\mathbf{Z}}\operatorname{tr}(\mathbf{Z}^{\top}\mathbf{A}\mathbf{Z})=2\mathbf{A}\mathbf{Z}$ for symmetric $\mathbf{A}$, and the chain rule through $\mathbf{Z}=\tilde{\mathbf{X}}\mathbf{D}_h$.
+
+### Exercise 5 — Chebyshev recursion
+
+Verify that $\mathbf{Z}_i=2\tilde{\mathbf{L}}\mathbf{Z}_{i-1}-\mathbf{Z}_{i-2}$ implements $T_i(\tilde{\mathbf{L}})\mathbf{H}^{(\ell)}$, and explain why $\tilde{\mathbf{L}}=2\mathbf{L}/\lambda_N-\mathbf{I}$ rather than $\mathbf{L}$ itself.
+
+### Exercise 6 — Does the Sobolev term speed things up?
+
+Using `scripts/figures/lecture_04_figures.py`, run gradient descent on @eq-tgsr and on @eq-sobolev from the same start, and plot the error against iteration. Try to find a regime — sparser sampling, larger $\upsilon$, larger $\epsilon$ or $\beta$ — in which the Sobolev version converges measurably faster. If you cannot, say what that tells you about which term controls the conditioning of this particular problem, and read [@giraldo2022reconstruction] for the setting where the effect is visible.
+
+### Exercise 7 — Parameter count
+
+For @eq-graph-ar with $N=10^{4}$ nodes, order $K=12$ and $p=3$ hops, count the parameters. Compare with an unconstrained $\boldsymbol{\Phi}_i\in\mathbb{R}^{N\times N}$, and with an LSTM run independently at each node with hidden size 64.
+
+### Exercise 8 — Horizons
+
+Explain why the recursive formulation compounds errors while the MLP head does not, and why the recursive one is nonetheless usually more accurate.
+
+## Main takeaways
+
+1. A **time-varying graph signal** $\mathbf{X}\in\mathbb{R}^{N\times M}$ carries a time series at every node; the temporal difference $\mathbf{X}\mathbf{D}_h$ is the object most of the modeling acts on.
+2. The **GFT** diagonalizes graph filters and makes "graph frequency" precise: the eigenvalue is the frequency, and smooth signals concentrate their energy at the low end.
+3. Working on the spectrum costs $O(N^{3})$ and is not inductive. **ChebConv** buys an arbitrary degree-$k$ response with sparse products only, and GCN is its $k=1$ special case.
+4. **Reconstruction** is an error term on the observed entries plus a smoothness regularizer, and the regularizer belongs on $\mathbf{X}\mathbf{D}_h$ — a choice worth several factors of accuracy.
+5. $\kappa(\mathbf{L})=\infty$ because $\lambda_{\min}(\mathbf{L})=0$. **Sobolev smoothness** replaces $\mathbf{L}$ with $(\mathbf{L}+\epsilon\mathbf{I})^{\beta}$ and makes the conditioning finite and tunable.
+6. The same problem solves with a **Chebyshev autoencoder** and the same loss. Optimization needs no data; the network amortizes across signals. Both are shallow, for the usual reason.
+7. **Forecasting** is auto-regressive modeling where the AR coefficients become graph filters, giving dependence on both past time steps and nearby nodes with a parameter count independent of $N$.
+8. Multiple horizons come from an **MLP head** or a **recursive** rollout with shared parameters; the recursive version usually wins. **GraphCast** is this recipe at planetary scale.
+
+## References and provenance {.unnumbered}
+
+This web note is adapted from the Lecture 4 slides by Jhony H. Giraldo. The graph-filter diagonalization is proved, the shapes of the autoencoder are worked through, the auto-regressive model is derived from the classical AR($K$) model, and the smoothness and conditioning claims are checked numerically.
+
+The diagrams reproduce the original course vectors. @fig-gft, @fig-temporal-difference, @fig-reconstruction-smoothness, and @fig-chebyshev are new and were computed with `numpy` and `networkx`; the script that produces them is `scripts/figures/lecture_04_figures.py` in this repository. @fig-fourier is a redrawn version of the lecture's Fourier recap.
+
+::: {#refs .references-small}
+:::

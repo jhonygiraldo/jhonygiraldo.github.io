@@ -30,30 +30,6 @@ page-layout: full
 </section>
 ```
 
-## Research interests
-
-My work lies at the intersection of learning, signal processing, and structured data. The main themes are:
-
-```{=html}
-<ul class="research-interest-list">
-  <li><strong>Machine learning on graphs and higher-order structures.</strong> Graph neural networks, continuous models, and geometric learning on graphs, hypergraphs, simplicial complexes, and cellular complexes.</li>
-  <li><strong>Graph signal processing.</strong> Learning graph structure and developing methods for reconstruction, forecasting, imputation, summarization, stability, and generalization.</li>
-  <li><strong>Scientific and engineering applications.</strong> Structured-learning methods for vision, wildlife monitoring, underwater acoustics, materials, physical simulation, image compression, and circuit design.</li>
-</ul>
-```
-
-```{=html}
-<div class="postdoc-note">
-  <strong>Postdoctoral opportunity.</strong> I am looking for a researcher interested in geometric deep learning. Applications are reviewed on a rolling basis until the position is filled. <a href="/assets/pdf/Postdoc-Position-Geometric-Deep-Learning.pdf">Read the full call</a>.
-</div>
-```
-
-## Selected publications
-
-These papers represent the three threads of the research program. The [complete publication record](/publications/index.qmd) is searchable by title, author, venue, and year.
-
-{{< include _includes/generated/selected-publications.md >}}
-
 ## Latest news
 
 {{< include _includes/generated/latest-news.md >}}

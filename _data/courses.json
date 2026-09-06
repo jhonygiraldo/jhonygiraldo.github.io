@@ -12,6 +12,7 @@
     "lectures": [
       {
         "number": 1,
+        "kind": "lecture",
         "title": "Introduction to machine learning on graphs",
         "topics": "Graphs as a modeling language; graph representations and task levels; handcrafted structural features; node embeddings; DeepWalk; node2vec.",
         "note": "teaching/machine-learning-with-graphs/lecture-01.qmd",
@@ -19,45 +20,43 @@
       },
       {
         "number": 2,
-        "title": "Introduction to graph neural networks",
+        "kind": "lecture",
+        "title": "Graph neural networks",
         "topics": "Convolutions as polynomials in a shift operator; graph signals and diffusion; graph convolutional filters; GCN; message passing; GAT; homophily, over-smoothing, and over-squashing; PyTorch Geometric.",
         "note": "teaching/machine-learning-with-graphs/lecture-02.qmd",
         "slides": "Lecture-02-Graph-Neural-Networks.pdf"
       },
       {
         "number": 3,
-        "title": "Practical: graph neural networks",
-        "topics": "Implementing, training, and debugging GNNs on real datasets with PyTorch Geometric."
+        "kind": "lecture",
+        "title": "Scaling up graph neural networks",
+        "topics": "Why mini-batching fails on graphs; computational graphs; GraphSAGE neighbor sampling; Cluster-GCN; SGC and LightGCN.",
+        "note": "teaching/machine-learning-with-graphs/lecture-03.qmd",
+        "slides": "Lecture-03-Scaling-Up-Graph-Neural-Networks.pdf"
       },
       {
         "number": 4,
-        "title": "Scaling graph neural networks",
-        "topics": "Sampling, mini-batching, and architectures for graphs too large to fit in memory."
+        "kind": "lecture",
+        "title": "Spatiotemporal analysis with graphs",
+        "topics": "Time-varying graph signals; the graph Fourier transform; spectral GNNs and ChebConv; reconstruction by optimization and by autoencoder; auto-regressive forecasting; GraphCast.",
+        "note": "teaching/machine-learning-with-graphs/lecture-04.qmd",
+        "slides": "Lecture-04-Spatiotemporal-Analysis-with-Graphs.pdf"
       },
       {
         "number": 5,
-        "title": "Spatiotemporal analysis with graph neural networks",
-        "topics": "Learning on graphs whose signals evolve in time: traffic, sensors, and dynamic systems."
+        "kind": "lecture",
+        "title": "Recommender systems",
+        "topics": "Bipartite user-item graphs; recommendation as link prediction; Recall@k; the binary and BPR losses; collaborative filtering; NGCF; LightGCN.",
+        "note": "teaching/machine-learning-with-graphs/lecture-05.qmd",
+        "slides": "Lecture-05-Recommender-Systems.pdf"
       },
       {
         "number": 6,
-        "title": "Practical: spatiotemporal graph learning",
-        "topics": "Building and evaluating a spatiotemporal graph model end to end."
-      },
-      {
-        "number": 7,
-        "title": "Recommender systems using graphs",
-        "topics": "User-item bipartite graphs, collaborative filtering, and graph-based recommendation."
-      },
-      {
-        "number": 8,
+        "kind": "lecture",
         "title": "Graph generation",
-        "topics": "Generative models for graphs and molecules, and how such models are evaluated."
-      },
-      {
-        "number": 9,
-        "title": "Practical: graph generation",
-        "topics": "Training a graph generative model and assessing the graphs it produces."
+        "topics": "Properties of real-world graphs; Erdos-Renyi random graphs; deep generative models; GraphRNN; iterative local expansion by coarsening.",
+        "note": "teaching/machine-learning-with-graphs/lecture-06.qmd",
+        "slides": "Lecture-06-Graph-Generation.pdf"
       }
     ]
   },
