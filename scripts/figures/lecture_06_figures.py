@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 
-from _style import CORAL, GOLD, MUTED, PURPLE, TEAL, save, use_style
+from _style import CORAL, GOLD, INK, MUTED, PURPLE, TEAL, save, use_style
 
 use_style()
 
@@ -83,29 +83,40 @@ def figure_real_vs_random() -> None:
                      fontsize=9.5, color=CORAL,
                      arrowprops=dict(arrowstyle="->", color=CORAL, linewidth=1.1))
 
+    # Clustering is O(1e-3) for G(n,p) while path length is O(5). On a shared
+    # linear axis the clustering bars vanish, so plot the ratio instead: how
+    # many times larger the model's value is than the random graph's.
+    matched = graphs[1:]
     labels = ["clustering\ncoefficient $C$", "avg. path\nlength $\\bar{h}$",
               "largest component\n(fraction of $N$)"]
+    scale_free_values = [
+        nx.average_clustering(matched[0][1]),
+        average_path_length(matched[0][1]),
+        giant_component(matched[0][1]).number_of_nodes() / matched[0][1].number_of_nodes(),
+    ]
+    random_values = [
+        nx.average_clustering(matched[1][1]),
+        average_path_length(matched[1][1]),
+        giant_component(matched[1][1]).number_of_nodes() / matched[1][1].number_of_nodes(),
+    ]
+    ratios = [a / b if b > 0 else np.inf for a, b in zip(scale_free_values, random_values)]
     positions = np.arange(len(labels))
-    width = 0.26
-    matched = graphs[1:]
-    for index, (label, graph, color, _) in enumerate(matched):
-        values = [
-            nx.average_clustering(graph),
-            average_path_length(graph),
-            giant_component(graph).number_of_nodes() / graph.number_of_nodes(),
-        ]
-        offset = (index - 0.5) * width
-        bars = axes[1].bar(positions + offset, values, width=width, color=color)
-        for bar, value in zip(bars, values):
-            axes[1].annotate(f"{value:.2f}", xy=(bar.get_x() + bar.get_width() / 2, value),
-                             xytext=(0, 3), textcoords="offset points", ha="center",
-                             fontsize=8.5, color=color)
+    colors = [CORAL if r > 3 or r < 1 / 3 else MUTED for r in ratios]
+    axes[1].bar(positions, ratios, width=0.5, color=colors)
+    axes[1].axhline(1.0, color=TEAL, linewidth=1.6)
+    axes[1].annotate("equal", xy=(2.42, 1.0), xytext=(0, 4), textcoords="offset points",
+                     fontsize=9, color=TEAL, ha="right")
+    for position, (ratio, a, b) in enumerate(zip(ratios, scale_free_values, random_values)):
+        axes[1].annotate(f"{ratio:.0f}×" if ratio >= 10 else f"{ratio:.2f}×",
+                         xy=(position, ratio), xytext=(0, 4), textcoords="offset points",
+                         ha="center", fontsize=9.5, color=INK)
+        labels[position] = f"{labels[position]}\n{a:.3g} vs {b:.3g}"
+    axes[1].set_yscale("log")
     axes[1].set_xticks(positions)
     axes[1].set_xticklabels(labels, fontsize=9.5)
     axes[1].grid(axis="x", visible=False)
-    axes[1].set_ylim(0, 6.4)
-    axes[1].legend([label for label, *_ in matched], loc="upper left", fontsize=9)
-    axes[1].set_title("Same $N$ and same average degree: only clustering differs")
+    axes[1].set_ylabel("preferential attachment $/$ Erdős–Rényi")
+    axes[1].set_title("Two synthetic models, same $N$ and mean degree")
 
     save(fig, "real-vs-random-graphs")
 
@@ -161,14 +172,14 @@ def figure_generation_cost() -> None:
     nodes = np.arange(10, 2001)
 
     fig, axis = plt.subplots(figsize=(7.6, 4.2))
-    axis.loglog(nodes, nodes * (nodes + 1) / 2, color=CORAL, linewidth=2.4,
-                label=r"GraphRNN: $\mathcal{O}(N^2/2)$ edge decisions")
+    axis.loglog(nodes, nodes * (nodes - 1) / 2, color=CORAL, linewidth=2.4,
+                label=r"GraphRNN worst case: $N(N-1)/2$ decisions")
     axis.loglog(nodes, nodes * np.log2(nodes), color=TEAL, linewidth=2.4, linestyle="--",
-                label=r"local expansion: sub-quadratic")
+                label=r"$N\log_2 N$ (reference slope, not a measurement)")
     axis.loglog(nodes, nodes, color=MUTED, linewidth=1.4, linestyle=":", label=r"$N$ (for reference)")
 
     for size in (100, 1000):
-        quadratic = size * (size + 1) / 2
+        quadratic = size * (size - 1) / 2
         axis.plot([size], [quadratic], "o", color=CORAL, markersize=7, zorder=3)
         axis.annotate(f"$N={size}$: {quadratic:,.0f}", xy=(size, quadratic), xytext=(-8, 10),
                       textcoords="offset points", ha="right", fontsize=9.5, color=CORAL)

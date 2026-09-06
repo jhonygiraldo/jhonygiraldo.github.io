@@ -86,6 +86,18 @@ where $\mathcal{V}=\{v_1,\ldots,v_N\}$ is a set of **nodes** (or vertices) and $
 
 We write $N=|\mathcal{V}|$ and $M=|\mathcal{E}|$. A node can carry a feature vector $\mathbf{x}_v\in\mathbb{R}^F$; an edge can carry a scalar or vector attribute, such as distance, capacity, time, or bond type.
 
+::: {.checkpoint}
+**Conventions used throughout this course**
+
+Defining $\mathcal{E}$ as a set of ordered pairs and then calling $(u,v)$ and $(v,u)$ "the same edge" needs an explicit convention, so here it is.
+
+- **Counting.** For an undirected graph, $M=|\mathcal{E}|$ counts each edge **once**, so a triangle has $M=3$. Stored formats keep both directions, so an `edge_index` has $2M$ columns and a sparse matrix has $2M$ nonzeros. When a complexity is quoted as $O(|\mathcal{E}|)$ the factor of two is absorbed into the constant.
+- **Graphs.** Unless stated otherwise, graphs are **simple** (no self-loops, no multi-edges) and weights are **nonnegative**. Self-loops appear deliberately in Lecture 2 and are flagged there.
+- **Isolated nodes.** A node of degree zero has no outgoing transition, so a random walk cannot leave it and its clustering coefficient is defined as $0$. Degree-normalized operators use the convention $1/0=0$.
+- **Features.** $\mathbf{X}\in\mathbb{R}^{N\times F}$ is **row-wise**: one row per node.
+- **Reused symbols.** $M$ is the edge count here, the mini-batch size in Lecture 3, and the number of time samples in Lecture 4. Each lecture states which it means.
+:::
+
 ### Undirected, directed, and weighted graphs
 
 In an **undirected graph**, $(u,v)$ and $(v,u)$ represent the same edge. In a **directed graph**, their meanings differ. A **weighted graph** associates a value $w_{uv}$ with every edge.
@@ -128,7 +140,9 @@ The same abstract graph admits several computational representations.
 
 ### Adjacency matrix
 
-An adjacency matrix supports algebraic operations and dense linear algebra. Its storage cost is $O(N^2)$, even when only a small fraction of node pairs are connected.
+An adjacency matrix supports algebraic operations and linear algebra. Stored **densely** its cost is $O(N^2)$, even when only a small fraction of node pairs are connected.
+
+That is a statement about the storage format, not about matrices. A **sparse** adjacency matrix — CSR, COO, or the `edge_index` of a graph library — stores only the nonzeros, at $O(N+M)$, and still supports the matrix products every later lecture relies on. So the choice is not "matrix or efficiency": it is dense or sparse. Dense $O(N^2)$ storage is what becomes impossible at scale, and the sparse matrix is what Lectures 2 to 6 actually use.
 
 ### Edge list and adjacency list
 
@@ -272,7 +286,9 @@ $$
 \mathbf{x}^{(t+1)}=\frac{\mathbf{A}\mathbf{x}^{(t)}}{\|\mathbf{A}\mathbf{x}^{(t)}\|_2}
 $$
 
-often converges toward this dominant direction when the standard spectral conditions hold.
+converges toward this dominant direction provided $|\lambda_1|>|\lambda_2|$ — the largest eigenvalue must be strictly larger *in absolute value* than the next.
+
+That condition is not a formality. A **connected bipartite graph** has eigenvalues symmetric about zero, so $-\lambda_{\max}$ is also an eigenvalue and $|\lambda_1|=|\lambda_2|$. Power iteration then oscillates between two directions instead of converging. This is the same near-bipartite structure that will reappear in Lecture 3, where it makes diffusion behave very differently from the homophilous case.
 
 ### Closeness centrality
 
@@ -286,12 +302,14 @@ A high value means that the node can reach the rest of the network in relatively
 
 ### Betweenness centrality
 
-Let $\sigma_{st}$ be the number of shortest paths from $s$ to $t$, and $\sigma_{st}(i)$ the number of those paths passing through $i$. Then
+Let $\sigma_{st}$ be the number of shortest paths from $s$ to $t$, and $\sigma_{st}(i)$ the number of those paths passing through $i$. Summing over **ordered** pairs $(s,t)$,
 
 $$
 C_B(i)=\sum_{\substack{s\neq i\neq t\\s\neq t}}
 \frac{\sigma_{st}(i)}{\sigma_{st}}.
 $$
+
+On an undirected graph each unordered pair is therefore counted twice, and implementations usually divide by two — `networkx` does, and also offers a normalized variant. Compare conventions before comparing numbers.
 
 Betweenness identifies potential bridges and bottlenecks rather than merely well-connected nodes.
 
@@ -306,9 +324,24 @@ $$
 The coefficient counts the fraction of possible neighbor–neighbor edges that exist. **Graphlets** generalize this idea by counting small rooted subgraph patterns. A graphlet-degree vector can describe the structural role of a node, but its dimension and computational cost grow as larger patterns are included [@leskovec2020mmds].
 
 ::: {.checkpoint}
-**Check 2 — Importance is not one concept**
+**Check 2 — Predict before you read on**
 
-A high-degree node has many immediate contacts. A high-closeness node reaches other nodes quickly. A high-betweenness node mediates many shortest routes. A high-eigenvector-centrality node connects to influential neighbors. The rankings need not agree.
+Take a "barbell": two dense clusters of five nodes each, joined by a single path through one intermediate node $m$. A node $h$ inside one cluster is connected to everything in that cluster.
+
+Before reading further, predict which of $h$ and $m$ ranks higher on each of **degree**, **closeness**, and **betweenness**.
+
+<details><summary>Now check yourself</summary>
+
+$h$ wins on **degree** — it has more immediate contacts, while $m$ has only two.
+
+$m$ wins on **betweenness**, and by a wide margin: every shortest path between the clusters passes through it, and none passes through $h$.
+
+**Closeness** is the interesting one. $m$ is typically closer *on average* to everything, because it sits between the two clusters, whereas $h$ is far from the whole opposite cluster. So $m$ usually wins here too, despite its degree of two.
+
+The general lesson: a high-degree node has many immediate contacts, a high-closeness node reaches the network quickly, a high-betweenness node mediates routes, and a high-eigenvector-centrality node attaches to influential neighbors. **These rankings need not agree**, and choosing among them is a modelling decision, not a technicality.
+
+</details>
+
 :::
 
 ## From feature engineering to representation learning
@@ -317,7 +350,7 @@ A classical pipeline constructs structural features $\phi(v)$ and sends them to 
 
 ::: {.two-figures}
 ::: {.figure-panel}
-![A classical pipeline depends on manually engineered structural features. Vector figure from the supplied course material.](../../assets/figures/representation-learning.svg){fig-alt="Pipeline from input graph to automatically learned representation and prediction"}
+![The transition this section is about: the **feature-engineering stage is struck out** and replaced by a representation learned from the graph itself, which then feeds the same downstream learner. Vector figure from the supplied course material.](../../assets/figures/representation-learning.svg){fig-alt="Pipeline from input graph with the feature engineering stage crossed out, replaced by an automatically learned representation feeding a prediction"}
 :::
 ::: {.figure-panel}
 ![A node encoder maps each node to a vector in a lower-dimensional representation space. Vector figure from the supplied course material.](../../assets/figures/node-embedding.svg){fig-alt="A graph node mapped by a function into a numerical embedding vector"}
@@ -339,6 +372,8 @@ $$
 $$
 
 where $\mathbf{e}_u$ is the one-hot vector identifying $u$.
+
+One simplification to flag, because it affects the exercises. We use a **single** embedding table, so the same $\mathbf{z}_u$ appears whether $u$ is the center of a context window or a member of it. word2vec and most DeepWalk implementations keep **two** tables — a center (input) embedding and a context (output) embedding — and either discard the context table after training or average the two. The single-table version keeps the derivations readable and is a legitimate variant; just be aware that in a real implementation $\mathbf{z}_u^{\top}\mathbf{z}_v$ would be $\mathbf{z}_u^{\top}\mathbf{c}_v$, and that the gradient in Exercise 4 has an extra term when $u$ and $v$ share a table.
 
 The decoder converts two embeddings into a similarity score. A common choice is the dot product
 
@@ -363,7 +398,7 @@ $$
 After $k$ steps, $(\mathbf{P}^k)_{uv}$ gives the probability of being at $v$ when the walk began at $u$.
 
 ::: {.figure-panel}
-![A random walk produces node sequences. Nearby positions in each sequence form positive center–context training pairs.](../../assets/figures/random-walk.svg){#fig-random-walk fig-alt="Highlighted path through a graph followed by a node sequence and positive context pairs"}
+![A random walk produces node sequences. Nearby positions in each sequence form positive center–context training pairs: here the walk visits $u,a,b,c,d$, and a context window of radius two around $b$ yields the pairs $(b,u)$, $(b,a)$, $(b,c)$, $(b,d)$. Training increases $\mathbf{z}_b^{\top}\mathbf{z}_v$ for each context node $v$ and decreases it for sampled negatives.](../../assets/figures/random-walk.svg){#fig-random-walk fig-alt="Highlighted path through a graph followed by a node sequence and positive context pairs"}
 :::
 
 Random walks are useful because they provide:
@@ -405,13 +440,15 @@ where $\sigma(a)=1/(1+e^{-a})$. The first term attracts an observed center–con
 
 DeepWalk applies the word2vec skip-gram idea to random-walk sequences [@perozzi2014deepwalk].
 
+One point of attribution before the algorithm. The original DeepWalk paper makes the softmax denominator tractable with a **hierarchical softmax** — a binary tree over nodes, turning one $O(N)$ normalization into $O(\log N)$ binary decisions. The negative sampling used below is the later, and now more common, alternative inherited from word2vec. They are not two implementations of the same objective: hierarchical softmax computes a genuine normalized distribution, whereas negative sampling optimizes a **different objective** whose optimum happens to induce similar embeddings. Neither is an algebraically exact substitute for the full softmax.
+
 1. Start several short unbiased random walks from every node.
 2. Treat each walk as a sentence and each node as a token.
 3. Within a context window, form center–context pairs.
-4. Optimize the embeddings with stochastic gradient descent and negative sampling.
+4. Optimize the embeddings with stochastic gradient descent — with hierarchical softmax in the original paper, or negative sampling as above.
 
 ::: {.figure-panel}
-![DeepWalk places structurally related nodes near one another in a low-dimensional embedding. Course-supplied vector based on the DeepWalk example.](../../assets/figures/deepwalk-embedding.svg){#fig-deepwalk fig-alt="Network communities on the left and their separated two-dimensional embedding clusters on the right"}
+![DeepWalk places structurally related nodes near one another in a low-dimensional embedding. Left, the input graph with its communities colored; right, a **two-dimensional projection** of the learned embedding, colored by the same community labels. The axes carry no intrinsic meaning — they are projection directions, and the embedding itself is $d$-dimensional with $d\gg2$. What the picture shows is that nodes sharing a community end up near one another; the orientation, scale and sign of the axes are arbitrary. Course-supplied vector based on the DeepWalk example.](../../assets/figures/deepwalk-embedding.svg){#fig-deepwalk fig-alt="Network communities on the left and a two-dimensional projection of their embeddings, colored by community, on the right"}
 :::
 
 The embeddings are **transductive**: $\mathbf{Z}$ contains one learned vector per training node. A new node has no column in $\mathbf{Z}$ and therefore no embedding unless the model is retrained or extended. Graph neural networks will replace this lookup table with a feature- and neighborhood-dependent encoder.
@@ -451,7 +488,7 @@ The **return parameter** $p$ controls immediate backtracking. A larger $p$ makes
 ![Breadth-first-like walks remain near the source; depth-first-like walks explore farther away. Vector figure from the supplied course material.](../../assets/figures/bfs-vs-dfs.svg){fig-alt="A network with red local BFS arrows and blue outward DFS arrows"}
 :::
 ::: {.figure-panel}
-![node2vec assigns unnormalized transition weights according to the distance from the preceding node. Vector figure from the supplied course material.](../../assets/figures/node2vec-transition.svg){fig-alt="Current and previous nodes with candidate transitions labeled one over p, one, and one over q"}
+![node2vec assigns unnormalized transition weights according to the distance from the preceding node. Read the figure against the equations as follows: the node the walk **came from** is $t$, the node it is **at** is $v$, and the labelled candidates are the $x\in\mathcal{N}(v)$. The factor $1/p$ sits on the edge back to $t$ ($d(t,x)=0$), the factor $1$ on candidates adjacent to $t$ ($d(t,x)=1$), and $1/q$ on those two hops from $t$ ($d(t,x)=2$). Note that the figure's own node letters differ from the symbols used here. Vector figure from the supplied course material.](../../assets/figures/node2vec-transition.svg){fig-alt="Previous node t and current node v with candidate transitions labeled one over p, one, and one over q according to distance from t"}
 :::
 :::
 

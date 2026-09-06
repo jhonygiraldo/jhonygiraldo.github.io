@@ -183,15 +183,19 @@ $$
 Substituting into Definition 2,
 
 $$
-\mathbb{E}[C_i]=\frac{2}{k_i(k_i-1)}\cdot p\,\frac{k_i(k_i-1)}{2}=p=\frac{\bar{k}}{N-1}\approx\frac{\bar{k}}{N}.
+\mathbb{E}[C_i\mid k_i]=\frac{2}{k_i(k_i-1)}\cdot p\,\frac{k_i(k_i-1)}{2}=p=\frac{\bar{k}}{N-1}\approx\frac{\bar{k}}{N}.
 $$
+
+Two conventions to fix, because the result is cleaner than it looks. The cancellation needs $k_i\geq2$ — a node of degree 0 or 1 has no pair of neighbors and its $C_i$ is $0/0$. If we define $C_i=0$ in that case, then averaging over all nodes gives $\mathbb{E}[C]=p\cdot\Pr(k_i\geq2)$, slightly below $p$. And $\bar{k}=p(N-1)$ is the *expected* mean degree; any particular realization has its own.
 
 Read the result: if we hold the average degree $\bar{k}$ fixed and grow the graph, **the clustering coefficient goes to zero**. A large random graph has no local structure at all.
 :::
 
 ### Its giant component
 
-The other classical result is a phase transition: the giant component appears exactly when the average degree reaches $1$, that is $p=1/(N-1)$ — the point at which each node has, in expectation, at least one edge.
+The other classical result is a phase transition. Writing $p=c/N$, the statement is **asymptotic**: as $N\to\infty$, for $c<1$ the largest component has size $O(\log N)$, while for $c>1$ a component containing a constant fraction of the nodes emerges. The critical case $c=1$ is different again, with a largest component of order $N^{2/3}$.
+
+Two things this is *not*. It is not a sharp event in a finite sample — the transition in a 2000-node graph is a smooth rise, not a step, and it sharpens as $N$ grows. And a giant component is not **full connectivity**: that requires the much higher $p\approx\log N/N$, so a graph well past the giant-component threshold still typically has isolated nodes and infinite distances between some pairs.
 
 ::: {.figure-panel}
 ![Both results, simulated. Left: the largest component against average degree on 2000-node $G_{np}$ graphs; the transition at $\bar{k}=1$ is sharp. Right: $\mathbb{E}[C]=\bar{k}/N$ against $N$ for two fixed average degrees, with MSN's measured $C=0.11$ marked. At MSN's scale, $\bar{k}=14.4$ over $1.8\times10^{8}$ nodes predicts $C\approx8\times10^{-8}$ — six orders of magnitude too small.](../../assets/figures/erdos-renyi-properties.svg){#fig-er-properties fig-alt="Left, a sharp rise in giant component size at average degree one; right, two decreasing lines far below a horizontal line at 0.11"}
@@ -204,7 +208,7 @@ For $G_{np}$ the diameter scales as $\mathcal{O}\!\left(\log N/\log(pN)\right)$.
 ### The verdict
 
 ::: {.figure-panel}
-![The comparison, measured. Left: the complementary CDF $P(K\geq k)$ — the readable way to compare tails. A preferential-attachment graph and the real Les Misérables network keep mass out to high degree; the size-matched $G_{np}$ falls off a cliff at $k\approx15$. Right: with $N$ and average degree held equal, path length and connectivity agree closely, and clustering differs by more than two orders of magnitude.](../../assets/figures/real-vs-random-graphs.svg){#fig-real-vs-random fig-alt="Left, three complementary CDF curves with the random graph dropping sharply; right, grouped bars where clustering differs and path length and component size match"}
+![The comparison, measured — and note that the two panels compare different things. **Left**: the complementary CDF $P(K\geq k)$, the readable way to compare tails on a small sample. The real Les Misérables network ($N=77$) and a preferential-attachment model ($N=5000$) both keep mass out to high degree; the $G_{np}$ graph, matched to the model in $N$ and mean degree, falls off a cliff at $k\approx15$. The real graph is here as an anchor, not as a size-matched comparison — it is 65 times smaller. **Right**: two **synthetic** models only, at equal $N$ and equal mean degree, so the comparison is like for like. Ratios rather than raw values, because $C\approx0.001$ and $\bar{h}\approx5$ cannot share a linear axis: clustering differs by $193\times$, while path length ($0.82\times$) and giant-component fraction ($1.00\times$) agree.](../../assets/figures/real-vs-random-graphs.svg){#fig-real-vs-random fig-alt="Left, three complementary CDF curves with the random graph dropping sharply; right, a log-scale ratio bar chart where clustering differs 193-fold and the other two properties agree"}
 :::
 
 ::: {.checkpoint}
@@ -219,7 +223,11 @@ For $G_{np}$ the diameter scales as $\mathcal{O}\!\left(\log N/\log(pN)\right)$.
 
 Two out of four, and the two failures are the interesting ones. The degree distribution is binomial rather than heavily skewed, there is no local structure, and the giant component in most real networks does not emerge through a sharp phase transition at all.
 
-So: **no, real networks are not random graphs.** $G_{np}$ nonetheless remains valuable as the reference point — the null model you compare against before claiming that a structure is meaningful, and the standard setting for analyzing the cost and stability of graph algorithms.
+So: **real networks are not $G_{np}$ graphs.** Be careful to draw the conclusion no wider than that. "Real networks are not random graphs" would be far too strong — most useful models of real networks, including preferential attachment and the stochastic block model, *are* random graph models. What fails here is the specific assumption that edges appear **independently with a common probability**, and that assumption is what makes the degree distribution binomial and the clustering vanish.
+
+Note too what a good fit would and would not buy. Classical models have parameters and can be fitted: a preferential-attachment model can be tuned to match an observed degree exponent. But matching a graph's summary statistics is not the same as identifying the **process** that produced it — several mechanisms generate heavy tails, and a distributional fit does not choose between them.
+
+$G_{np}$ nonetheless remains valuable as the reference point — the null model you compare against before claiming that a structure is meaningful, and the standard setting for analyzing the cost and stability of graph algorithms.
 :::
 
 Other classical models improve on parts of this. The **small-world model** recovers a realistic clustering coefficient; the **Kronecker graph model** approximates several real properties at once. Both are left for self-study.
@@ -335,7 +343,7 @@ GraphRNN uses a **node-level RNN** and an **edge-level RNN**:
 
 - the node-level RNN generates the initial state for the edge-level RNN;
 - the edge-level RNN sequentially predicts whether the new node connects to each previous node;
-- the last hidden state of the edge-level RNN is fed back to advance the node-level RNN.
+- the node-level RNN advances by consuming the **adjacency vector just generated** — the sequence of edge decisions for the node that was added — not the edge-level RNN's hidden state.
 
 ### Making it stochastic
 
@@ -352,7 +360,7 @@ The fix is to treat each output as a **distribution** and sample from it. We wan
 ### Training
 
 ::: {.figure-panel}
-![**Teacher forcing.** At training time the observed edge sequence $y^{*}=[0,0,1,\ldots]$ replaces both the inputs and the outputs, so each step is conditioned on the true prefix rather than on the model's own samples.](../../assets/figures/graphrnn-teacher-forcing.svg){#fig-teacher-forcing fig-alt="An unrolled RNN with the ground-truth sequence supplied at every input and compared at every output"}
+![**Teacher forcing.** At training time the observed edge sequence $y^{*}=[0,0,1,\ldots]$ is fed in as the **inputs**, so each step is conditioned on the true prefix rather than on the model's own samples. The **outputs** are not replaced: the model still predicts a probability at every step, and the loss compares those predictions against the same $y^{*}$ as targets. Both appear in the diagram — ground truth entering from below, predictions leaving above.](../../assets/figures/graphrnn-teacher-forcing.svg){#fig-teacher-forcing fig-alt="An unrolled RNN with the ground-truth sequence supplied at every input and predictions compared against targets at every output"}
 :::
 
 The loss is binary cross-entropy:
@@ -384,14 +392,16 @@ At **training** time, teacher forcing supplies the true sequences. At **test** t
 ![The structural problem: **any node can connect to any prior node**, so adding node $i$ requires $i-1$ separate binary decisions, and long-range dependencies must be carried through the recurrence.](../../assets/figures/graphrnn-limitation.svg){#fig-graphrnn-limitation fig-alt="A graph being built where a newly added node must be checked against every previously added node"}
 :::
 
-The authors mitigate the ordering problem with a **BFS ordering**, which bounds how far back a new node can plausibly connect. The cost problem remains:
+The authors mitigate this with a **BFS ordering**. Under a BFS order a new node can only connect within a bounded frontier, so the edge-level sequence can be truncated to a fixed maximum length $M$ — which is what makes GraphRNN practical, and turns the cost from quadratic into $O(NM)$ on graphs where a small $M$ suffices.
+
+Without that truncation, adding node $i$ requires $i-1$ binary decisions, so the worst case is
 
 $$
-\mathcal{O}\!\left(\sum_{i=1}^{N}i\right)=\mathcal{O}\!\left(\frac{N(N+1)}{2}\right).
+\sum_{i=1}^{N}(i-1)=\frac{N(N-1)}{2},
 $$
 
 ::: {.figure-panel}
-![Sequential edge generation in numbers. At $N=100$ a graph takes about 5000 decisions; at $N=1000$, about half a million. The dashed line marks a sub-quadratic alternative for comparison — the point is the slope, not the constant.](../../assets/figures/graph-generation-cost.svg){#fig-generation-cost fig-alt="Log-log plot with a steep quadratic line for GraphRNN above a shallower sub-quadratic line"}
+![Sequential edge generation in numbers, as a **worst case**. At $N=100$ an untruncated graph takes about 5000 decisions; at $N=1000$, about half a million. Two caveats on this plot. The quadratic curve is the bound *without* BFS truncation, which GraphRNN does apply. And the dashed line is **not a measurement**: it is $N\log_2 N$, drawn purely as a reference slope for "sub-quadratic". It is neither a runtime nor a derived bound for the cited method, whose actual cost depends on its candidate-set assumptions and its denoising steps. Compare the slopes, not the values.](../../assets/figures/graph-generation-cost.svg){#fig-generation-cost fig-alt="Log-log plot with a steep quadratic line for GraphRNN above a shallower reference slope"}
 :::
 
 ## Efficient generation by local expansion
@@ -450,9 +460,19 @@ Show that the degree distribution of $G_{np}$ is binomial, $P(k)=\binom{N-1}{k}p
 
 Reproduce the left panel of @fig-er-properties with `scripts/figures/lecture_06_figures.py`. Vary $N$ over $\{500, 2000, 10000\}$ and describe what happens to the sharpness of the transition at $\bar{k}=1$.
 
-### Exercise 5 — Orderings
+### Exercise 5 — Orderings (advanced, optional)
 
-A graph with $N$ nodes admits up to $N!$ node orderings. For $N=10$, how many is that? Explain why GraphRNN's random ordering makes the likelihood it maximizes a lower bound rather than the true likelihood, and what the BFS ordering does about it.
+A graph with $N$ nodes admits up to $N!$ node orderings. For $N=10$, how many is that?
+
+Now set the likelihood up properly. GraphRNN models a *sequence*, so it defines $p_\theta(S^{\pi})$ for an ordering $\pi$, whereas we want $p_\theta(\mathcal{G})$. These are related by marginalizing over orderings,
+
+$$
+p_\theta(\mathcal{G})=\sum_{\pi}p_\theta(S^{\pi})\,\Pr(\pi),
+$$
+
+with $\Pr(\pi)$ the distribution the training procedure samples orderings from. Training maximizes $\mathbb{E}_{\pi\sim\Pr}[\log p_\theta(S^{\pi})]$ — the expectation of the log, not the log of the expectation. Use Jensen's inequality to show this is a **lower bound** on $\log p_\theta(\mathcal{G})$, and state when the bound is tight.
+
+Then make it concrete on a three-node path with just two orderings: write both sequences, assign each probability $\tfrac12$, and compute both sides of the inequality for a model of your choosing. Finally, explain what the BFS restriction does to $\Pr(\pi)$ and why that helps.
 
 ### Exercise 6 — Counting decisions
 

@@ -111,16 +111,22 @@ def figure_temporal_difference() -> None:
     graph, _ = sensor_graph()
     laplacian = nx.laplacian_matrix(graph).toarray().astype(float)
     signal = build_time_varying(graph)
-
     difference = np.diff(signal, axis=1)
 
     def per_column_energy(matrix: np.ndarray) -> np.ndarray:
         return np.einsum("ij,ij->j", matrix, laplacian @ matrix)
 
+    def total(matrix: np.ndarray) -> float:
+        return float(np.trace(matrix.T @ laplacian @ matrix))
+
+    def rayleigh(matrix: np.ndarray) -> float:
+        """Total variation per unit energy: the amplitude-free measure."""
+        return total(matrix) / float(np.sum(matrix**2))
+
     energy_signal = per_column_energy(signal)
     energy_difference = per_column_energy(difference)
 
-    fig, axes = plt.subplots(1, 2, figsize=(10.6, 3.9))
+    fig, axes = plt.subplots(1, 3, figsize=(12.4, 3.7))
 
     axes[0].plot(energy_signal, color=CORAL, linewidth=1.9, label=r"$\mathbf{x}_s^{\top}\mathbf{L}\mathbf{x}_s$")
     axes[0].plot(range(1, len(energy_difference) + 1), energy_difference, color=TEAL, linewidth=1.9,
@@ -128,25 +134,30 @@ def figure_temporal_difference() -> None:
     axes[0].set_yscale("log")
     axes[0].set_xlabel("time step $s$")
     axes[0].set_ylabel("Laplacian quadratic form")
-    axes[0].set_title("Smoothness per time step")
     axes[0].set_ylim(top=float(energy_signal.max()) * 4.0)
-    axes[0].legend(loc="upper right", fontsize=9.5)
+    axes[0].set_title("Total variation per time step")
+    axes[0].legend(loc="upper right", fontsize=9)
 
-    ratio = float(np.trace(signal.T @ laplacian @ signal) / np.trace(difference.T @ laplacian @ difference))
-    axes[1].bar(
-        [0, 1],
-        [float(np.trace(signal.T @ laplacian @ signal)), float(np.trace(difference.T @ laplacian @ difference))],
-        color=[CORAL, TEAL],
-        width=0.55,
-    )
+    # What the regularizer actually penalizes: an unnormalized quantity.
+    totals = [total(signal), total(difference)]
+    axes[1].bar([0, 1], totals, color=[CORAL, TEAL], width=0.55)
     axes[1].set_yscale("log")
     axes[1].set_xticks([0, 1])
-    axes[1].set_xticklabels([r"$\mathrm{tr}(\mathbf{X}^{\top}\mathbf{L}\mathbf{X})$",
-                             r"$\mathrm{tr}((\mathbf{X}\mathbf{D}_h)^{\top}\mathbf{L}\mathbf{X}\mathbf{D}_h)$"],
-                            fontsize=11)
-    axes[1].set_ylabel("total variation")
-    axes[1].set_title(f"The temporal difference is ${ratio:.0f}\\times$ smoother")
+    axes[1].set_xticklabels([r"$\mathbf{X}$", r"$\mathbf{X}\mathbf{D}_h$"], fontsize=12)
+    axes[1].set_ylabel("total variation (unnormalized)")
+    axes[1].set_title(f"What the penalty sees:\n${totals[0] / totals[1]:.1f}\\times$ smaller")
     axes[1].grid(axis="x", visible=False)
+
+    # The amplitude-free comparison tells the opposite story, and saying so is
+    # the point: most of the gap above is scale, not smoothness.
+    quotients = [rayleigh(signal), rayleigh(difference)]
+    axes[2].bar([0, 1], quotients, color=[CORAL, TEAL], width=0.55)
+    axes[2].set_yscale("log")
+    axes[2].set_xticks([0, 1])
+    axes[2].set_xticklabels([r"$\mathbf{X}$", r"$\mathbf{X}\mathbf{D}_h$"], fontsize=12)
+    axes[2].set_ylabel(r"$\mathrm{tr}(\mathbf{Z}^{\top}\mathbf{L}\mathbf{Z})/\Vert\mathbf{Z}\Vert_F^2$")
+    axes[2].set_title(f"Amplitude removed:\n${quotients[1] / quotients[0]:.0f}\\times$ rougher, not smoother")
+    axes[2].grid(axis="x", visible=False)
 
     save(fig, "temporal-difference-smoothness")
 

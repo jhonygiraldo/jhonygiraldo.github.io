@@ -322,7 +322,7 @@ def figure_receptive_field() -> None:
     axis.set_xlabel("hop distance $k$")
     axis.set_ylabel("nodes within $k$ hops (average)")
     axis.set_title("A $k$-layer message-passing model reads a $k$-hop neighborhood")
-    axis.legend(loc="lower right", fontsize=10)
+    axis.legend(loc="lower right", fontsize=9, framealpha=0.95, frameon=True)
     save(fig, "receptive-field-growth")
 
 
@@ -336,19 +336,25 @@ def figure_attention_weights() -> None:
     graph.add_edges_from((center, node) for node in neighbors)
     # Give the neighbors very different degrees so the GCN coefficients differ.
     extra = 5
-    for node, degree in zip(neighbors, (1, 4, 9, 2)):
+    # Degrees chosen so the coefficients both spread widely (the hub is damped
+    # ~3x relative to the leaf) and visibly do NOT sum to one. The earlier
+    # choice happened to sum to 0.999, which made the wrong claim look true.
+    for node, degree in zip(neighbors, (1, 29, 29, 29)):
         for _ in range(degree):
             graph.add_edge(node, extra)
             extra += 1
 
     degrees = dict(graph.degree())
+    # The actual GCN coefficients. Symmetric normalization is NOT row-stochastic,
+    # so these do not sum to one and must not be rescaled to make them look as
+    # though they do -- that would plot a different operator from the one GCN uses.
     gcn_weights = np.array(
         [1.0 / np.sqrt((degrees[center] + 1) * (degrees[node] + 1)) for node in [center] + neighbors]
     )
-    gcn_weights = gcn_weights / gcn_weights.sum()
 
-    # A learned attention head can weight the same neighborhood differently:
-    # these scores come from a fixed random attention vector on random features.
+    # A learned attention head can weight the same neighborhood differently.
+    # These scores come from a FIXED RANDOM attention vector on random features:
+    # they illustrate what attention can express, not what a trained model learns.
     rng = np.random.default_rng(6)
     features = rng.normal(size=(len(neighbors) + 1, 6))
     attention_vector = rng.normal(size=12)
@@ -401,8 +407,10 @@ def figure_attention_weights() -> None:
     names = [r"self $i$"] + [rf"$j={node}$  ($d={degrees[node]}$)" for node in neighbors]
     offsets = np.arange(len(names))
     height = 0.36
-    axis.barh(offsets + height / 2, gcn_weights, height=height, color=TEAL, label="GCN (fixed by degrees)")
-    axis.barh(offsets - height / 2, attention, height=height, color=CORAL, label="GAT (learned attention)")
+    axis.barh(offsets + height / 2, gcn_weights, height=height, color=TEAL,
+              label=f"GCN, fixed by degrees (sums to {gcn_weights.sum():.2f})")
+    axis.barh(offsets - height / 2, attention, height=height, color=CORAL,
+              label=f"GAT, one untrained attention head (sums to {attention.sum():.2f})")
     for position, (left, right) in enumerate(zip(gcn_weights, attention)):
         axis.annotate(f"{left:.2f}", xy=(left, position + height / 2), xytext=(4, 0), textcoords="offset points",
                       va="center", fontsize=9.5, color=TEAL)
@@ -414,8 +422,8 @@ def figure_attention_weights() -> None:
     axis.set_xlabel("aggregation coefficient")
     axis.set_xlim(0, max(gcn_weights.max(), attention.max()) * 1.22)
     axis.grid(axis="y", visible=False)
-    axis.legend(loc="lower right", fontsize=10)
-    axis.set_title("Both sets of coefficients sum to one", fontsize=11.5)
+    axis.legend(loc="lower right", fontsize=9, framealpha=0.95, frameon=True)
+    axis.set_title("Only the attention coefficients sum to one", fontsize=11.5)
 
     save(fig, "gcn-vs-gat-weights")
 

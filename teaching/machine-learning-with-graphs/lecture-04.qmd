@@ -49,6 +49,12 @@ After studying this note, you should be able to:
 
 ## Time-varying graph signals
 
+::: {.checkpoint}
+**Notation in this lecture**
+
+$M$ here is the **number of time samples**, not the edge count as in Lecture 1 or the mini-batch size as in Lecture 3; edge count is written $|\mathcal{E}|$. $N$ is the number of nodes, so $\mathbf{X}\in\mathbb{R}^{N\times M}$ is nodes-by-time. Graphs are undirected with nonnegative weights, and $\mathbf{L}$ is the symmetric Laplacian unless stated otherwise. $k$ counts polynomial *terms*, whose degree is $k-1$.
+:::
+
 ::: {.definition}
 **Definition 1 — Time-varying graph signal**
 
@@ -121,7 +127,9 @@ The graph Fourier transform is the same idea with the sinusoids replaced by the 
 ::: {.definition}
 **Definition 3 — Graph Fourier transform**
 
-Let $\mathbf{S}$ be diagonalizable, $\mathbf{S}=\mathbf{U}\boldsymbol{\Lambda}\mathbf{U}^{-1}$. The eigenvectors $\mathbf{u}_i$ form a basis of $\mathbb{R}^{N}$, so any graph signal can be written as
+Throughout this section, take $\mathcal{G}$ **undirected with nonnegative weights** and $\mathbf{S}$ its symmetric Laplacian $\mathbf{L}$ (or $\hat{\mathbf{L}}$). Symmetry is what guarantees a real spectrum and a real orthonormal eigenbasis; a general diagonalizable shift operator can have complex eigenvalues and eigenvectors, and choosing an undirected graph does not by itself force every shift operator on it to be symmetric.
+
+With that fixed, write $\mathbf{S}=\mathbf{U}\boldsymbol{\Lambda}\mathbf{U}^{-1}$. The eigenvectors $\mathbf{u}_i$ form a basis of $\mathbb{R}^{N}$, so any graph signal can be written as
 
 $$
 \mathbf{x}=\mathbf{U}\hat{\mathbf{x}},
@@ -177,7 +185,7 @@ This is appealing: no matrix powers, no sequential recursion, and complete freed
 
 The catch is $\mathbf{U}$. Obtaining it requires an **eigendecomposition, costing $O(N^{3})$**, and $\mathbf{U}$ is dense even when $\mathbf{S}$ is sparse. Compare with the vertex domain, where a $K$-tap filter costs $O(K|\mathcal{E}|)$ and touches only $K$-hop neighborhoods.
 
-So the spectral view is a modeling tool for small and medium graphs, and an analysis tool for large ones. It is also not transferable: $\mathbf{U}$ belongs to one graph, so a model defined directly on $\boldsymbol{\Lambda}$ is not inductive.
+So the spectral view is a modeling tool for small and medium graphs, and an analysis tool for large ones. Transfer is also limited, though the reason is specific: $\mathbf{U}$ and the eigenvalue *indices* belong to one graph, so a model whose parameters are attached to them — one free coefficient per index, as in the earliest spectral GNNs — cannot move to another graph. A model that learns a **function of $\lambda$**, such as a polynomial, has no such problem: ChebConv's coefficients transfer perfectly well. Non-inductivity is a property of the parameterization, not of the spectral viewpoint.
 :::
 
 ### Chebyshev graph convolutions
@@ -204,7 +212,15 @@ $$
 and the rescaled Laplacian $\tilde{\mathbf{L}}=\dfrac{2\mathbf{L}}{\lambda_N}-\mathbf{I}$.
 :::
 
-Two details explain the design. The rescaling maps the spectrum of $\mathbf{L}$ from $[0,\lambda_N]$ onto $[-1,1]$, which is where the Chebyshev polynomials are defined and where they are numerically well behaved. And the three-term recursion $T_i(x)=2xT_{i-1}(x)-T_{i-2}(x)$ is exactly the recursion satisfied by $\mathbf{Z}_i$ — so a degree-$k$ response costs $k$ sparse matrix products and no eigendecomposition at all.
+Two details explain the design. The rescaling maps the spectrum of $\mathbf{L}$ from $[0,\lambda_N]$ onto $[-1,1]$, which is where the Chebyshev polynomials are defined and where they are numerically well behaved. And the three-term recursion $T_m(x)=2xT_{m-1}(x)-T_{m-2}(x)$ is exactly the recursion satisfied by the $\mathbf{Z}_i$.
+
+Mind the offset, because it is easy to be one out. With $\mathbf{Z}_1=\mathbf{H}^{(\ell)}$ the indexing is
+
+$$
+\mathbf{Z}_i=T_{i-1}(\tilde{\mathbf{L}})\,\mathbf{H}^{(\ell)},
+$$
+
+so a sum over $i=1,\dots,k$ has $k$ **terms** but degree $k-1$, and costs $k-1$ sparse products. Throughout this note $k$ counts terms; when a paper says "order $K$" it usually means the degree, one less.
 
 ::: {.figure-panel}
 ![Left: the Chebyshev polynomials $T_0,\ldots,T_5$ on $[-1,1]$. Right: two responses built as learned combinations of them. Unlike a stack of GCN layers, which can only realize $\mu^{L}$, a ChebConv layer can place its pass-band anywhere — including away from $\lambda=0$.](../../assets/figures/chebyshev-polynomials.svg){#fig-chebyshev fig-alt="Left, six oscillating polynomial curves on the interval minus one to one; right, a decreasing low-pass curve and a peaked band-pass curve"}
@@ -215,7 +231,7 @@ Swapping the polynomial family gives other models: Gegenbauer polynomials yield 
 ::: {.checkpoint}
 **Check 3 — Spectral GNNs in one paragraph**
 
-The GFT diagonalizes graph filters, turning convolution into pointwise multiplication by $h(\lambda)$ and making "graph frequency" precise. Working on the spectrum directly costs an $O(N^{3})$ eigendecomposition. ChebConv recovers an arbitrary degree-$k$ response using only sparse products, through the Chebyshev recursion — and GCN is the special case $k=1$ with tied coefficients.
+The GFT diagonalizes graph filters, turning convolution into pointwise multiplication by $h(\lambda)$ and making "graph frequency" precise. Working on the spectrum directly costs an $O(N^{3})$ eigendecomposition. ChebConv recovers an arbitrary polynomial response using only sparse products, through the Chebyshev recursion — and GCN is the two-term case with tied coefficients, i.e. degree one.
 :::
 
 ## Reconstruction of time-varying graph signals {#sec-reconstruction}
@@ -254,11 +270,14 @@ $$
 =a_{12}(x_1-x_2)^{2}+a_{13}(x_1-x_3)^{2}+a_{14}(x_1-x_4)^{2}.
 $$
 
-Note what is **absent**: no term in $(x_3-x_4)$. Nodes 3 and 4 may differ freely at no cost, because they are not adjacent. Variation is measured along edges, not between arbitrary pairs.
+Note what is **absent**: no *direct* term in $(x_3-x_4)$. Variation is measured along edges, not between arbitrary pairs. That does not make nodes 3 and 4 free of one another — both are tied to the centre, so pushing them apart still costs through $x_1$. What it means is that the penalty is a sum over edges, so a difference between two non-adjacent nodes is only ever penalized indirectly, through the paths joining them.
 
 **Minimum.** Take $x_1=x_2=x_3=x_4=1$. Every difference vanishes, so $\mathbf{x}^{\top}\mathbf{L}\mathbf{x}=0$. Since $a_{ij}\geq0$ makes every term nonnegative, this is the global minimum — and it is the constant eigenvector $\mathbf{u}_1$ with $\lambda_1=0$ from @fig-eigenvectors.
 
-**Maximum.** Maximize the sign changes across edges: $x_1=1$, $x_2=x_3=x_4=-1$. Each difference is $2$, so
+**Maximum — but only under a constraint.** There is no unconstrained maximum: replacing $\mathbf{x}$ by $c\mathbf{x}$ multiplies the form by $c^{2}$, so it grows without bound. The question has to be posed on a bounded set, and the answer depends which one:
+
+- Under $\Vert\mathbf{x}\Vert_2=1$, the maximum is $\lambda_{\max}(\mathbf{L})$, attained at the top eigenvector. This is the Rayleigh-quotient statement and the one to remember.
+- Under $x_i\in[-1,1]$, maximizing the sign changes across edges works: $x_1=1$, $x_2=x_3=x_4=-1$ makes every difference $2$, giving
 
 $$
 \mathbf{x}^{\top}\mathbf{L}\mathbf{x}=4(a_{12}+a_{13}+a_{14}).
@@ -279,14 +298,26 @@ $$
 E(\mathbf{X}\mathbf{D}_h)=\sum_{s=2}^{M}(\mathbf{x}_s-\mathbf{x}_{s-1})^{\top}\mathbf{L}(\mathbf{x}_s-\mathbf{x}_{s-1}).
 $$
 
-The intuition is physical. A temperature field can have large spatial gradients — a valley is genuinely colder than a ridge — so $\mathbf{x}_s$ need not be smooth. But when the sampling rate is high, *how much things changed since the last reading* varies gently across the network, because neighboring sensors experience the same weather. Nature rarely moves abruptly, and even more rarely does so at one node and not its neighbor.
+The intuition is physical. A temperature field can have large spatial gradients — a valley is genuinely colder than a ridge — so $\mathbf{x}_s$ need not be smooth. But when the sampling rate is high, *how much things changed since the last reading* is small and varies gently across the network, because neighboring sensors experience the same weather.
 
 ::: {.figure-panel}
 ![The quantity being regularized: at each step, take the difference between consecutive snapshots and measure *its* variation on the graph.](../../assets/figures/sobolev-smoothness-intuition.png){#fig-sobolev-intuition fig-alt="A signal matrix, two consecutive columns being subtracted, and the difference evaluated on a small graph"}
 :::
 
 ::: {.figure-panel}
-![The assumption, checked. On a 220-node sensor graph with a slowly evolving field, the temporal difference is markedly smoother than the signal itself at every time step, and about $4\times$ smoother in total. This is the entire justification for putting $\mathbf{X}\mathbf{D}_h$ rather than $\mathbf{X}$ inside the regularizer.](../../assets/figures/temporal-difference-smoothness.svg){#fig-temporal-difference fig-alt="A log-scale curve of per-step variation, with the difference curve well below the signal curve, and a bar chart of the totals"}
+![The assumption, checked — and only half confirmed. On a 220-node sensor graph with a slowly evolving synthetic field: **left**, the per-step quadratic form of the temporal difference sits well below that of the signal; **middle**, its total is $3.8\times$ smaller, which is what the regularizer of @eq-tgsr actually penalizes; **right**, the same comparison after dividing out the energy, where the difference is $21\times$ **rougher**. Both numbers are correct and they measure different things — see Check 4.](../../assets/figures/temporal-difference-smoothness.svg){#fig-temporal-difference fig-alt="A per-step variation curve, a bar chart of unnormalized totals, and a bar chart of energy-normalized quotients pointing the opposite way"}
+:::
+
+::: {.checkpoint}
+**Check 4 — "Smoother" has two meanings, and only one of them holds here**
+
+This is worth slowing down for, because it is the kind of claim that is easy to assert and easy to get wrong.
+
+The temporal difference has $3.8\times$ less total variation than the signal. But it also has $78\times$ less **energy**: differencing consecutive snapshots of a slowly evolving field produces something small. Divide the variation by the energy and the difference comes out $21\times$ rougher, not smoother. So the gap in the middle panel is overwhelmingly a statement about **amplitude**, not about relative frequency content.
+
+Does that break the method? No — because the regularizer penalizes the *unnormalized* quantity. A prior works by placing the true signal near the minimizer of the penalty, and $\mathbf{X}\mathbf{D}_h$ genuinely lands closer than $\mathbf{X}$ does. The reconstruction experiment below confirms this directly, and that is the evidence that counts.
+
+But state the claim carefully. "The temporal difference is smoother on the graph" is **not** what this experiment shows, and on this synthetic field it is false in the normalized sense — differencing is a high-pass operation in time, and here it amplifies the faster-varying modes regardless of how smooth they are in space. For the normalized claim to hold you would need the fast-changing components to also be the spatially smooth ones, which is a real physical assumption about the data, not a property of the operator $\mathbf{D}_h$.
 :::
 
 ### The optimization problem
@@ -312,7 +343,23 @@ $$ {#eq-tgsr}
 
 ### Solving it
 
-@eq-tgsr is a convex quadratic, so it has a closed-form solution — which requires inverting an $MN\times MN$ matrix. For $N=1000$ sensors over $M=500$ time steps that is a $500\,000\times500\,000$ inverse. Not a good idea.
+@eq-tgsr is a convex quadratic, so its stationary condition is a linear system. Solving it directly would mean handling an $MN\times MN$ operator: for $N=1000$ sensors over $M=500$ time steps, $500\,000\times500\,000$. Not a good idea.
+
+::: {.checkpoint}
+**Check 5 — Convex does not mean uniquely solvable**
+
+Being convex gives a global minimum; it does not give a *unique* one. Vectorizing, the Hessian is
+
+$$
+\mathbf{H}=\operatorname{diag}(\operatorname{vec}\mathbf{J})+\upsilon\,(\mathbf{D}_h\mathbf{D}_h^{\top}\otimes\mathbf{L}),
+$$
+
+and the solution is unique exactly when $\mathbf{H}$ is positive definite. Both terms are only positive **semi**-definite, so uniqueness depends on their null spaces intersecting trivially.
+
+Here is the failure case to keep in mind. $\mathbf{D}_h\mathbf{D}_h^{\top}$ annihilates signals constant in time, and $\mathbf{L}$ annihilates signals constant over nodes. So if some sensor $i$ is **unobserved at every time step**, adding any constant offset to that sensor's whole series changes neither the data term (it observes nothing there) nor the temporal-difference penalty (a constant offset has zero difference). That sensor's level is unidentifiable, and no amount of convexity recovers it.
+
+Replacing $\mathbf{L}$ by a positive definite $(\mathbf{L}+\epsilon\mathbf{I})^{\beta}$ fixes the *node* direction but not this one — the null space of $\mathbf{D}_h\mathbf{D}_h^{\top}$ survives. Reconstruction needs a sampling condition: every sensor observed at least once, and enough coverage for the smoothness prior to bridge the gaps.
+:::
 
 Use gradient descent instead. Writing $f_u(\tilde{\mathbf{X}})$ for the objective,
 
@@ -325,7 +372,7 @@ $$
 a formula built entirely from sparse products. The original paper uses conjugate gradient.
 
 ::: {.figure-panel}
-![The claim, measured. A 220-node graph, 60 time steps, entries deleted at random. Doing nothing leaves the error near 1. Regularizing $\mathbf{X}$ itself helps. Regularizing $\mathbf{X}\mathbf{D}_h$ is in a different class: at 10% of entries observed it reaches 20% error, where smoothing the signal directly reaches 67%. The regularization weight $\upsilon$ was tuned separately for each, so this compares the two priors, not two hyperparameters.](../../assets/figures/reconstruction-smoothness.svg){#fig-reconstruction-smoothness fig-alt="Left, three error curves against observed fraction with the temporal-difference curve far below the others; right, condition number against epsilon on log axes"}
+![**An oracle-tuned synthetic illustration**, not a validation protocol. A 220-node random geometric graph, 60 time steps, a synthetic field built from slowly evolving low-frequency modes, entries deleted at random. Doing nothing leaves the error near 1; regularizing $\mathbf{X}$ itself helps; regularizing $\mathbf{X}\mathbf{D}_h$ reaches 20% error at 10% observed where smoothing the signal directly reaches 67%. Read two caveats with it. The weight $\upsilon$ was chosen for each method by minimizing error against the **complete ground truth, including the hidden entries** — an oracle choice no real deployment can make; a validation-mask protocol would give worse absolute numbers for every method. And the field was *constructed* to have slowly evolving low-frequency modes, which is exactly the assumption the temporal-difference prior encodes.](../../assets/figures/reconstruction-smoothness.svg){#fig-reconstruction-smoothness fig-alt="Left, three error curves against observed fraction with the temporal-difference curve far below the others; right, condition number against epsilon on log axes"}
 :::
 
 ### Sobolev smoothness
@@ -333,7 +380,7 @@ a formula built entirely from sparse products. The original paper uses conjugate
 Giraldo et al. [@giraldo2022reconstruction] observed that @eq-tgsr is ill-posed in a specific sense, and that this slows convergence.
 
 ::: {.checkpoint}
-**Check 4 — Why $\mathbf{L}$ conditions the problem badly**
+**Check 6 — Why $\mathbf{L}$ conditions the problem badly**
 
 The condition number of a square matrix,
 
@@ -372,7 +419,7 @@ $$
 :::
 
 ::: {.checkpoint}
-**Check 5 — What is and is not shown here**
+**Check 7 — What is and is not shown here**
 
 @fig-reconstruction-smoothness establishes two things directly: the temporal-difference prior is dramatically better than the static one, and $\kappa(\mathbf{L}+\epsilon\mathbf{I})^{\beta}$ is finite while $\kappa(\mathbf{L})$ is not.
 
@@ -388,13 +435,13 @@ It does **not** show a convergence speed-up from the Sobolev term. On this small
 The same problem can be solved by learning. Feed the Laplacian and the incomplete signal to a GNN with an **autoencoder** shape, and train it with a loss that is the previous objective in disguise.
 
 ::: {.figure-panel}
-![The learned pipeline: build the graph, sample the signal, pass it through a Chebyshev-based autoencoder, and recover the full time-varying signal. Source: [@castro2024gegenbauer].](../../assets/figures/gegenbauer-reconstruction-pipeline.png){#fig-gegenbauer fig-alt="A pipeline from an underwater experiment through a k-NN graph and encoder-decoder architecture to a reconstructed signal matrix"}
+![The learned pipeline, **reproduced from GegenGNN** [@castro2024gegenbauer]: build the $k$-NN graph from sensor coordinates, sample the signal, pass it through an encoder–decoder, and recover the full time-varying signal. Note two differences from the simplified model described below: the published architecture uses **Gegenbauer** polynomials $C_k^{(\alpha)}$ rather than Chebyshev, and it feeds the temporal difference into the loss as shown. We keep the pipeline shape and substitute Chebyshev branches, which are the family introduced in @sec-spectral.](../../assets/figures/gegenbauer-reconstruction-pipeline.png){#fig-gegenbauer fig-alt="A pipeline from an underwater experiment through a k-NN graph and encoder-decoder architecture to a reconstructed signal matrix"}
 :::
 
 Each layer is a **cascade of Chebyshev convolutions** of increasing order $\rho=0,\dots,\zeta-1$, combined linearly.
 
 ::: {.figure-panel}
-![One layer: the signal enters $\zeta$ branches, branch $\rho$ applying a Chebyshev convolution of order $\rho$, and the outputs are merged by a learned linear combination.](../../assets/figures/chebyshev-cascade-layer.png){#fig-cheb-layer fig-alt="A block diagram with the Laplacian and signal feeding several Chebyshev convolution branches merged by a linear combination block"}
+![One layer: the signal enters $\zeta$ branches, branch $\rho$ applying a polynomial convolution of order $\rho$, and the outputs are merged by a learned linear combination $\sum_\rho\mu_\rho^{(\ell)}\mathbf{Z}_\rho^{(\ell)}$. This panel is **taken from the GegenGNN paper**, so the symbols inside it are Gegenbauer: $C_k^{(\alpha)}$ and $2\alpha\tilde{\mathbf{L}}$ where the simplified model in the text would have $T_k$ and $2\tilde{\mathbf{L}}$. The cascade-and-combine structure is the same; only the polynomial family differs.](../../assets/figures/chebyshev-cascade-layer.png){#fig-cheb-layer fig-alt="A block diagram with the Laplacian and signal feeding several polynomial convolution branches merged by a linear combination block"}
 :::
 
 $$
@@ -427,13 +474,15 @@ $$
 An MSE term on the observed entries plus the Sobolev term from @eq-sobolev. Train it with Adam or SGD.
 
 ::: {.checkpoint}
-**Check 6 — Optimization or network?**
+**Check 8 — Optimization or network?**
 
 They solve the same problem with the same prior, and the difference is where the effort goes.
 
 The **optimization** approach has no training data, no training phase, and few hyperparameters ($\upsilon$, $\epsilon$, $\beta$); it needs a bespoke solver, and it starts from scratch on every new signal.
 
-The **network** approach reuses a standard optimizer and amortizes the cost across signals once trained; but hyperparameter tuning is harder, and it needs data to train on.
+The **network** approach reuses a standard optimizer and can amortize the cost across signals; but hyperparameter tuning is harder, and it needs data to train on.
+
+Be precise about that amortization, because it does not come for free from using a network. Reuse across signals requires a **training protocol** in which the model sees a collection of signals — a set of incomplete matrices with known held-out entries — and is evaluated on signals it did not train on. If instead you fit the network to one incomplete matrix and read off its reconstruction, you have used a neural network as an optimizer for a single instance, and you have amortized nothing. Both setups appear in the literature; they answer different questions. You also have to specify how missing entries enter the input — a fill value, and whether the mask $\mathbf{J}$ is itself given to the network as a channel.
 :::
 
 ## Forecasting of time-varying graph signals
@@ -482,7 +531,7 @@ $$ {#eq-graph-ar}
 with $(p+1)K$ parameters regardless of $N$. Reading it off: the value at a node at time $m$ depends on its own past $K$ values **and** on the past values of its $p$-hop neighborhood. Setting $p=1$ gives the simplest useful case, $\mathbf{x}_m=\sum_i(h_{0,i}\mathbf{I}+h_{1,i}\mathbf{S})\mathbf{x}_{m-i}+\boldsymbol{\epsilon}_m$ — each node's own history plus its immediate neighbors'.
 
 ::: {.checkpoint}
-**Check 7 — Two axes, not one**
+**Check 9 — Two axes, not one**
 
 An ordinary time series has one axis of dependence: the past. A spatiotemporal graph signal has two, and @eq-graph-ar has one index for each — $i$ runs over time lags and $j$ over graph hops. Traffic at an intersection depends on that intersection an hour ago *and* on the upstream intersections a few minutes ago.
 :::
@@ -514,14 +563,15 @@ and training is ordinary SGD or Adam.
 
 Predicting $H$ steps ahead rather than one admits two designs.
 
-**MLP head.** Produce all $H$ horizons in one forward pass by projecting the shared representation:
+**MLP head.** Produce all $H$ horizons in one forward pass by projecting a shared hidden representation. Let the graph layers produce $\mathbf{Z}_m\in\mathbb{R}^{N\times F}$, with $F$ hidden channels per node, and read out with $\mathbf{W}_h\in\mathbb{R}^{F\times H}$:
 
 $$
-\tilde{\mathbf{X}}_m=\sigma\!\left(\left[\sum_{i=1}^{K}\alpha_i\sigma\!\left(\sum_{j=0}^{p}h_{j,i}\mathbf{S}^{j}\mathbf{x}_{m-i}\right)\right]\mathbf{w}_h^{\top}\right)
-\in\mathbb{R}^{N\times H},
+\tilde{\mathbf{X}}_m=\sigma\!\left(\mathbf{Z}_m\mathbf{W}_h\right)\in\mathbb{R}^{N\times H},
 $$
 
-with $\mathbf{w}_h\in\mathbb{R}^{H\times1}$ learnable, and MSE taken between the matrices $\tilde{\mathbf{X}}_m$ and $\mathbf{X}_m$.
+with MSE taken between $\tilde{\mathbf{X}}_m$ and $\mathbf{X}_m$.
+
+The width $F$ matters. If the hidden representation is a single value per node — $\mathbf{z}_m\in\mathbb{R}^{N\times1}$ and $\mathbf{w}_h\in\mathbb{R}^{1\times H}$ — then the preactivation $\mathbf{z}_m\mathbf{w}_h$ has **rank one**: every node's forecast is the same $H$-step profile scaled by one number. That is a severe restriction, not a general head, and it is worth recognizing when you see it.
 
 **Recursive.** Feed the model's own prediction back in. Writing $\texttt{GNN}_{\mathcal{G},\boldsymbol{\theta}}(\cdot)$ for @eq-forecast-gnn,
 
@@ -534,12 +584,12 @@ $$
 and so on for $H-1$ steps, assembling $\tilde{\mathbf{X}}_m\in\mathbb{R}^{N\times H}$.
 
 ::: {.checkpoint}
-**Check 8 — Two things to notice about the recursion**
+**Check 10 — Two things to notice about the recursion**
 
 1. **The window shifts.** Each step drops the oldest true observation and prepends the newest prediction, so the input stays $K$ wide and grows progressively more synthetic.
 2. **The parameters are shared.** The same $\boldsymbol{\theta}$ is used at every horizon — one model, applied $H$ times, not $H$ models.
 
-The recursive formulation works better in practice. It also compounds its own errors, which is why forecast accuracy degrades with the horizon.
+Which is better is an empirical question, not a settled one. The recursive rollout shares parameters across horizons and matches the one-step training objective, but it is trained on true inputs and run on its own predictions — an exposure mismatch that compounds errors as $H$ grows. The direct head avoids that compounding and can specialize per horizon, at the cost of more parameters and no guarantee of consistency between horizons. Recursive tends to do better at short horizons and on smooth, strongly auto-correlated signals; direct tends to do better at long horizons. Standard practice is to try both.
 :::
 
 ### GraphCast
@@ -547,7 +597,7 @@ The recursive formulation works better in practice. It also compounds its own er
 The clearest large-scale demonstration is **GraphCast** [@lam2023learning], DeepMind's medium-range weather model.
 
 - It forecasts up to **10 days** ahead, learning from historical reanalysis data instead of integrating the equations of motion numerically.
-- The atmosphere is represented as a **global multi-mesh graph** built on hierarchical icosahedral meshes, not a latitude–longitude grid — which avoids the pole distortion a regular grid suffers.
+- The atmosphere is **encoded from** a latitude–longitude grid onto a **global multi-mesh graph** built on hierarchical icosahedral meshes, processed there, then **decoded back** to the grid. The mesh is where the message passing happens, which avoids the pole distortion a regular grid suffers; the grid is still the input and output format.
 - Message passing across mesh resolutions propagates information locally and globally in the same forward pass.
 - It is **auto-regressive**, exactly as above: each output state is computed from previous states plus multi-resolution message passing.
 - It produces a 10-day forecast in **under a minute on one TPU**, against roughly an hour for traditional numerical weather prediction.
@@ -576,7 +626,7 @@ Derive $\nabla_{\tilde{\mathbf{X}}}f_u$ for @eq-tgsr. You will need $\nabla_{\ma
 
 ### Exercise 5 — Chebyshev recursion
 
-Verify that $\mathbf{Z}_i=2\tilde{\mathbf{L}}\mathbf{Z}_{i-1}-\mathbf{Z}_{i-2}$ implements $T_i(\tilde{\mathbf{L}})\mathbf{H}^{(\ell)}$, and explain why $\tilde{\mathbf{L}}=2\mathbf{L}/\lambda_N-\mathbf{I}$ rather than $\mathbf{L}$ itself.
+Verify that $\mathbf{Z}_i=2\tilde{\mathbf{L}}\mathbf{Z}_{i-1}-\mathbf{Z}_{i-2}$ with $\mathbf{Z}_1=\mathbf{H}^{(\ell)}$ implements $T_{i-1}(\tilde{\mathbf{L}})\mathbf{H}^{(\ell)}$ — note the index offset. State the degree and the number of sparse products for a sum over $i=1,\dots,k$. Then explain why $\tilde{\mathbf{L}}=2\mathbf{L}/\lambda_N-\mathbf{I}$ rather than $\mathbf{L}$ itself.
 
 ### Exercise 6 — Does the Sobolev term speed things up?
 
@@ -588,18 +638,18 @@ For @eq-graph-ar with $N=10^{4}$ nodes, order $K=12$ and $p=3$ hops, count the p
 
 ### Exercise 8 — Horizons
 
-Explain why the recursive formulation compounds errors while the MLP head does not, and why the recursive one is nonetheless usually more accurate.
+Explain why the recursive rollout compounds errors while the direct head does not. Then set up the comparison rather than assuming its outcome: name two properties of a signal that would favour the recursive strategy and two that would favour the direct one, and describe the experiment — horizons, splits, baselines — that would decide between them for a given dataset. Persistence (predict $\mathbf{x}_{m-1}$ for every horizon) is the baseline both must beat.
 
 ## Main takeaways
 
 1. A **time-varying graph signal** $\mathbf{X}\in\mathbb{R}^{N\times M}$ carries a time series at every node; the temporal difference $\mathbf{X}\mathbf{D}_h$ is the object most of the modeling acts on.
 2. The **GFT** diagonalizes graph filters and makes "graph frequency" precise: the eigenvalue is the frequency, and smooth signals concentrate their energy at the low end.
-3. Working on the spectrum costs $O(N^{3})$ and is not inductive. **ChebConv** buys an arbitrary degree-$k$ response with sparse products only, and GCN is its $k=1$ special case.
-4. **Reconstruction** is an error term on the observed entries plus a smoothness regularizer, and the regularizer belongs on $\mathbf{X}\mathbf{D}_h$ — a choice worth several factors of accuracy.
-5. $\kappa(\mathbf{L})=\infty$ because $\lambda_{\min}(\mathbf{L})=0$. **Sobolev smoothness** replaces $\mathbf{L}$ with $(\mathbf{L}+\epsilon\mathbf{I})^{\beta}$ and makes the conditioning finite and tunable.
-6. The same problem solves with a **Chebyshev autoencoder** and the same loss. Optimization needs no data; the network amortizes across signals. Both are shallow, for the usual reason.
+3. Working on the spectrum directly costs an $O(N^{3})$ eigendecomposition, and parameterizing per eigenvalue *index* does not transfer between graphs. **ChebConv** learns a function of $\lambda$ instead, buying a polynomial response with sparse products only; GCN is its degree-one, tied-coefficient case.
+4. **Reconstruction** is an error term on the observed entries plus a smoothness regularizer, and the regularizer belongs on $\mathbf{X}\mathbf{D}_h$ — worth several factors of accuracy here. The reason is that the temporal difference has far smaller *total variation*, which is what the penalty sees; it is not smoother in the energy-normalized sense, and Check 4 shows why the distinction matters.
+5. $\kappa(\mathbf{L})=\infty$ because $\lambda_{\min}(\mathbf{L})=0$. **Sobolev smoothness** replaces $\mathbf{L}$ with $(\mathbf{L}+\epsilon\mathbf{I})^{\beta}$, making that factor's conditioning finite and tunable — but it does not remove the null space of $\mathbf{D}_h\mathbf{D}_h^{\top}$, so uniqueness still needs a sampling condition (Check 5).
+6. The same problem solves with a **polynomial-filter autoencoder** and the same loss. Optimization needs no data; the network can amortize across signals, but only under a training protocol that actually trains on a collection of them. Both are shallow, for the usual reason.
 7. **Forecasting** is auto-regressive modeling where the AR coefficients become graph filters, giving dependence on both past time steps and nearby nodes with a parameter count independent of $N$.
-8. Multiple horizons come from an **MLP head** or a **recursive** rollout with shared parameters; the recursive version usually wins. **GraphCast** is this recipe at planetary scale.
+8. Multiple horizons come from a **direct head** on an $N\times F$ hidden representation or a **recursive** rollout with shared parameters; which wins is an empirical question, and both must beat persistence. **GraphCast** is this recipe at planetary scale, encoding from and decoding to a latitude–longitude grid while processing on a multimesh.
 
 ## References and provenance {.unnumbered}
 

@@ -80,7 +80,7 @@ The obstacle is that the definition of convolution used in signal processing rel
 ![a) A discrete time axis is a directed line graph; b) an image is a grid graph. Both are graphs whose adjacency matrix expresses which samples are neighbors.](../../assets/figures/time-space-graphs.svg){#fig-time-space fig-alt="A six-node directed line graph beside an eight-by-eight grid graph"}
 :::
 
-A discrete-time signal $\mathbf{x}\in\mathbb{R}^{N}$ lives on a **directed line graph**: sample $i$ is connected to sample $i+1$. An image lives on a **grid graph**: pixel $(i,j)$ is connected to its four neighbors. In both cases the adjacency matrix implements the elementary shift. For the line graph,
+A discrete-time signal $\mathbf{x}\in\mathbb{R}^{N}$ lives on a **directed line graph**: sample $i$ is connected to sample $i+1$. An image lives on a **grid graph**: pixel $(i,j)$ is connected to its four neighbors. For the line graph the adjacency matrix implements the elementary shift exactly:
 
 $$
 \mathbf{S}=
@@ -94,10 +94,18 @@ $$
 (\mathbf{S}\mathbf{x})_i=x_{i-1}.
 $$
 
-Multiplying by $\mathbf{S}$ delays the signal by one sample; multiplying by $\mathbf{S}^{k}$ delays it by $k$.
+Multiplying by $\mathbf{S}$ delays the signal by one sample; multiplying by $\mathbf{S}^{k}$ delays it by $k$. The 1-D case is therefore an exact correspondence: polynomials in this $\mathbf{S}$ are precisely the causal FIR filters.
+
+::: {.checkpoint}
+**Check 0 — The grid is an analogy, not an identity**
+
+The 2-D case is weaker, and it is worth being honest about it now rather than later. The grid adjacency is **isotropic**: it treats all four neighbors alike. A polynomial in it therefore cannot represent a directional filter — a horizontal derivative distinguishes left from right, and $\mathbf{S}$ has no way to. Ordinary CNN kernels have one weight *per offset*; a polynomial has one weight *per hop*.
+
+So read the grid as motivation for the shape of the construction, and the directed line as the case where the correspondence is exact. Graph polynomial filters are a structured generalization of convolution, not a superset of it.
+:::
 
 ::: {.figure-panel}
-![Two applications of the shift operator on a) the line graph and b) the grid graph. The red set is the part of the domain reached after two steps: exactly the support of $\mathbf{S}^{2}$ acting on an impulse.](../../assets/figures/convolution-time-space.svg){#fig-convolution-time-space fig-alt="A line graph with the first six nodes highlighted and a grid graph with a diamond-shaped highlighted region"}
+![Two applications of the shift operator on a) the line graph and b) the grid graph. The highlighted set is the part of the domain a two-tap filter reads — the union of the supports of $\mathbf{S}^{0}$, $\mathbf{S}^{1}$ and $\mathbf{S}^{2}$ applied to an impulse. Be careful with $\mathbf{S}^{2}$ on its own: its entries count *length-two walks*, so on the directed line it is a single shifted nonzero rather than a filled interval, and on the grid the walk counts are non-uniform across the diamond.](../../assets/figures/convolution-time-space.svg){#fig-convolution-time-space fig-alt="A line graph with the first six nodes highlighted and a grid graph with a diamond-shaped highlighted region"}
 :::
 
 Now write the familiar convolution of a signal $\mathbf{x}$ with a filter $\mathbf{h}=\{h_k\}$:
@@ -148,7 +156,7 @@ The sparsity condition is what matters: $\mathbf{S}$ may only mix a node with it
 ![A four-node graph. Two of its relations are one-way.](../../assets/figures/adjacency-matrix-example.svg){#fig-adjacency-example fig-alt="Four nodes arranged in a diamond with colored directed arrows between them"}
 :::
 ::: {.figure-panel}
-![An undirected four-node graph, stored below as a list of edges.](../../assets/figures/edge-list-graph.svg){#fig-edge-list fig-alt="Four nodes connected by five undirected edges"}
+![An undirected four-node graph with four edges — $\{1,2\}$, $\{1,4\}$, $\{2,3\}$ and $\{2,4\}$ — stored below as a list of edges.](../../assets/figures/edge-list-graph.svg){#fig-edge-list fig-alt="Four nodes connected by four undirected edges"}
 :::
 :::
 
@@ -307,17 +315,19 @@ Each recursive step is one sparse matrix–vector product, costing $O(|\mathcal{
 A **graph filter** is a polynomial in the shift operator,
 
 $$
-\mathbf{H}(\mathbf{S})=\sum_{k=0}^{\infty}h_k\mathbf{S}^{k}.
+\mathbf{H}(\mathbf{S})=\sum_{k=0}^{K-1}h_k\mathbf{S}^{k}.
 $$
 
 Applying it to a graph signal produces the **graph convolution**
 
 $$
-\mathbf{y}=\mathbf{H}(\mathbf{S})\mathbf{x}=\sum_{k=0}^{\infty}h_k\mathbf{S}^{k}\mathbf{x} .
+\mathbf{y}=\mathbf{H}(\mathbf{S})\mathbf{x}=\sum_{k=0}^{K-1}h_k\mathbf{S}^{k}\mathbf{x} .
 $$ {#eq-graph-convolution}
+
+The sum is **finite**: a $K$-tap filter of order $K-1$. An infinite series $\sum_{k\ge0}h_k\mathbf{S}^k$ is a useful formal object but needs convergence conditions on $\{h_k\}$ and on the spectral radius of $\mathbf{S}$, so we take the finite polynomial as the definition and treat the infinite form as shorthand.
 :::
 
-In practice the sum is truncated at $K$ taps, giving a filter of order $K-1$. Three properties make @eq-graph-convolution the right generalization of the classical convolution.
+Three properties make @eq-graph-convolution the right generalization of the classical convolution.
 
 - **Locality.** The $k$-th term reads only the $k$-hop neighborhood, so a $K$-tap filter is supported on $K-1$ hops.
 - **Fixed parameter count.** The filter has $K$ coefficients whatever the size of the graph. This is the property that shallow embeddings lacked.
@@ -363,7 +373,15 @@ Before choosing an architecture, fix the requirements:
 3. **locality**, so that each output depends on a bounded neighborhood;
 4. applicability to **inductive** problems, that is, to graphs unseen during training.
 
-The generic filter of @eq-graph-convolution satisfies 2 and 3 but not 1: the recursion $\mathbf{S}\mathbf{x}^{(k)}$ is inherently sequential across $k$ and cannot be parallelized, while the alternative of precomputing $\mathbf{S}^{k}$ destroys sparsity. Architectures built directly on high-order filters, such as ChebNet [@defferrard2016convolutional], pay this price. The practical answer is to approximate.
+A $K$-tap filter evaluated by the recursion of Check 2 satisfies all four, and its arithmetic **is** linear in the edge count: $K$ sparse products cost $O(K|\mathcal{E}|)$, which is $O(|\mathcal{E}|)$ for fixed $K$. With $F_{\text{in}}$ input and $F_{\text{out}}$ output channels the honest count is $O(N F_{\text{in}} F_{\text{out}} + K |\mathcal{E}| F_{\text{out}})$ — the node-wise dense maps are usually the larger term on a sparse graph, so "cost $O(|\mathcal{E}|)$" is shorthand, not the whole story.
+
+What high order actually costs is different, and worth separating from the arithmetic:
+
+- **Depth of the dependency chain.** $\mathbf{x}^{(k)}$ needs $\mathbf{x}^{(k-1)}$, so the $K$ products run in sequence. The work is linear in $K$; the *latency* is too, and cannot be reduced by adding hardware.
+- **A larger constant.** Every extra tap is another full pass over the edges, and another $K$-hop neighborhood to fetch — which is what Lecture 3 will find expensive at scale.
+- **The tempting shortcut is the real trap.** Precomputing $\mathbf{S}^{k}$ to parallelize the sum destroys sparsity: powers of a sparse matrix fill in, and the $O(N^2)$ memory returns.
+
+Architectures built on high-order filters, such as ChebNet [@defferrard2016convolutional], pay the second and third of these. GCN's answer is to make $K$ as small as possible.
 :::
 
 ## Graph convolutional networks {#sec-gcn}
@@ -375,11 +393,19 @@ The graph convolutional network of Kipf and Welling [@kipf2016semi] is the most 
 Start from a first-order filter on the normalized Laplacian, keeping only $k=0$ and $k=1$:
 
 $$
-\mathbf{y}\approx\theta_0\mathbf{x}+\theta_1\hat{\mathbf{L}}\mathbf{x}
-=\theta_0\mathbf{x}-\theta_1\mathbf{D}^{-1/2}\mathbf{A}\mathbf{D}^{-1/2}\mathbf{x},
+\mathbf{y}\approx\theta_0'\mathbf{x}+\theta_1'\hat{\mathbf{L}}\mathbf{x}.
 $$
 
-using $\hat{\mathbf{L}}=\mathbf{I}-\hat{\mathbf{A}}$ up to the constant term. Tying the two coefficients with $\theta=\theta_0=-\theta_1$ leaves a **single** parameter per filter:
+Now substitute $\hat{\mathbf{L}}=\mathbf{I}-\hat{\mathbf{A}}$ and collect terms. Note that this changes the constant coefficient — it does **not** leave $\theta_0'$ untouched:
+
+$$
+\theta_0'\mathbf{x}+\theta_1'(\mathbf{I}-\hat{\mathbf{A}})\mathbf{x}
+=\underbrace{(\theta_0'+\theta_1')}_{\textstyle \theta_0}\mathbf{x}
+\;\underbrace{-\;\theta_1'}_{\textstyle \theta_1}\hat{\mathbf{A}}\mathbf{x}
+=\theta_0\mathbf{x}+\theta_1\hat{\mathbf{A}}\mathbf{x}.
+$$
+
+So a first-order filter has two free parameters whichever basis we write it in. Tying them with $\theta=\theta_0=\theta_1$ leaves a **single** parameter per filter:
 
 $$
 \mathbf{y}\approx\theta\left(\mathbf{I}+\mathbf{D}^{-1/2}\mathbf{A}\mathbf{D}^{-1/2}\right)\mathbf{x}.
@@ -476,7 +502,9 @@ Only the labelled rows enter the loss, but the forward pass uses the whole graph
 ![A transductive model must re-solve its optimization problem whenever data arrives. A GCN applies its trained weights to a graph it has never seen, because the parameters are filter coefficients rather than per-node vectors.](../../assets/figures/inductive-vs-transductive.svg){#fig-inductive fig-alt="Top row, a transductive pipeline that recomputes the entire graph; bottom row, an inductive pipeline that reuses the trained model"}
 :::
 
-This is the decisive practical advantage over DeepWalk. The trained object is $\{\mathbf{W}^{(\ell)}\}$, a set of matrices whose shapes depend on feature dimensions only. Give the network a different graph with the same feature dimension and it produces embeddings immediately.
+This is the decisive practical advantage over DeepWalk. The trained object is $\{\mathbf{W}^{(\ell)}\}$, a set of matrices whose shapes depend on feature dimensions only, so the architecture *can* be applied to a graph it never saw.
+
+Two distinctions are worth keeping straight. First, being applicable inductively is a property of the **architecture**; whether a given experiment is inductive or transductive is a property of the **protocol** you evaluate under. A GCN trained and tested on one fixed graph with a node mask is a transductive experiment using an inductive architecture. Second, a matching feature dimension makes the forward pass *defined*, not *useful*: transfer to a new graph also needs the features to mean the same thing and the degree and homophily structure to be comparable.
 
 ### What the outputs are used for
 
@@ -533,17 +561,21 @@ $$
 =\sigma\!\left(
 \mathbf{W}^{\top}
 \sum_{j\in\mathcal{N}_i\cup\{i\}}
-\frac{a_{ij}}{\sqrt{(d_i+1)(d_j+1)}}\,
+\frac{\tilde{a}_{ij}}{\sqrt{(d_i+1)(d_j+1)}}\,
 \mathbf{h}_j^{(\ell)}
 \right),
 $$ {#eq-gcn-mpnn}
 
-where $d_i$ is the degree of node $i$. Reading @eq-gcn-mpnn against @eq-mpnn: the message function is the identity on the neighbor's state, the aggregation is a weighted sum over the closed neighborhood $\mathcal{N}_i\cup\{i\}$ — the self-loop from the renormalization trick — and the update is a linear map followed by an activation.
+where $d_i$ is the degree of node $i$ in $\mathbf{A}$ and $\tilde{a}_{ij}$ is an entry of the **self-loop-augmented** $\tilde{\mathbf{A}}=\mathbf{A}+\mathbf{I}$, so that $\tilde{a}_{ii}=1$. Writing $a_{ij}$ here would be a mistake: the examples in this course use a simple graph, whose adjacency has a zero diagonal, and the $j=i$ term would silently vanish — dropping exactly the self-message the renormalization trick was introduced to add.
+
+Reading @eq-gcn-mpnn against @eq-mpnn: the message function is the identity on the neighbor's state, the aggregation is a weighted sum over the closed neighborhood $\mathcal{N}_i\cup\{i\}$, and the update is a linear map followed by an activation.
 
 ::: {.checkpoint}
 **Check 4 — Where the GCN coefficients come from**
 
-In @eq-gcn-mpnn the weight of neighbor $j$ is $a_{ij}/\sqrt{(d_i+1)(d_j+1)}$. It depends only on the **degrees** and the **prescribed edge weights**. Nothing in it is learned, and nothing in it depends on what the nodes contain. Two consequences follow: a high-degree neighbor is systematically down-weighted regardless of how informative it is, and edge features cannot be used at all.
+In @eq-gcn-mpnn the weight of neighbor $j$ is $\tilde{a}_{ij}/\sqrt{(d_i+1)(d_j+1)}$. It depends only on the **degrees** and the **prescribed edge weights**. Nothing in it is learned, and nothing in it depends on what the nodes contain. Two consequences follow: a high-degree neighbor is systematically down-weighted regardless of how informative it is, and edge features cannot be used at all.
+
+Note also what these coefficients do **not** do: they do not sum to one over the closed neighborhood. Symmetric normalization is not a row-stochastic operation — that is $\mathbf{D}^{-1}\mathbf{A}$, a different operator.
 :::
 
 ## Graph attention networks
@@ -575,7 +607,7 @@ $$
 Three points about @eq-gat-alpha. The softmax runs over the neighborhood only, so the coefficients are computed on $|\mathcal{E}|$ pairs rather than $N^2$ — attention here is sparse by construction, which is what keeps the layer affordable. The neighborhood is understood to include $i$ itself, so a node can attend to its own state. And the coefficients are generally asymmetric: $\alpha_{ij}\neq\alpha_{ji}$, because each is normalized over a different neighborhood.
 
 ::: {.figure-panel}
-![The same neighborhood weighted two ways. The GCN coefficients (teal) are determined by the degrees alone and penalize the high-degree neighbor $j=3$; the attention coefficients (coral) are computed from the node states and can concentrate on $j=2$ instead. Both sets sum to one.](../../assets/figures/gcn-vs-gat-weights.svg){#fig-gcn-vs-gat fig-alt="Left, a five-node neighborhood with node degrees; right, a grouped bar chart comparing GCN and GAT coefficients"}
+![The same neighborhood weighted two ways. The GCN coefficients (teal) are fixed by the degrees and damp the three high-degree neighbors to $0.08$ against $0.26$ for the low-degree one; the attention coefficients (coral) are computed from the node states and can concentrate on $j=2$ instead. Note the sums: the GAT coefficients are a softmax and sum to $1$, while the symmetrically normalized GCN coefficients sum to $0.70$ here — symmetric normalization is not row-stochastic. The GAT values come from one **untrained** head with a random attention vector on random features; they illustrate what attention can express, not what a trained model learns.](../../assets/figures/gcn-vs-gat-weights.svg){#fig-gcn-vs-gat fig-alt="Left, a five-node neighborhood with node degrees; right, a grouped bar chart comparing GCN and GAT coefficients"}
 :::
 
 ### Multi-head attention
@@ -624,7 +656,17 @@ where $\mathcal{N}_i^{s}$ is the set of neighbors of $i$ carrying the same label
 ![Two graphs with the same number of nodes and comparable density but opposite label structure. Averaging over neighborhoods helps on the left and actively destroys the signal on the right.](../../assets/figures/homophily-heterophily.svg){#fig-homophily fig-alt="Two node-link diagrams, one with edges mostly inside classes and one with edges mostly between classes"}
 :::
 
-The intuition is immediate: message passing averages a node with its neighbors, which helps precisely when neighbors share the node's label. The formal statement is spectral. A GCN layer applies $\hat{\mathbf{A}}_{\mathrm{sl}}$, whose eigenvalues $\mu$ lie in $(-1,1]$, and $L$ layers apply $\mu^{L}$. Since $|\mu|<1$ away from the top of the spectrum, every component except the smoothest is suppressed: **a stack of GCN layers is a low-pass filter**.
+The intuition is immediate: message passing averages a node with its neighbors, which helps precisely when neighbors share the node's label.
+
+There is a spectral statement behind it, but it has to be scoped carefully. Consider **repeated fixed linear propagation** — apply $\hat{\mathbf{A}}_{\mathrm{sl}}$ $L$ times with no weights and no nonlinearity. Its eigenvalues $\mu$ lie in $(-1,1]$, so $L$ applications scale each spectral component by $\mu^{L}$, and since $|\mu|<1$ away from the top of the spectrum every component except the smoothest is suppressed. **Repeated propagation alone is a low-pass filter.**
+
+Three caveats, because it is easy to over-claim here:
+
+- A trained GCN is **not** multiplication by $\mu^{L}$. The weights $\mathbf{W}^{(\ell)}$ mix channels and the nonlinearities are not diagonal in this basis, so the composition is not a spectral filter at all.
+- Message passing in general is **not** low-pass. Nothing stops a layer from computing $\mathbf{h}_i-\text{mean}_j\mathbf{h}_j$, which is high-pass; architectures for heterophily do exactly that.
+- Low homophily does **not** by itself make a task hard. On the complete bipartite $K_{4,4}$ with one-hot class features and self-loops, propagation sends one class to $[0.2,0.8]$ and the other to $[0.8,0.2]$ — perfectly separable by a linear readout, at $H(\mathcal{G})=0$.
+
+What survives is the useful practical statement: the *specific* aggregation GCN and GAT use is a smoothing one, so they carry a homophily prior, and low homophily is a reason to check the architecture rather than a proof that it will fail.
 
 ::: {.figure-panel}
 ![Left, the response $\mu^{L}$ of $L$ stacked propagation steps; the shaded band is the spectrum actually attained by the graph on the right. Only eigenvalues near $\mu=1$ — the low graph frequencies — survive, and they survive more exclusively as $L$ grows. Right, the spectrum of a 120-node two-community graph, computed with `numpy`.](../../assets/figures/gcn-spectral-response.svg){#fig-spectral fig-alt="Left, curves of mu to the power L for L equal to 1, 2, 8, and 32; right, a histogram of eigenvalues between -0.5 and 1"}
@@ -658,7 +700,7 @@ So deep GNNs face a pincer: shallow models cannot see far enough, and deep model
 
 ### Practical remedies
 
-**PairNorm** [@zhao2019pairnorm] attacks over-smoothing directly by forbidding the embeddings to converge. It centers and rescales the representations between layers:
+**PairNorm** [@zhao2019pairnorm] attacks over-smoothing directly by forbidding the embeddings to collapse to a point. It centers and rescales the representations between layers:
 
 $$
 \mathbf{x}_i^{c}=\mathbf{x}_i-\frac{1}{N}\sum_{j\in\mathcal{V}}\mathbf{x}_j
@@ -668,12 +710,12 @@ $$
 \quad\text{(scaling)},
 $$
 
-with $s$ a scale hyperparameter. The total pairwise distance is held constant, so the cloud cannot contract to a point.
+with $s$ a scale hyperparameter. What this holds constant is the **total pairwise squared distance** of the representations — equivalently their total variance — so the cloud cannot contract to a point. That is not the same quantity as the normalized Dirichlet energy plotted below, which also depends on how the remaining variation is distributed over the graph.
 
 **DropEdge** [@rong2020dropedge] removes a random fraction of edges at every training step. It slows the mixing of the underlying chain, and as a side benefit reduces the cost of a layer, since the complexity is proportional to $O(|\mathcal{E}|)$.
 
 ::: {.figure-panel}
-![The same propagation experiment as @fig-over-smoothing, repeated with PairNorm and with DropEdge at rate $0.5$. Plain propagation decays geometrically; DropEdge slows the decay; PairNorm holds the energy at a constant level by construction.](../../assets/figures/over-smoothing-remedies.svg){#fig-remedies fig-alt="Three curves on a logarithmic axis: plain propagation decaying steeply, DropEdge decaying slowly, PairNorm flat"}
+![The same propagation experiment as @fig-over-smoothing, repeated with PairNorm and with DropEdge at rate $0.5$. Plain propagation decays geometrically; DropEdge slows the decay; PairNorm falls from $0.420$ to $0.200$ over the first step and then plateaus near $0.076$. Note that the plateau is an **observation in this experiment**, not a guarantee: PairNorm fixes the total pairwise distance, not this normalized Dirichlet energy, and the energy does drop by a factor of about $5.6$ before levelling off.](../../assets/figures/over-smoothing-remedies.svg){#fig-remedies fig-alt="Three curves on a logarithmic axis: plain propagation decaying steeply, DropEdge decaying slowly, PairNorm falling then flattening"}
 :::
 
 **Rewiring** attacks over-squashing instead. Topping et al. [@topping2022understanding] relate over-squashing to the Ricci curvature of the graph: negatively curved edges are the bottlenecks, and if curvature is positive everywhere the receptive field grows polynomially rather than exponentially in the hop distance. One can therefore add edges around the most negatively curved regions.
@@ -816,9 +858,11 @@ A three-layer GCN is applied to a graph with $N=10^{6}$ nodes, $F=500$ input fea
 
 For the neighborhood in @fig-gcn-vs-gat, verify the GCN coefficients $a_{ij}/\sqrt{(d_i+1)(d_j+1)}$ by hand using the degrees printed in the figure, and confirm that the reported values are these coefficients after normalization. Then state what would change if node $3$ gained fifty new neighbors elsewhere in the graph — under GCN, and under GAT.
 
-### Exercise 6 — Homophily
+### Exercise 6 — Homophily (investigation)
 
-Construct a graph on eight nodes with two classes and $H(\mathcal{G})=0$. Compute the output of one GCN layer with $\mathbf{W}=\mathbf{I}$ on the one-hot label signal, and explain why a classifier reading that output performs worse than one reading the raw features.
+Take the complete bipartite graph $K_{4,4}$ with the two sides as the two classes, so $H(\mathcal{G})=0$, and one-hot class features. Add self-loops and compute the output of one propagation step $\hat{\mathbf{A}}_{\mathrm{sl}}\mathbf{X}$ by hand.
+
+You should find $[0.2,0.8]$ for one class and $[0.8,0.2]$ for the other. Is this output linearly separable? Now answer the real question: **does zero homophily always destroy the signal?** Construct a second eight-node graph, also with $H(\mathcal{G})=0$, on which one propagation step *does* make the classes inseparable, and identify what differs between the two cases. What does this tell you about using $H(\mathcal{G})$ alone to predict whether a GNN will work?
 
 ### Exercise 7 — Over-smoothing in practice
 
@@ -829,10 +873,10 @@ Reproduce @fig-over-smoothing with the script in `scripts/figures/lecture_02_fig
 1. A convolution is a **polynomial in a shift operator**; time and space are just special graphs, so the definition transfers to any graph unchanged.
 2. Graph filters are **local**, have a **fixed number of parameters**, and are **permutation equivariant** — the three properties that shallow embeddings could not deliver.
 3. A GNN composes graph filters with pointwise nonlinearities; with a directed line graph it reduces exactly to a CNN.
-4. The exact filter is expensive, since powers of $\mathbf{S}$ fill in and the recursion cannot be parallelized. Practical architectures approximate it.
+4. A $K$-tap filter costs $O(K|\mathcal{E}|)$ — linear in the edge count for fixed $K$. What high order really costs is a longer sequential dependency chain and a bigger neighborhood to fetch; forming $\mathbf{S}^{k}$ to avoid that destroys sparsity. Practical architectures keep $K$ small.
 5. **GCN** is the cheapest such approximation: one hop, one shared weight matrix, self-loops for stability. It is inductive, costs $O(|\mathcal{E}|)$, and should be your first baseline.
 6. **Message passing** is the general framework; **GAT** stays inside it and replaces the degree-based coefficients by learned attention.
-7. Message-passing models are low-pass filters. They assume **homophily**, they **over-smooth** with depth, and they **over-squash** long-range information. PairNorm, DropEdge, and curvature-based rewiring mitigate these, and none of them solves the problem completely.
+7. The aggregation GCN and GAT use is a **smoothing** one, so they carry a homophily prior, **over-smooth** with depth, and **over-squash** long-range information. This is a property of these architectures, not of message passing in general. PairNorm, DropEdge, and curvature-based rewiring mitigate the symptoms; none of them solves the problem completely.
 8. Plenty of open problems remain — which is good news if you are looking for a research topic.
 
 ## References and provenance {.unnumbered}

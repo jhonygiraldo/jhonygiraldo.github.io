@@ -162,7 +162,15 @@ def figure_cluster_partition_loss() -> None:
 def figure_sgc_homophily() -> None:
     rng = np.random.default_rng(5)
     depths = [0, 1, 2, 3, 4, 6, 8]
-    homophily_levels = [(0.95, TEAL, "-"), (0.70, GOLD, "--"), (0.50, CORAL, "-."), (0.30, PURPLE, ":")]
+    # H=0.05 is included deliberately: near-bipartite graphs have large negative
+    # propagation eigenvalues, so separability RISES there. Omitting it invites
+    # the false reading that low homophily always kills the signal.
+    homophily_levels = [
+        (0.95, TEAL, "-"),
+        (0.70, GOLD, "--"),
+        (0.30, PURPLE, ":"),
+        (0.05, CORAL, "-."),
+    ]
 
     fig, axis = plt.subplots(figsize=(7.6, 4.2))
 
@@ -199,9 +207,9 @@ def figure_sgc_homophily() -> None:
         axis.plot(depths, separations, style, color=color, linewidth=2.2, marker="o", markersize=5,
                   label=f"$H(\\mathcal{{G}}) \\approx {target:.2f}$")
 
-    axis.set_xlabel(r"diffusion steps $\ell$ in $\hat{\mathbf{A}}^{\ell}\mathbf{X}$")
+    axis.set_xlabel(r"diffusion steps $K$ in $\hat{\mathbf{A}}^{K}\mathbf{X}$")
     axis.set_ylabel("class separability of the features")
-    axis.set_title("SGC pre-processing helps only when the graph is homophilous")
+    axis.set_title("Diffusion depth interacts with homophily — in both directions")
     axis.legend(loc="upper left", fontsize=10)
     save(fig, "sgc-homophily")
 

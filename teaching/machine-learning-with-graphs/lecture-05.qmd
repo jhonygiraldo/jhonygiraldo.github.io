@@ -28,7 +28,7 @@ format:
 </header>
 ```
 
-Netflix carries more than ten thousand films. Amazon lists twelve million products directly and some 350 million on its marketplace. Spotify holds seventy million tracks, YouTube more than ten billion videos, Pinterest more than two hundred billion images. No user can explore a catalogue of that size, so **personalized recommendation** — surfacing a handful of interesting items for each individual — is what makes such a platform usable at all.
+Catalogues are enormous and still growing — as of 2026, Spotify's own company page reports over 100 million tracks, Amazon lists millions of products directly and hundreds of millions across its marketplace, and YouTube and Pinterest count their items in the billions. No user can explore a catalogue of that size, so **personalized recommendation** — surfacing a handful of interesting items for each individual — is what makes such a platform usable at all.
 
 This note treats recommendation as a graph problem. The data is a bipartite user–item graph; the task is link prediction on it; and the two architectures we study, NGCF and LightGCN, are the machinery of Lectures 2 and 3 applied to that graph. But the interesting part is not the architecture. It is that the **metric we care about is not differentiable**, and almost everything in the design follows from what we do about that.
 
@@ -123,7 +123,9 @@ Everything in this note concerns the embeddings that make the first stage possib
 
 How many times have you opened TikTok, Instagram, or YouTube "just for five minutes" and lost half an hour?
 
-That is not an accident. It is a direct consequence of the objective functions in this note. Recommender systems are trained on engagement — clicks, watch time, interactions — and Recall@$k$ rewards giving users exactly what they are most likely to engage with. If a user's history shows a pull toward content that is harmful or addictive, a system optimizing this objective will **amplify** it, because amplifying it is what the metric rewards.
+That is not an accident, and the objective functions in this note are part of the reason. Recommender systems are typically trained on engagement — clicks, watch time, interactions — and Recall@$k$ rewards showing users what they are most likely to interact with.
+
+The risk is a **feedback loop**, and it is worth stating as a mechanism rather than a theorem. The model is trained on interactions that the previous model's recommendations helped produce. If it surfaces a kind of content, engagement with that content rises, the next training set reflects that, and the pattern can reinforce itself. Whether it does depends on the candidate generation, the exploration policy, the re-ranking and diversity constraints on top, and what "engagement" was defined to mean. Recall@$k$ alone does not *imply* harmful amplification; it removes any pressure against it.
 
 Going further is outside this course, but there are active research communities on fairness, diversity, filter bubbles, and engagement-versus-wellbeing objectives. Know that the metric you optimize is a choice, and that this one has consequences.
 :::
@@ -167,7 +169,7 @@ $$
 \mathcal{E}_{\text{neg}}=\{(u,v)\ \vert\ (u,v)\notin\mathcal{E},\ u\in\mathcal{U},\ v\in\mathcal{V}\}
 $$
 
-the negative ones. The binary loss classifies edges as positive or negative using $\sigma(F_\theta(\mathbf{u},\mathbf{v}))$:
+the **candidate negatives**. That name matters: an unobserved pair is one the user has not interacted with, which is overwhelmingly because they never saw it. Treating it as an established dislike is a modelling assumption, and a strong one — it is why the sampling distribution for negatives is itself a design choice. The binary loss classifies edges as positive or negative using $\sigma(F_\theta(\mathbf{u},\mathbf{v}))$:
 
 $$
 -\frac{1}{|\mathcal{E}|}\sum_{(u,v)\in\mathcal{E}}\log\sigma\!\left(F_\theta(\mathbf{u},\mathbf{v})\right)
@@ -175,20 +177,31 @@ $$
 $$
 :::
 
-This pushes positive-edge scores up and negative-edge scores down, which sounds exactly right — positives are what we want recalled. But look at what "up" and "down" mean here: **all** positives above **all** negatives, across the entire dataset at once.
+This pushes positive-edge scores up and negative-edge scores down, which sounds exactly right — positives are what we want recalled. But note what kind of loss it is: **pointwise**. Each term depends on the score of one pair alone, and asks that $\sigma(F_\theta)$ be a calibrated probability of interaction. That is a different request from "rank this user's items well".
 
 ::: {.figure-panel}
-![Two users, two items, and the model's scores. Recall@1 is $1.0$ — a perfect score: $v_1$ is correctly the top recommendation for $u_1$, and $v_2$ for $u_2$. Yet the binary loss still penalizes this model, because the negative edge $(u_2,v_1)$ scores $2.0$, higher than the positive edge $(u_1,v_1)$ at $1.0$.](../../assets/figures/binary-loss-counterexample.svg){#fig-binary-counterexample fig-alt="Two users connected to two items, annotated with scores 1.0, -1.0, 2.0, and 4.0, with positive edges solid and negative edges dashed"}
+![Two users, two items, and the model's scores. Recall@1 is $1.0$ — a perfect score: $v_1$ is correctly the top recommendation for $u_1$, and $v_2$ for $u_2$. Yet the binary loss still penalizes this model heavily.](../../assets/figures/binary-loss-counterexample.svg){#fig-binary-counterexample fig-alt="Two users connected to two items, annotated with scores 1.0, -1.0, 2.0, and 4.0, with positive edges solid and negative edges dashed"}
 :::
+
+Work the numbers through, because the reason for the penalty is easy to get wrong:
+
+| pair | label | score | $\sigma(\text{score})$ | BCE term |
+|---|---|---:|---:|---:|
+| $(u_1,v_1)$ | positive | $1.0$ | $0.731$ | $0.313$ |
+| $(u_1,v_2)$ | negative | $-1.0$ | $0.269$ | $0.313$ |
+| $(u_2,v_1)$ | negative | $2.0$ | $0.881$ | $\mathbf{2.127}$ |
+| $(u_2,v_2)$ | positive | $4.0$ | $0.982$ | $0.018$ |
 
 ::: {.checkpoint}
 **Check 3 — Read the counterexample carefully**
 
-The model in @fig-binary-counterexample is **perfect** by the metric we care about, and the loss punishes it anyway.
+The model in @fig-binary-counterexample is **perfect** by the metric we care about, and the loss punishes it anyway. But the reason is not that the loss compares $(u_2,v_1)$ against $(u_1,v_1)$ — it never does. Binary cross-entropy is pointwise; no term in it involves two users.
 
-The reason is a mismatch of scope. The binary loss compares positives and negatives **across all users at once** — it is *non-personalized*. Recall@$k$ compares items **within one user** — it is *personalized*. Comparing $(u_2,v_1)$ against $(u_1,v_1)$ is a comparison the metric never makes and never rewards, so the loss is strictly stricter than the objective.
+The $2.127$ appears because $\sigma(2.0)=0.881$ declares that pair **88% likely to be positive** while its label is negative. The loss is doing exactly its job: fitting probabilities. It is *our* objective that is different.
 
-Note that this is a proof, not an observation. One counterexample is enough to establish the misalignment.
+The real mismatch is an **invariance**. Add a constant to every score of one user and Recall@$k$ does not change at all — the within-user ordering is untouched. Do the same to the binary loss and it changes, because each score is being read as an absolute probability. A loss that is not invariant to something the metric is invariant to will spend capacity on a distinction the metric never rewards.
+
+So the lesson is not "BCE is non-personalized". It is: **probability calibration and within-user ranking are different objectives**, and a top-$k$ ranking metric asks only for the second.
 :::
 
 ### The BPR loss
@@ -215,7 +228,19 @@ $$ {#eq-bpr}
 and the total loss is $\frac{1}{|\mathcal{U}|}\sum_{u^*\in\mathcal{U}}\text{Loss}(u^*)$.
 :::
 
-The whole design is in the **difference** $F_\theta(u^*,v_{\text{pos}})-F_\theta(u^*,v_{\text{neg}})$. Only scores belonging to the same user are ever compared, so the loss is invariant to shifting one user's scores up or down — precisely the invariance Recall@$k$ has. Applied to @fig-binary-counterexample, the BPR loss is happy: within $u_1$, $v_1$ outranks $v_2$; within $u_2$, $v_2$ outranks $v_1$; nothing else is checked.
+The whole design is in the **difference** $F_\theta(u^*,v_{\text{pos}})-F_\theta(u^*,v_{\text{neg}})$ [@rendle2009bpr]. Only scores belonging to the same user are ever compared, so the loss is invariant to shifting one user's scores up or down — precisely the invariance we just found Recall@$k$ has and the binary loss lacks. Applied to @fig-binary-counterexample, both users have margin $2.0$ and the loss is small and equal for each.
+
+::: {.checkpoint}
+**Check 4 — BPR is a better surrogate, not the metric**
+
+Sharing one invariance does not make two objectives the same, and it is worth being precise about the gap.
+
+On @fig-binary-counterexample the BPR loss is $-\log\sigma(2.0)=0.127$ per user — **small, but not zero, and with a nonzero gradient**. BPR keeps pushing an already-correctly-ordered pair toward a larger margin; Recall@$k$ stopped caring the moment the ordering was right.
+
+It also differs in *where* in the ranking it looks. Recall@$k$ only sees the top $k$: promoting an item from rank 900 to rank 400 changes nothing. BPR treats every positive–negative pair alike, so it will happily spend gradient on that move. Losses that weight the head of the ranking more heavily (WARP, LambdaRank) exist for exactly this reason.
+
+BPR is the right default here because it is differentiable, cheap to sample, and shares the invariance that matters. It is a **surrogate**, not a reformulation of the metric.
+:::
 
 ::: {.figure-panel}
 ![Mini-batch estimation. Sample a subset of users $\mathcal{U}_{\text{mini}}$; for each, sample one positive item and a set of negative items.](../../assets/figures/bpr-minibatch.svg){#fig-bpr-minibatch fig-alt="A bipartite graph with a few users highlighted and their sampled positive and negative items marked"}
@@ -238,11 +263,13 @@ $$
 The mechanism is a capacity argument, and it is worth stating precisely.
 
 ::: {.checkpoint}
-**Check 4 — Low dimension is a feature, not a limitation**
+**Check 5 — Low dimension is a feature, not a limitation**
 
-A $D$-dimensional embedding table has $O((|\mathcal{U}|+|\mathcal{V}|)D)$ parameters, whereas the interaction matrix has $|\mathcal{U}|\times|\mathcal{V}|$ entries. When $D$ is small the model **cannot memorize** the interactions.
+A $D$-dimensional embedding table has $O((|\mathcal{U}|+|\mathcal{V}|)D)$ parameters, whereas the interaction matrix has $|\mathcal{U}|\times|\mathcal{V}|$ entries. Since the score matrix $\mathbf{U}\mathbf{V}^{\top}$ has rank at most $D$, the model cannot represent an arbitrary interaction pattern.
 
-Being unable to memorize, it is forced to explain the data with structure it can represent — which means placing similar users near each other and similar items near each other. That compression *is* collaborative filtering, and it is what lets the model say anything about a pair it has never observed.
+Being unable to represent everything, it is pushed toward explaining the data with structure it *can* represent — placing similar users near each other and similar items near each other. That compression is the mechanism behind collaborative filtering, and it is what lets the model say anything about a pair it has never observed.
+
+Two honest caveats. A rank constraint on the full matrix does not mean the **observed** entries cannot be fit closely: interaction data is extremely sparse, and a low-rank model can often fit a sparse set of observations well while generalizing poorly. And low rank alone does not make the learned geometry *meaningful* — regularization, the negative-sampling distribution, data density, and the evaluation protocol all matter. Low dimension creates the pressure; it does not guarantee the result.
 :::
 
 ## Neural graph collaborative filtering
@@ -252,13 +279,13 @@ Being unable to memorize, it is forced to explain the data with structure it can
 :::
 
 ::: {.checkpoint}
-**Check 5 — What shallow encoders miss**
+**Check 6 — What shallow encoders miss**
 
 The graph enters a shallow model **only through the training objective** — through which pairs are positive. It never enters the model itself.
 
 And the objective only ever looks at **first-order** structure: individual edges. A $K$-hop path between a user and an item — the very thing that says "people like you, who liked things like this, went on to like that" — is never represented.
 
-This is exactly the limitation Lecture 2 identified for DeepWalk, in a new setting.
+This echoes Lecture 2's complaint about shallow encoders, though the two are not identical: DeepWalk's random-walk contexts do reach beyond immediate edges, whereas the loss here looks only at observed pairs.
 :::
 
 We want a model that captures graph structure **explicitly** and at **higher order**. GNNs do both.
@@ -268,7 +295,7 @@ We want a model that captures graph structure **explicitly** and at **higher ord
 :::
 
 ::: {.definition}
-**Definition 6 — NGCF propagation**
+**Definition 6 — Generic bipartite message passing**
 
 With shallow embeddings as the initial features, $\mathbf{h}_u^{(0)}$ and $\mathbf{h}_v^{(0)}$, iterate
 
@@ -276,17 +303,46 @@ $$
 \mathbf{h}_v^{(k+1)}=\operatorname{COMBINE}\!\left(\mathbf{h}_v^{(k)},\ \operatorname{AGGR}\!\left(\left\{\mathbf{h}_u^{(k)}\right\}_{u\in\mathcal{N}(v)}\right)\right),
 $$
 $$
-\mathbf{h}_u^{(k+1)}=\operatorname{COMBINE}\!\left(\mathbf{h}_u^{(k)},\ \operatorname{AGGR}\!\left(\left\{\mathbf{h}_v^{(k)}\right\}_{v\in\mathcal{N}(u)}\right)\right).
+\mathbf{h}_u^{(k+1)}=\operatorname{COMBINE}\!\left(\mathbf{h}_u^{(k)},\ \operatorname{AGGR}\!\left(\left\{\mathbf{h}_v^{(k)}\right\}_{v\in\mathcal{N}(u)}\right)\right),
 $$
 
-A typical choice is $\operatorname{AGGR}=\operatorname{MEAN}$ and $\operatorname{COMBINE}(\mathbf{x},\mathbf{y})=\operatorname{ReLU}(\operatorname{Linear}(\operatorname{Concat}(\mathbf{x},\mathbf{y})))$.
+with, say, $\operatorname{AGGR}=\operatorname{MEAN}$ and $\operatorname{COMBINE}(\mathbf{x},\mathbf{y})=\operatorname{ReLU}(\operatorname{Linear}(\operatorname{Concat}(\mathbf{x},\mathbf{y})))$.
+
+This is the **general shape** of a graph recommender, and it is what to keep in mind. It is not yet NGCF.
+:::
+
+::: {.definition}
+**Definition 7 — NGCF, as actually specified**
+
+NGCF [@wang2019neural] fixes two things that Definition 6 leaves open, and both matter.
+
+**The message carries an interaction term.** The message from item $v$ to user $u$ is not the neighbor's state but
+
+$$
+\mathbf{m}_{u\leftarrow v}=\frac{1}{\sqrt{|\mathcal{N}(u)|\,|\mathcal{N}(v)|}}
+\Big(\mathbf{W}_1\mathbf{h}_v^{(k)}+\mathbf{W}_2\big(\mathbf{h}_v^{(k)}\odot\mathbf{h}_u^{(k)}\big)\Big),
+$$
+
+where $\odot$ is the elementwise product. The second term is the point of the model: it makes the message depend on **how well the user and item already agree**, which a mean aggregation cannot express. There is also a self-message $\mathbf{m}_{u\leftarrow u}=\mathbf{W}_1\mathbf{h}_u^{(k)}$, and the update is
+
+$$
+\mathbf{h}_u^{(k+1)}=\operatorname{LeakyReLU}\Big(\mathbf{m}_{u\leftarrow u}+\textstyle\sum_{v\in\mathcal{N}(u)}\mathbf{m}_{u\leftarrow v}\Big).
+$$
+
+**The readout concatenates every depth.** The final embedding is not $\mathbf{h}_u^{(K)}$ but
+
+$$
+\mathbf{h}_u^{*}=\mathbf{h}_u^{(0)}\,\Vert\,\mathbf{h}_u^{(1)}\,\Vert\cdots\Vert\,\mathbf{h}_u^{(K)},
+$$
+
+so information from every hop count reaches the score. Keep this in view: LightGCN will replace the concatenation with a weighted average, and drop everything else.
 :::
 
 ::: {.figure-panel}
 ![Because the graph is bipartite, users aggregate from items and items aggregate from users. Two rounds therefore connect a user to other users through shared items — the second-order structure the shallow model could not see.](../../assets/figures/ngcf-neighbor-aggregation.svg){#fig-ngcf-aggregation fig-alt="A bipartite graph with green arrows from items to users and blue arrows from users to items"}
 :::
 
-After $K$ rounds we set $\mathbf{u}\leftarrow\mathbf{h}_u^{(K)}$ and $\mathbf{v}\leftarrow\mathbf{h}_v^{(K)}$, and score by inner product.
+After $K$ rounds we set $\mathbf{u}\leftarrow\mathbf{h}_u^{*}$ and $\mathbf{v}\leftarrow\mathbf{h}_v^{*}$ — the concatenations over all depths — and score by inner product.
 
 ::: {.figure-panel}
 ![The final embeddings are explicitly graph-aware. NGCF trains **two** kinds of parameters jointly: the shallow embeddings and the GNN weights.](../../assets/figures/ngcf-final-embedding.svg){#fig-ngcf-final fig-alt="A bipartite graph whose nodes carry final graph-aware embedding vectors"}
@@ -295,7 +351,7 @@ After $K$ rounds we set $\mathbf{u}\leftarrow\mathbf{h}_u^{(K)}$ and $\mathbf{v}
 ## LightGCN
 
 ::: {.checkpoint}
-**Check 6 — Count the parameters before adding machinery**
+**Check 7 — Count the parameters before adding machinery**
 
 NGCF learns shallow embeddings **and** GNN weights. Compare their sizes:
 
@@ -352,11 +408,21 @@ $$ {#eq-lightgcn-multiscale}
 The coefficients are hyperparameters; LightGCN simply takes them uniform, $\alpha_i=\frac{1}{k+1}$.
 
 ::: {.checkpoint}
-**Check 7 — Why average across scales?**
+**Check 8 — Why average across scales?**
 
-Keeping $\mathbf{E}^{(0)}$ in the sum means the un-diffused embedding always survives with weight $\frac{1}{k+1}$. This is a direct structural defence against the failure mode of Lecture 2: however much the deep terms over-smooth, the model retains a path back to the node's own identity.
+Keeping $\mathbf{E}^{(0)}$ in the sum means the un-diffused embedding always survives with weight $\frac{1}{k+1}$. This is a structural defence against the failure mode of Lecture 2: however much the deep terms smooth, the model retains a path back to the node's own identity.
 
-It is the same idea as a residual connection, and it is why LightGCN tolerates more propagation steps than a plain GCN would.
+It is the same idea as a residual connection. But note the weight: $\frac{1}{k+1}$ **shrinks as $k$ grows**, so this mitigates over-smoothing rather than preventing it. At large $k$ the un-diffused term is a vanishing share of the sum.
+
+::: {.checkpoint}
+**Check 9 — LightGCN is not SGC on a bipartite graph**
+
+The resemblance is real — both delete the nonlinearity and the projection — but one difference changes the engineering completely.
+
+SGC's $\tilde{\mathbf{X}}=\hat{\mathbf{A}}^{\ell}\mathbf{X}$ is computed from **fixed input features**, so it is preprocessing: compute once, then train an ordinary classifier on the rows. In LightGCN the input $\mathbf{E}$ is **the parameter being learned**. Every gradient step changes it, so the diffusion must be recomputed on every forward pass and differentiated through on every backward pass. There is no one-time preprocessing to be had.
+
+Two more differences worth noting: LightGCN averages over all depths where SGC uses a single depth, and LightGCN omits self-loops. The self-loop omission is not simply because the graph is bipartite — it is because the layer combination of @eq-lightgcn-multiscale already retains $\mathbf{E}^{(0)}$, so a self-loop inside each propagation would be redundant with it.
+:::
 :::
 
 ### The model end to end
@@ -385,15 +451,17 @@ The **only** learnable parameters are the input embeddings $\mathbf{E}$. Everyth
 :::
 
 ::: {.checkpoint}
-**Check 8 — What @fig-lightgcn-depth does and does not show**
+**Check 10 — What @fig-lightgcn-depth does and does not show**
 
 It shows the central claim: **diffusion is the whole of what LightGCN adds over a shallow encoder**, and it is worth a large factor. The $k=0$ point is a shallow model trained identically, so the gap is attributable to the propagation alone.
 
-It does **not** show a turning point. In this small, clean, strongly homophilous synthetic graph, recall was still improving at the largest depth tested — the multi-scale average of @eq-lightgcn-multiscale is doing its job. On real data, and without that average, more layers eventually hurt for the reasons Lecture 2 measured. Do not read this curve as licence to stack layers indefinitely; read it as evidence that the diffusion is where the value is. Exercise 6 asks you to look for the turnover.
+It does **not** show a turning point. In this small, clean, strongly homophilous synthetic graph, recall was still improving at the largest depth tested — the multi-scale average of @eq-lightgcn-multiscale is doing its job. On real data, and without that average, more layers eventually hurt for the reasons Lecture 2 measured.
+
+And it is one experiment, so treat it accordingly: **one random interaction split, one seed, and the same hyperparameters at every depth**, on synthetic data whose group structure was built in by construction. There is no validation-selected setting, no popularity baseline, and no matrix-factorization baseline to compare against. It is evidence that the diffusion is where the value is in this setup — not a general ranking of models. Exercise 6 asks you to look for the turnover, and Exercise 8 to add the missing baselines.
 :::
 
 ::: {.checkpoint}
-**Check 9 — Why the simple thing works**
+**Check 11 — Why the simple thing works**
 
 The diffusion directly pulls together the embeddings of users who share many item neighbors. Two users who interacted with many of the same items get similar final embeddings, and therefore similar recommendations.
 
@@ -401,7 +469,7 @@ That is a mechanical restatement of collaborative filtering — the assumption w
 :::
 
 ::: {.checkpoint}
-**Check 10 — NGCF, LightGCN, and shallow encoders**
+**Check 12 — NGCF, LightGCN, and shallow encoders**
 
 | | learnable parameters | graph in the model | cost |
 |---|---|---|---|
@@ -420,7 +488,7 @@ A user has $P_u=\{v_3,v_7,v_9,v_{11}\}$ and the model returns $R_u=\{v_2,v_3,v_5
 
 ### Exercise 2 — The counterexample, generalized
 
-@fig-binary-counterexample uses two users and two items. Construct a family of examples with $n$ users in which training Recall@1 is perfect but the binary loss is arbitrarily large. What property of the score matrix are you exploiting?
+@fig-binary-counterexample uses two users and two items. Construct a family of examples with $n$ users in which Recall@1 is perfect but the binary loss is arbitrarily large. You are not exploiting a comparison across users — the loss makes none — so say precisely which property of the individual scores you are exploiting, and why Recall@$k$ is blind to it.
 
 ### Exercise 3 — Invariance
 
@@ -436,19 +504,25 @@ Verify @eq-lightgcn-layer for $k=2$: expand $\mathbf{E}^{(2)}$ with the ReLU pre
 
 ### Exercise 6 — Diffusion depth
 
-Reproduce @fig-lightgcn-depth with `scripts/figures/lecture_05_figures.py`. Then remove the multi-scale average — score with $\mathbf{E}^{(k)}$ alone instead of the average of @eq-lightgcn-multiscale — and re-run the sweep. Does a turning point appear? Explain the result using Check 7.
+Reproduce @fig-lightgcn-depth with `scripts/figures/lecture_05_figures.py`. Then remove the multi-scale average — score with $\mathbf{E}^{(k)}$ alone instead of the average of @eq-lightgcn-multiscale — and re-run the sweep. Does a turning point appear? Explain the result using Check 8.
 
 ### Exercise 7 — Parameter counts
 
 A platform has $10^{7}$ users, $10^{6}$ items and $D=64$. Count the parameters of a shallow encoder, of LightGCN, and of NGCF with a 3-layer GNN. Then state which of the three you would deploy first, and why the answer does not follow from the parameter count alone.
+
+### Exercise 8 — The missing baselines (investigation)
+
+@fig-lightgcn-depth compares LightGCN against itself at $k=0$. That is not enough to conclude the model is good. Extend `scripts/figures/lecture_05_figures.py` with two baselines: **most-popular** (rank every user's candidates by global interaction count, ignoring the user) and **matrix factorization** (the $k=0$ model, but with its own tuned dimension and regularization). Re-run over five seeds and report the mean and spread of Recall@10.
+
+Does LightGCN still win? By how much, relative to the seed-to-seed spread? Which baseline is harder to beat, and what does that tell you about how much of the signal is popularity rather than personalization?
 
 ## Main takeaways
 
 1. A recommender system is a **bipartite user–item graph**, and recommendation is **link prediction** on it.
 2. We recommend $k \ll |\mathcal{V}|$ items and evaluate with **Recall@$k$**, which is defined **per user** and then averaged.
 3. Recall@$k$ is not differentiable, so training uses a **surrogate loss** — and the choice of surrogate is where the alignment with the metric is won or lost.
-4. The **binary loss** compares positives and negatives across all users. One two-user counterexample shows it penalizes a model with perfect Recall@1.
-5. The **BPR loss** compares items only within a user, matching the metric's personalization exactly.
+4. The **binary loss** is pointwise: it fits calibrated probabilities. A two-user counterexample shows it penalizing a model with perfect Recall@1 — not because it compares users, but because probability calibration and ranking are different objectives.
+5. The **BPR loss** compares items only within a user, so it shares Recall@$k$'s invariance to per-user score shifts. It is a better surrogate, not the metric: it still rewards larger margins on pairs that are already correctly ordered, and it weights the whole ranking rather than the top $k$.
 6. Embeddings work because they are **too small to memorize**, which forces them to encode user and item similarity — collaborative filtering.
 7. **NGCF** propagates shallow embeddings over the bipartite graph with a GNN, capturing high-order structure the training objective alone cannot.
 8. **LightGCN** removes the GNN's parameters entirely, keeping only diffusion plus a multi-scale average. It has fewer parameters than NGCF and performs better — and the multi-scale average is what keeps depth safe.
