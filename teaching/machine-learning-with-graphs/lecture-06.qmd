@@ -47,10 +47,10 @@ After studying this note, you should be able to:
 ```{=html}
 <ol class="learning-objectives">
   <li>characterize a graph by its degree distribution, clustering coefficient, connectivity, and path length;</li>
-  <li>define the Erdős–Rényi models $G_{np}$ and $G_{nm}$ and derive their clustering coefficient;</li>
-  <li>state which properties of real networks $G_{np}$ reproduces and which it cannot;</li>
+  <li>define the Erdős–Rényi models \(G_{np}\) and \(G_{nm}\) and derive their clustering coefficient;</li>
+  <li>state which properties of real networks \(G_{np}\) reproduces and which it cannot;</li>
   <li>formulate graph generation as density estimation plus sampling;</li>
-  <li>explain how GraphRNN turns a graph into a sequence of sequences, and why that costs $\mathcal{O}(N^2)$;</li>
+  <li>explain how GraphRNN turns a graph into a sequence of sequences, and why that costs \(\mathcal{O}(N^2)\);</li>
   <li>explain how coarsening-based local expansion avoids both the ordering problem and the quadratic cost.</li>
 </ol>
 ```

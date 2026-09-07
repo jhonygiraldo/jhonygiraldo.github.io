@@ -10,7 +10,7 @@ This graduate course develops the foundations of graph machine learning. It begi
 ```{=html}
 <div class="feature-grid">
   <article class="feature-card"><span class="number">Level</span><h3>MSc</h3><p>Master Data Science and Master Data & AI.</p></article>
-  <article class="feature-card"><span class="number">Prerequisites</span><h3>Linear algebra + deep learning</h3><p>Comfort with vectors, matrices, probability, optimization, and basic neural networks.</p></article>
+  <article class="feature-card"><span class="number">Prerequisites</span><h3>Linear algebra + deep learning</h3><p>Comfort with vectors, matrices, probability, optimization, and basic neural networks. <a href="#before-you-start">Two preliminary notes</a> cover what the lectures assume.</p></article>
   <article class="feature-card"><span class="number">Format</span><h3>Six lectures</h3><p>Conceptual development, mathematical derivations, examples, and guided exercises.</p></article>
 </div>
 ```
@@ -24,6 +24,12 @@ By the end of the course, students should be able to:
 - identify scaling, generalization, and modeling challenges in graph learning;
 - use graph models for semi-supervised learning, molecular-property prediction, spatiotemporal analysis, recommendation, and graph generation;
 - evaluate assumptions, failure modes, and empirical evidence in graph-ML research.
+
+## Before you start {#before-you-start}
+
+The lectures assume a working knowledge of linear algebra, probability, and neural networks, and they move quickly through it. These two notes cover exactly what is used and no more — every section ends by naming the lecture that needs it. Read them in order if you want the background; skim the diagnostic at the top of each if you only want to find your gaps.
+
+{{< include ../../_includes/generated/preliminaries.md >}}
 
 ## Course sequence
 

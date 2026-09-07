@@ -9,6 +9,20 @@
     "summary": "Graph representation learning, graph neural networks, scaling, spatiotemporal learning, recommender systems, and graph generation.",
     "url": "teaching/machine-learning-with-graphs/index.qmd",
     "featured": true,
+    "preliminaries": [
+      {
+        "label": "P1",
+        "title": "Mathematical preliminaries",
+        "topics": "Vectors and matrices; structured and sparse matrices; eigenvalues and what matrix powers do; matrix calculus.",
+        "note": "teaching/machine-learning-with-graphs/preliminaries-mathematics.qmd"
+      },
+      {
+        "label": "P2",
+        "title": "Machine-learning preliminaries",
+        "topics": "Probability and estimators; perceptron and MLP; backpropagation and SGD; convex optimization; reading an experiment.",
+        "note": "teaching/machine-learning-with-graphs/preliminaries-machine-learning.qmd"
+      }
+    ],
     "lectures": [
       {
         "number": 1,

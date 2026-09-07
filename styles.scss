@@ -416,8 +416,21 @@ body.fullcontent #quarto-content > main.content,
   line-height: 1.35;
 }
 
+/* Preliminaries share the lecture card but read as a distinct group: teal
+   badge and a teal rule, against the lectures' coral. */
+.lecture-item.is-preliminary {
+  border-color: #b9d7d9;
+  background: linear-gradient(90deg, #f2f9f8, white 45%);
+}
+
 .lecture-item.is-published .lecture-index {
   color: var(--coral);
+}
+
+.lecture-item.is-preliminary .lecture-index {
+  color: var(--teal);
+  font-size: 1.3rem;
+  letter-spacing: 0.02em;
 }
 
 .lecture-body h3 {

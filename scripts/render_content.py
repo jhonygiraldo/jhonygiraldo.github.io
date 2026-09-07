@@ -226,6 +226,18 @@ def validate(news: list[dict[str, Any]], people: dict[str, Any], courses: list[d
         for field in ("title", "level", "period", "summary"):
             if not course.get(field):
                 errors.append(f"course {index} is missing {field}")
+        labels = [entry.get("label") for entry in course.get("preliminaries", [])]
+        if len(labels) != len(set(labels)):
+            errors.append(f"course {index} has duplicate preliminary labels")
+        for entry in course.get("preliminaries", []):
+            tag = f"course {index} preliminary {entry.get('label', '?')}"
+            for field in ("label", "title", "topics", "note"):
+                if not entry.get(field):
+                    errors.append(f"{tag} is missing {field}")
+            note = entry.get("note")
+            if note and not (ROOT / note).exists():
+                errors.append(f"{tag} points at a missing web note: {note}")
+
         numbers = [lecture.get("number") for lecture in course.get("lectures", [])]
         if numbers != sorted(number for number in numbers if isinstance(number, int)):
             errors.append(f"course {index} has lectures that are unnumbered or out of order")
@@ -352,8 +364,13 @@ def lecture_label(lecture: dict[str, Any], lecture_number: int | None) -> str:
     return f"{lecture_number:02d}" if lecture_number is not None else f"{lecture['number']:02d}"
 
 
-def render_lecture_item(lecture: dict[str, Any], lecture_number: int | None = None) -> list[str]:
-    number = lecture_label(lecture, lecture_number)
+def render_lecture_item(
+    lecture: dict[str, Any],
+    lecture_number: int | None = None,
+    label: str | None = None,
+    extra_class: str = "",
+) -> list[str]:
+    number = label if label is not None else lecture_label(lecture, lecture_number)
     published = bool(lecture.get("note"))
     buttons: list[str] = []
     if published:
@@ -365,7 +382,7 @@ def render_lecture_item(lecture: dict[str, Any], lecture_number: int | None = No
         buttons.append(f'    <a class="button-link secondary" href="{slides_url(lecture)}">{label}</a>')
 
     lines = [
-        f'<li class="lecture-item{" is-published" if published else ""}">',
+        f'<li class="lecture-item{" is-published" if published else ""}{extra_class}">',
         f'  <div class="lecture-index">{number}</div>',
         '  <div class="lecture-body">',
         f'    <h3>{html.escape(lecture["title"])}</h3>',
@@ -379,6 +396,26 @@ def render_lecture_item(lecture: dict[str, Any], lecture_number: int | None = No
         lines.append('    <p class="lecture-status">Web note in preparation.</p>')
     lines.extend(["  </div>", "</li>"])
     return lines
+
+
+def render_preliminaries(courses: list[dict[str, Any]]) -> str:
+    """Render the "before you start" list.
+
+    Kept out of the `lectures` array on purpose: `render_lectures` numbers the
+    sequence by counting non-practical entries, so a preliminary note living
+    there would consume number 01 and shift every lecture down.
+    """
+    course = next((item for item in courses if item.get("preliminaries")), None)
+    if course is None:
+        return "\n".join(raw_block(["<!-- no preliminaries declared in _data/courses.json -->"])) + "\n"
+
+    listing = ['<ol class="lecture-list">']
+    for entry in course["preliminaries"]:
+        listing.extend(
+            render_lecture_item(entry, label=entry["label"], extra_class=" is-preliminary")
+        )
+    listing.append("</ol>")
+    return "\n".join(raw_block(listing)) + "\n"
 
 
 def render_lectures(courses: list[dict[str, Any]]) -> tuple[str, str]:
@@ -579,6 +616,7 @@ def main() -> int:
         "team-preview.md": people_preview,
         "courses.md": render_courses(courses),
         "lecture-notes.md": lectures_full,
+        "preliminaries.md": render_preliminaries(courses),
         "lecture-spotlight.md": lectures_spotlight,
         "news.md": news_full,
         "latest-news.md": news_latest,

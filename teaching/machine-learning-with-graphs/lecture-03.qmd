@@ -40,7 +40,7 @@ After studying this note, you should be able to:
 <ol class="learning-objectives">
   <li>explain why a uniformly sampled mini-batch of nodes destroys the graph structure;</li>
   <li>construct the computational graph of a node and state how its size grows with depth;</li>
-  <li>describe GraphSAGE neighbor sampling and the trade-off controlled by the fan-out $H$;</li>
+  <li>describe GraphSAGE neighbor sampling and the trade-off controlled by the fan-out \(H\);</li>
   <li>describe Cluster-GCN, and identify the bias it introduces by discarding between-cluster edges;</li>
   <li>derive SGC by removing the nonlinearities from a GCN, and explain why it is so cheap;</li>
   <li>choose between these methods for a given graph, task, and memory budget.</li>

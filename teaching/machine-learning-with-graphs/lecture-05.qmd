@@ -39,8 +39,8 @@ After studying this note, you should be able to:
 ```{=html}
 <ol class="learning-objectives">
   <li>model a recommender system as a bipartite graph and cast recommendation as link prediction;</li>
-  <li>define Recall@$k$ and explain why it cannot be optimized directly;</li>
-  <li>show by counterexample why the binary loss is misaligned with Recall@$k$, and how the BPR loss fixes it;</li>
+  <li>define Recall@\(k\) and explain why it cannot be optimized directly;</li>
+  <li>show by counterexample why the binary loss is misaligned with Recall@\(k\), and how the BPR loss fixes it;</li>
   <li>explain collaborative filtering and why low-dimensional embeddings capture it;</li>
   <li>describe NGCF's message passing over the user–item graph;</li>
   <li>derive LightGCN from a GCN and explain what its multi-scale average does.</li>

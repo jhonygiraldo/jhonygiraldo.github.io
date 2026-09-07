@@ -12,17 +12,5 @@
   <p>Modern representation learning and deep neural architectures for visual understanding.</p>
   <p class="person-links">MSc · Course lead · 2023–present</p>
 </article>
-<article class="course-card">
-  <div class="course-code">Télécom Paris</div>
-  <h3>Wavelets</h3>
-  <p>Multiscale signal representations and wavelet methods.</p>
-  <p class="person-links">Graduate · Lecturer · 2023–present</p>
-</article>
-<article class="course-card">
-  <div class="course-code">Télécom Paris</div>
-  <h3>Advanced Machine Learning</h3>
-  <p>Lectures on graph neural networks within the advanced machine learning curriculum.</p>
-  <p class="person-links">Graduate · Lecturer · 2023–present</p>
-</article>
 </div>
 ```
