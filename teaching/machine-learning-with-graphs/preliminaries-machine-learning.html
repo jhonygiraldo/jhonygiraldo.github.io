@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Preliminary web note covering the machine learning the course assumes: probability and estimators, the perceptron and MLP, backpropagation and SGD, convex optimization, and how to read an experiment.">
+
+<title>Machine-learning preliminaries – Jhony H. Giraldo</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../assets/images/jhony-giraldo.jpg" rel="icon" type="image/jpeg">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-933893266c10dca58b5ae82bff0b7ef1.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Jhony H. Giraldo",
+  "jobTitle": "Assistant Professor in Machine Learning and Computer Vision",
+  "url": "https://jhonygiraldo.github.io/",
+  "image": "https://jhonygiraldo.github.io/assets/images/jhony-giraldo.jpg",
+  "email": "mailto:jhony.giraldo@telecom-paris.fr",
+  "affiliation": [
+    {"@type": "CollegeOrUniversity", "name": "Télécom Paris"},
+    {"@type": "CollegeOrUniversity", "name": "Institut Polytechnique de Paris"}
+  ],
+  "sameAs": [
+    "https://orcid.org/0000-0002-0039-1270",
+    "https://scholar.google.com/citations?user=iwzmGKwAAAAJ",
+    "https://www.linkedin.com/in/jhonyhgiraldo",
+    "https://bsky.app/profile/jhonyhgiraldo.bsky.social"
+  ],
+  "knowsAbout": [
+    "Graph machine learning",
+    "Geometric deep learning",
+    "Graph signal processing",
+    "Computer vision",
+    "Higher-order neural networks"
+  ]
+}
+</script>
+
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<meta property="og:title" content="Machine-learning preliminaries">
+<meta property="og:description" content="Preliminary web note covering the machine learning the course assumes: probability and estimators, the perceptron and MLP, backpropagation and SGD, convex optimization, and how to read an experiment.">
+<meta property="og:site_name" content="Jhony H. Giraldo">
+<meta name="twitter:title" content="Machine-learning preliminaries">
+<meta name="twitter:description" content="Preliminary web note covering the machine learning the course assumes: probability and estimators, the perceptron and MLP, backpropagation and SGD, convex optimization, and how to read an experiment.">
+<meta name="twitter:card" content="summary">
+</head>
+
+<body class="nav-fixed custom-title-page lecture-page quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Jhony H. Giraldo</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../research/index.html"> 
+<span class="menu-text">Research</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../people/index.html"> 
+<span class="menu-text">Team</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../publications/index.html"> 
+<span class="menu-text">Publications</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../teaching/index.html"> 
+<span class="menu-text">Teaching</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../news/index.html"> 
+<span class="menu-text">News</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../cv/index.html"> 
+<span class="menu-text">CV</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:jhony.giraldo@telecom-paris.fr"> <i class="bi bi-envelope" role="img" aria-label="Email Jhony Giraldo">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://scholar.google.com/citations?user=iwzmGKwAAAAJ"> <i class="bi bi-mortarboard-fill" role="img" aria-label="Google Scholar">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/jhonyhgiraldo"> <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#diagnostic-what-do-you-actually-need-to-read" id="toc-diagnostic-what-do-you-actually-need-to-read" class="nav-link active" data-scroll-target="#diagnostic-what-do-you-actually-need-to-read"><span class="header-section-number">1</span> Diagnostic: what do you actually need to read?</a></li>
+  <li><a href="#probability-and-estimators" id="toc-probability-and-estimators" class="nav-link" data-scroll-target="#probability-and-estimators"><span class="header-section-number">2</span> Probability and estimators</a>
+  <ul class="collapse">
+  <li><a href="#the-pieces-you-need" id="toc-the-pieces-you-need" class="nav-link" data-scroll-target="#the-pieces-you-need"><span class="header-section-number">2.1</span> The pieces you need</a></li>
+  <li><a href="#three-distributions" id="toc-three-distributions" class="nav-link" data-scroll-target="#three-distributions"><span class="header-section-number">2.2</span> Three distributions</a></li>
+  <li><a href="#estimators-unbiased-and-how-noisy" id="toc-estimators-unbiased-and-how-noisy" class="nav-link" data-scroll-target="#estimators-unbiased-and-how-noisy"><span class="header-section-number">2.3</span> Estimators: unbiased, and how noisy</a></li>
+  <li><a href="#maximum-likelihood" id="toc-maximum-likelihood" class="nav-link" data-scroll-target="#maximum-likelihood"><span class="header-section-number">2.4</span> Maximum likelihood</a></li>
+  <li><a href="#jensens-inequality" id="toc-jensens-inequality" class="nav-link" data-scroll-target="#jensens-inequality"><span class="header-section-number">2.5</span> Jensen’s inequality</a></li>
+  </ul></li>
+  <li><a href="#from-a-linear-model-to-an-mlp" id="toc-from-a-linear-model-to-an-mlp" class="nav-link" data-scroll-target="#from-a-linear-model-to-an-mlp"><span class="header-section-number">3</span> From a linear model to an MLP</a>
+  <ul class="collapse">
+  <li><a href="#the-linear-model" id="toc-the-linear-model" class="nav-link" data-scroll-target="#the-linear-model"><span class="header-section-number">3.1</span> The linear model</a></li>
+  <li><a href="#why-one-layer-is-not-enough" id="toc-why-one-layer-is-not-enough" class="nav-link" data-scroll-target="#why-one-layer-is-not-enough"><span class="header-section-number">3.2</span> Why one layer is not enough</a></li>
+  <li><a href="#the-multilayer-perceptron" id="toc-the-multilayer-perceptron" class="nav-link" data-scroll-target="#the-multilayer-perceptron"><span class="header-section-number">3.3</span> The multilayer perceptron</a></li>
+  <li><a href="#activations" id="toc-activations" class="nav-link" data-scroll-target="#activations"><span class="header-section-number">3.4</span> Activations</a></li>
+  <li><a href="#softmax-logits-and-probabilities" id="toc-softmax-logits-and-probabilities" class="nav-link" data-scroll-target="#softmax-logits-and-probabilities"><span class="header-section-number">3.5</span> Softmax, logits, and probabilities</a></li>
+  <li><a href="#loss-functions" id="toc-loss-functions" class="nav-link" data-scroll-target="#loss-functions"><span class="header-section-number">3.6</span> Loss functions</a></li>
+  </ul></li>
+  <li><a href="#backpropagation-and-stochastic-gradient-descent" id="toc-backpropagation-and-stochastic-gradient-descent" class="nav-link" data-scroll-target="#backpropagation-and-stochastic-gradient-descent"><span class="header-section-number">4</span> Backpropagation and stochastic gradient descent</a>
+  <ul class="collapse">
+  <li><a href="#gradient-descent" id="toc-gradient-descent" class="nav-link" data-scroll-target="#gradient-descent"><span class="header-section-number">4.1</span> Gradient descent</a></li>
+  <li><a href="#backpropagation-is-the-chain-rule-organized" id="toc-backpropagation-is-the-chain-rule-organized" class="nav-link" data-scroll-target="#backpropagation-is-the-chain-rule-organized"><span class="header-section-number">4.2</span> Backpropagation is the chain rule, organized</a></li>
+  <li><a href="#stochastic-gradient-descent" id="toc-stochastic-gradient-descent" class="nav-link" data-scroll-target="#stochastic-gradient-descent"><span class="header-section-number">4.3</span> Stochastic gradient descent</a></li>
+  </ul></li>
+  <li><a href="#optimization-as-far-as-the-course-needs-it" id="toc-optimization-as-far-as-the-course-needs-it" class="nav-link" data-scroll-target="#optimization-as-far-as-the-course-needs-it"><span class="header-section-number">5</span> Optimization, as far as the course needs it</a>
+  <ul class="collapse">
+  <li><a href="#convexity" id="toc-convexity" class="nav-link" data-scroll-target="#convexity"><span class="header-section-number">5.1</span> Convexity</a></li>
+  <li><a href="#convex-does-not-mean-unique" id="toc-convex-does-not-mean-unique" class="nav-link" data-scroll-target="#convex-does-not-mean-unique"><span class="header-section-number">5.2</span> Convex does not mean unique</a></li>
+  <li><a href="#condition-number-and-convergence" id="toc-condition-number-and-convergence" class="nav-link" data-scroll-target="#condition-number-and-convergence"><span class="header-section-number">5.3</span> Condition number and convergence</a></li>
+  <li><a href="#choosing-a-step-size" id="toc-choosing-a-step-size" class="nav-link" data-scroll-target="#choosing-a-step-size"><span class="header-section-number">5.4</span> Choosing a step size</a></li>
+  <li><a href="#closed-form-versus-iteration" id="toc-closed-form-versus-iteration" class="nav-link" data-scroll-target="#closed-form-versus-iteration"><span class="header-section-number">5.5</span> Closed form versus iteration</a></li>
+  </ul></li>
+  <li><a href="#reading-an-experiment" id="toc-reading-an-experiment" class="nav-link" data-scroll-target="#reading-an-experiment"><span class="header-section-number">6</span> Reading an experiment</a>
+  <ul class="collapse">
+  <li><a href="#splits-and-what-leaks" id="toc-splits-and-what-leaks" class="nav-link" data-scroll-target="#splits-and-what-leaks"><span class="header-section-number">6.1</span> Splits, and what leaks</a></li>
+  <li><a href="#baselines" id="toc-baselines" class="nav-link" data-scroll-target="#baselines"><span class="header-section-number">6.2</span> Baselines</a></li>
+  <li><a href="#seeds-and-variance" id="toc-seeds-and-variance" class="nav-link" data-scroll-target="#seeds-and-variance"><span class="header-section-number">6.3</span> Seeds and variance</a></li>
+  <li><a href="#reading-a-plot" id="toc-reading-a-plot" class="nav-link" data-scroll-target="#reading-a-plot"><span class="header-section-number">6.4</span> Reading a plot</a></li>
+  </ul></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">7</span> Exercises</a>
+  <ul class="collapse">
+  <li><a href="#exercise-1-sampling-variance" id="toc-exercise-1-sampling-variance" class="nav-link" data-scroll-target="#exercise-1-sampling-variance"><span class="header-section-number">7.1</span> Exercise 1 — Sampling variance</a></li>
+  <li><a href="#exercise-2-poisson-degrees" id="toc-exercise-2-poisson-degrees" class="nav-link" data-scroll-target="#exercise-2-poisson-degrees"><span class="header-section-number">7.2</span> Exercise 2 — Poisson degrees</a></li>
+  <li><a href="#exercise-3-xor" id="toc-exercise-3-xor" class="nav-link" data-scroll-target="#exercise-3-xor"><span class="header-section-number">7.3</span> Exercise 3 — XOR</a></li>
+  <li><a href="#exercise-4-the-cancelling-gradient" id="toc-exercise-4-the-cancelling-gradient" class="nav-link" data-scroll-target="#exercise-4-the-cancelling-gradient"><span class="header-section-number">7.4</span> Exercise 4 — The cancelling gradient</a></li>
+  <li><a href="#exercise-5-backpropagation-by-hand" id="toc-exercise-5-backpropagation-by-hand" class="nav-link" data-scroll-target="#exercise-5-backpropagation-by-hand"><span class="header-section-number">7.5</span> Exercise 5 — Backpropagation by hand</a></li>
+  <li><a href="#exercise-6-convex-but-not-unique" id="toc-exercise-6-convex-but-not-unique" class="nav-link" data-scroll-target="#exercise-6-convex-but-not-unique"><span class="header-section-number">7.6</span> Exercise 6 — Convex but not unique</a></li>
+  <li><a href="#exercise-7-step-size" id="toc-exercise-7-step-size" class="nav-link" data-scroll-target="#exercise-7-step-size"><span class="header-section-number">7.7</span> Exercise 7 — Step size</a></li>
+  <li><a href="#exercise-8-design-an-experiment-investigation" id="toc-exercise-8-design-an-experiment-investigation" class="nav-link" data-scroll-target="#exercise-8-design-an-experiment-investigation"><span class="header-section-number">7.8</span> Exercise 8 — Design an experiment (investigation)</a></li>
+  </ul></li>
+  <li><a href="#what-to-take-away" id="toc-what-to-take-away" class="nav-link" data-scroll-target="#what-to-take-away"><span class="header-section-number">8</span> What to take away</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+</div>
+
+<div>
+  <div class="description">
+    Preliminary web note covering the machine learning the course assumes: probability and estimators, the perceptron and MLP, backpropagation and SGD, convex optimization, and how to read an experiment.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    <div>
+    <div class="quarto-title-meta-heading">Modified</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date-modified">September 7, 2026</p>
+    </div>
+  </div>
+    
+  </div>
+  
+
+
+</header>
+
+
+<header class="lecture-header">
+  <div class="eyebrow">APM 5DS30 TP · Machine Learning with Graphs</div>
+  <h1>Machine-learning preliminaries</h1>
+  <p>Preliminary note 2 of 2 · Jhony H. Giraldo · Télécom Paris, Institut Polytechnique de Paris</p>
+  <div class="lecture-meta"><span>Read before Lecture 1</span><span>Mathematics rendered with MathJax</span></div>
+  <div class="button-row">
+    <a class="button-link primary" href="../../teaching/machine-learning-with-graphs/lecture-01.html">Start Lecture 1</a>
+    <a class="button-link secondary" href="../../teaching/machine-learning-with-graphs/preliminaries-mathematics.html">Back to the mathematical preliminaries</a>
+  </div>
+</header>
+<p>The companion note covered the linear algebra. This one covers the learning: how a model is specified, how it is trained, and — a section students often skip and shouldn’t — how to tell whether an experiment supports the claim made about it.</p>
+<p>As before, every section ends with <strong>Where this is used</strong>. The material assumes the <a href="../../teaching/machine-learning-with-graphs/preliminaries-mathematics.html">mathematical preliminaries</a>, particularly matrix products and the gradient rules of its §6.</p>
+<section id="diagnostic-what-do-you-actually-need-to-read" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="diagnostic-what-do-you-actually-need-to-read"><span class="header-section-number">1</span> Diagnostic: what do you actually need to read?</h2>
+<ol class="learning-objectives">
+  <li>You sample \(H\) of a node's \(d\) neighbours uniformly and average their features. Is the result an unbiased estimate of the true neighbour mean? What is its variance? (§2)</li>
+  <li>A coin has \(\Pr(\text{heads})=p\), flipped \(n\) times. Name the distribution of the number of heads and give its mean. (§2)</li>
+  <li>What does maximum likelihood estimation maximize, and why do we take a logarithm? (§2)</li>
+  <li>Why can a perceptron not represent XOR, and what fixes it? (§3)</li>
+  <li>What is the difference between a logit and a probability, and which does <code>CrossEntropyLoss</code> expect? (§3)</li>
+  <li>Write the derivative of the sigmoid \(\sigma(z)\) in terms of \(\sigma(z)\) itself. (§3)</li>
+  <li>In backpropagation, what exactly is being reused that makes it cheaper than computing each gradient separately? (§4)</li>
+  <li>Mini-batch SGD gives an unbiased gradient estimate. What does that require of the sampling — and does it require the data points to be independent? (§4)</li>
+  <li>A convex function has a global minimum. Does it have a <em>unique</em> one? (§5)</li>
+  <li>A paper reports 94% accuracy. Name three things you need to know before believing it beats an 89% baseline. (§6)</li>
+</ol>
+</section>
+<section id="probability-and-estimators" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="probability-and-estimators"><span class="header-section-number">2</span> Probability and estimators</h2>
+<section id="the-pieces-you-need" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="the-pieces-you-need"><span class="header-section-number">2.1</span> The pieces you need</h3>
+<p>A <strong>random variable</strong> <span class="math inline">\(X\)</span> takes values with probabilities. Its <strong>expectation</strong> and <strong>variance</strong> are</p>
+<p><span class="math display">\[
+\mathbb{E}[X]=\sum_x x\Pr(X=x),
+\qquad
+\operatorname{Var}(X)=\mathbb{E}\!\left[(X-\mathbb{E}[X])^{2}\right]=\mathbb{E}[X^{2}]-\mathbb{E}[X]^{2}.
+\]</span></p>
+<p>Two properties carry most of the weight. Expectation is <strong>linear</strong> — <span class="math inline">\(\mathbb{E}[aX+bY]=a\mathbb{E}[X]+b\mathbb{E}[Y]\)</span>, always, whether or not <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> are independent. Variance is not: <span class="math inline">\(\operatorname{Var}(X+Y)=\operatorname{Var}(X)+\operatorname{Var}(Y)\)</span> requires independence (or at least zero covariance).</p>
+<p>That asymmetry is worth remembering, because it is exactly why a sampled estimator can be <strong>unbiased while still being noisy</strong>, and why the noise is the thing you have to control.</p>
+</section>
+<section id="three-distributions" class="level3" data-number="2.2">
+<h3 data-number="2.2" class="anchored" data-anchor-id="three-distributions"><span class="header-section-number">2.2</span> Three distributions</h3>
+<p><strong>Bernoulli<span class="math inline">\((p)\)</span>.</strong> One trial: <span class="math inline">\(X\in\{0,1\}\)</span> with <span class="math inline">\(\Pr(X=1)=p\)</span>. Then <span class="math inline">\(\mathbb{E}[X]=p\)</span> and <span class="math inline">\(\operatorname{Var}(X)=p(1-p)\)</span>. Every single edge decision in Lecture 6’s GraphRNN is a Bernoulli draw.</p>
+<p><strong>Binomial<span class="math inline">\((n,p)\)</span>.</strong> The number of successes in <span class="math inline">\(n\)</span> independent Bernoulli trials:</p>
+<p><span class="math display">\[
+\Pr(X=k)=\binom{n}{k}p^{k}(1-p)^{n-k},
+\qquad
+\mathbb{E}[X]=np,
+\qquad
+\operatorname{Var}(X)=np(1-p).
+\]</span></p>
+<p><strong>Poisson<span class="math inline">\((\mu)\)</span>.</strong> The limit of Binomial<span class="math inline">\((n,p)\)</span> as <span class="math inline">\(n\to\infty\)</span> with <span class="math inline">\(np=\mu\)</span> held fixed:</p>
+<p><span class="math display">\[
+\Pr(X=k)=\frac{\mu^{k}e^{-\mu}}{k!},
+\qquad
+\mathbb{E}[X]=\operatorname{Var}(X)=\mu .
+\]</span></p>
+<div class="checkpoint">
+<p><strong>Why this matters for graphs</strong></p>
+<p>In an Erdős–Rényi graph <span class="math inline">\(G_{np}\)</span>, each of a node’s <span class="math inline">\(N-1\)</span> possible edges appears independently with probability <span class="math inline">\(p\)</span>. So <strong>its degree is Binomial<span class="math inline">\((N-1,p)\)</span></strong>, and for large <span class="math inline">\(N\)</span> with mean degree <span class="math inline">\(\bar{k}=p(N-1)\)</span> fixed, approximately Poisson<span class="math inline">\((\bar{k})\)</span>.</p>
+<p>That is the whole of Lecture 6’s negative result. A Poisson distribution has a tail that decays <em>faster than exponentially</em> — the probability of a node with degree <span class="math inline">\(10\bar{k}\)</span> is astronomically small. Real networks routinely have such nodes. No choice of <span class="math inline">\(p\)</span> fixes this, because the shape is wrong, not the parameter.</p>
+</div>
+</section>
+<section id="estimators-unbiased-and-how-noisy" class="level3" data-number="2.3">
+<h3 data-number="2.3" class="anchored" data-anchor-id="estimators-unbiased-and-how-noisy"><span class="header-section-number">2.3</span> Estimators: unbiased, and how noisy</h3>
+<p>You often cannot compute a quantity exactly and must estimate it from a sample. Two questions follow: is the estimate right <strong>on average</strong>, and how far from the truth is it <strong>typically</strong>?</p>
+<p>An estimator <span class="math inline">\(\hat{\theta}\)</span> of <span class="math inline">\(\theta\)</span> is <strong>unbiased</strong> if <span class="math inline">\(\mathbb{E}[\hat{\theta}]=\theta\)</span>. Its typical error is governed by <span class="math inline">\(\operatorname{Var}(\hat{\theta})\)</span>.</p>
+<div class="worked-example">
+<p><strong>Worked example — sampling a node’s neighbours</strong></p>
+<p>A node has <span class="math inline">\(d\)</span> neighbours with feature values <span class="math inline">\(x_1,\dots,x_d\)</span>, true mean <span class="math inline">\(\bar{x}\)</span> and population variance <span class="math inline">\(\sigma^{2}\)</span>. Computing <span class="math inline">\(\bar{x}\)</span> costs <span class="math inline">\(O(d)\)</span>, which is too much when <span class="math inline">\(d\)</span> is large, so sample <span class="math inline">\(H\)</span> of them and average.</p>
+<p><strong>With replacement.</strong> Each draw is independent with mean <span class="math inline">\(\bar{x}\)</span> and variance <span class="math inline">\(\sigma^{2}\)</span>, so</p>
+<p><span class="math display">\[
+\mathbb{E}[\hat{m}]=\bar{x},
+\qquad
+\operatorname{Var}(\hat{m})=\frac{\sigma^{2}}{H}.
+\]</span></p>
+<p>Unbiased, with error shrinking like <span class="math inline">\(1/\sqrt{H}\)</span> — halving the error costs four times the samples.</p>
+<p><strong>Without replacement.</strong> Same mean, but a correction:</p>
+<p><span class="math display">\[
+\operatorname{Var}(\hat{m})=\frac{\sigma^{2}}{H}\cdot\frac{d-H}{d-1}.
+\]</span></p>
+<p>The factor is at most <span class="math inline">\(1\)</span>, so sampling without replacement is never worse — and when <span class="math inline">\(H\ll d\)</span> the two agree, which is the regime graph samplers work in.</p>
+<p><strong>The trap.</strong> The sampled <em>mean</em> is unbiased. But a network layer applies a nonlinearity afterwards, and in general</p>
+<p><span class="math display">\[
+\mathbb{E}\!\left[\sigma(\hat{m})\right]\neq\sigma\!\left(\mathbb{E}[\hat{m}]\right).
+\]</span></p>
+<p>So the layer <strong>output</strong> is biased even though the aggregate is not, and so is the gradient. Lecture 3 relies on this distinction; it is why its comparison table says “biased” rather than “unbiased”.</p>
+</div>
+</section>
+<section id="maximum-likelihood" class="level3" data-number="2.4">
+<h3 data-number="2.4" class="anchored" data-anchor-id="maximum-likelihood"><span class="header-section-number">2.4</span> Maximum likelihood</h3>
+<p>Given data <span class="math inline">\(x_1,\dots,x_n\)</span> and a model <span class="math inline">\(p_{\theta}\)</span>, the <strong>maximum likelihood estimate</strong> is the parameter under which the data is most probable:</p>
+<p><span class="math display">\[
+\theta^{*}=\arg\max_{\theta}\prod_{i}p_{\theta}(x_i)
+=\arg\max_{\theta}\sum_{i}\log p_{\theta}(x_i).
+\]</span></p>
+<p>The logarithm changes nothing about the maximizer — it is increasing — and buys two things: a sum instead of a product, so gradients decompose over data points, and numerical stability, since a product of thousands of small probabilities underflows.</p>
+<p>Most loss functions in this course are negative log-likelihoods in disguise. Cross-entropy for a categorical model, binary cross-entropy for a Bernoulli one, and mean squared error for a Gaussian one with fixed variance.</p>
+</section>
+<section id="jensens-inequality" class="level3" data-number="2.5">
+<h3 data-number="2.5" class="anchored" data-anchor-id="jensens-inequality"><span class="header-section-number">2.5</span> Jensen’s inequality</h3>
+<p>For a <strong>concave</strong> function <span class="math inline">\(f\)</span> — the logarithm, for instance —</p>
+<p><span class="math display">\[
+\mathbb{E}[f(X)]\leq f\!\left(\mathbb{E}[X]\right).
+\]</span></p>
+<p>You need this exactly once, in Lecture 6. GraphRNN trains by maximizing <span class="math inline">\(\mathbb{E}_{\pi}[\log p_{\theta}(S^{\pi})]\)</span> over random node orderings <span class="math inline">\(\pi\)</span>, but the quantity of interest is <span class="math inline">\(\log p_{\theta}(\mathcal{G})=\log\mathbb{E}_{\pi}[p_{\theta}(S^{\pi})]\)</span>. Jensen says the first is a <strong>lower bound</strong> on the second, so the training objective is a bound rather than the thing itself.</p>
+<div class="checkpoint">
+<p><strong>Where this is used</strong></p>
+<p>Binomial and Poisson degrees are Lecture 6 §4. Unbiasedness and sampling variance are Lecture 3’s neighbour sampling and Exercise 3. Maximum likelihood is Lecture 1’s random-walk objective and Lecture 6 §5. Jensen is Lecture 6’s Exercise 5.</p>
+</div>
+</section>
+</section>
+<section id="from-a-linear-model-to-an-mlp" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="from-a-linear-model-to-an-mlp"><span class="header-section-number">3</span> From a linear model to an MLP</h2>
+<section id="the-linear-model" class="level3" data-number="3.1">
+<h3 data-number="3.1" class="anchored" data-anchor-id="the-linear-model"><span class="header-section-number">3.1</span> The linear model</h3>
+<p>A linear model scores an input <span class="math inline">\(\mathbf{x}\in\mathbb{R}^{F}\)</span> by</p>
+<p><span class="math display">\[
+z=\mathbf{w}^{\top}\mathbf{x}+b .
+\]</span></p>
+<p>Geometrically, <span class="math inline">\(\{\mathbf{x}:\mathbf{w}^{\top}\mathbf{x}+b=0\}\)</span> is a hyperplane, <span class="math inline">\(\mathbf{w}\)</span> is its normal, and the sign of <span class="math inline">\(z\)</span> says which side you are on. The <strong>perceptron</strong> classifies by that sign.</p>
+<p>Stacking <span class="math inline">\(H\)</span> such units gives a <strong>layer</strong>, written for a whole batch of <span class="math inline">\(N\)</span> inputs as</p>
+<p><span class="math display">\[
+\mathbf{Z}=\mathbf{X}\mathbf{W}+\mathbf{b}^{\top},
+\qquad
+\mathbf{X}\in\mathbb{R}^{N\times F},\ \ \mathbf{W}\in\mathbb{R}^{F\times H},\ \ \mathbf{Z}\in\mathbb{R}^{N\times H}.
+\]</span></p>
+<p>Note the convention, because it persists through the whole course: <strong>features are rows</strong>, and the weight matrix multiplies from the right.</p>
+</section>
+<section id="why-one-layer-is-not-enough" class="level3" data-number="3.2">
+<h3 data-number="3.2" class="anchored" data-anchor-id="why-one-layer-is-not-enough"><span class="header-section-number">3.2</span> Why one layer is not enough</h3>
+<p>A single linear layer can only produce linearly separable decision regions. The standard demonstration is XOR: four points, <span class="math inline">\((0,0)\)</span> and <span class="math inline">\((1,1)\)</span> in one class, <span class="math inline">\((0,1)\)</span> and <span class="math inline">\((1,0)\)</span> in the other. No line separates them, so no perceptron represents XOR.</p>
+<p>Composing linear maps does not help — <span class="math inline">\(\mathbf{X}\mathbf{W}_1\mathbf{W}_2=\mathbf{X}(\mathbf{W}_1\mathbf{W}_2)\)</span> is again a single linear map. <strong>The nonlinearity is what makes depth mean anything</strong>, and this exact collapse is what Lecture 3 exploits deliberately to derive SGC and Lecture 5 to derive LightGCN.</p>
+</section>
+<section id="the-multilayer-perceptron" class="level3" data-number="3.3">
+<h3 data-number="3.3" class="anchored" data-anchor-id="the-multilayer-perceptron"><span class="header-section-number">3.3</span> The multilayer perceptron</h3>
+<p>Interleave linear maps with a pointwise nonlinearity <span class="math inline">\(\sigma\)</span>:</p>
+<p><span class="math display">\[
+\mathbf{H}^{(0)}=\mathbf{X},
+\qquad
+\mathbf{H}^{(\ell+1)}=\sigma\!\left(\mathbf{H}^{(\ell)}\mathbf{W}^{(\ell)}+\mathbf{b}^{(\ell)\top}\right).
+\]</span></p>
+<p>Compare this with the GCN rule you will meet in Lecture 2:</p>
+<p><span class="math display">\[
+\mathbf{H}^{(\ell+1)}=\sigma\!\left(\hat{\mathbf{A}}\,\mathbf{H}^{(\ell)}\mathbf{W}^{(\ell)}\right).
+\]</span></p>
+<p><strong>The only difference is <span class="math inline">\(\hat{\mathbf{A}}\)</span>.</strong> A graph neural network is an MLP with one extra matrix that mixes rows — that is, that lets nodes see their neighbours. If <span class="math inline">\(\hat{\mathbf{A}}\)</span> were the identity, the two would be identical. Holding that comparison in mind makes Lecture 2 considerably easier.</p>
+</section>
+<section id="activations" class="level3" data-number="3.4">
+<h3 data-number="3.4" class="anchored" data-anchor-id="activations"><span class="header-section-number">3.4</span> Activations</h3>
+<p><span class="math display">\[
+\operatorname{ReLU}(z)=\max(0,z),
+\qquad
+\sigma(z)=\frac{1}{1+e^{-z}},
+\qquad
+\operatorname{LeakyReLU}(z)=\max(\alpha z,z).
+\]</span></p>
+<p>ReLU is the default in hidden layers. The sigmoid squashes to <span class="math inline">\((0,1)\)</span> and is read as a probability. LeakyReLU keeps a small slope for negative inputs and appears in Lecture 2’s attention mechanism.</p>
+<p>Their derivatives are worth memorizing, because they are what backpropagation multiplies by:</p>
+<p><span class="math display">\[
+\operatorname{ReLU}'(z)=\mathbb{1}[z&gt;0],
+\qquad
+\sigma'(z)=\sigma(z)\left(1-\sigma(z)\right).
+\]</span></p>
+<p>The sigmoid derivative is at most <span class="math inline">\(1/4\)</span> and is nearly zero when <span class="math inline">\(|z|\)</span> is large — the <strong>saturation</strong> that makes deep sigmoid networks hard to train, and part of why ReLU took over.</p>
+</section>
+<section id="softmax-logits-and-probabilities" class="level3" data-number="3.5">
+<h3 data-number="3.5" class="anchored" data-anchor-id="softmax-logits-and-probabilities"><span class="header-section-number">3.5</span> Softmax, logits, and probabilities</h3>
+<p>For a vector of scores <span class="math inline">\(\mathbf{z}\in\mathbb{R}^{C}\)</span>, the <strong>softmax</strong> produces a distribution over <span class="math inline">\(C\)</span> classes:</p>
+<p><span class="math display">\[
+\operatorname{softmax}(\mathbf{z})_c=\frac{e^{z_c}}{\sum_{c'}e^{z_{c'}}} .
+\]</span></p>
+<p>The raw scores <span class="math inline">\(\mathbf{z}\)</span> are called <strong>logits</strong>. They are unbounded and need not sum to anything; the softmax converts them into probabilities.</p>
+<div class="checkpoint">
+<p><strong>The single most common bug in this material</strong></p>
+<p><code>torch.nn.CrossEntropyLoss</code> applies <code>log_softmax</code> <strong>internally</strong>. It expects <strong>logits</strong>.</p>
+<p>If your model already ends with a softmax and you pass its output to <code>CrossEntropyLoss</code>, the softmax is applied twice. The model still trains — but the effective probabilities are flattened toward uniform, gradients shrink, and convergence is much slower. There is no error message.</p>
+<p>Pick a convention and hold it:</p>
+<ul>
+<li>return <strong>logits</strong>, use <code>CrossEntropyLoss</code>; or</li>
+<li>return <strong><code>log_softmax</code></strong>, use <code>NLLLoss</code>.</li>
+</ul>
+<p>Lecture 2’s Check 6 flags this again in the PyTorch Geometric code, because it is that easy to do.</p>
+</div>
+</section>
+<section id="loss-functions" class="level3" data-number="3.6">
+<h3 data-number="3.6" class="anchored" data-anchor-id="loss-functions"><span class="header-section-number">3.6</span> Loss functions</h3>
+<p>For regression, <strong>mean squared error</strong>:</p>
+<p><span class="math display">\[
+\mathcal{L}_{\text{MSE}}=\frac{1}{n}\sum_{i}(y_i-\hat{y}_i)^{2}.
+\]</span></p>
+<p>For binary classification with <span class="math inline">\(\hat{p}=\sigma(z)\)</span>, <strong>binary cross-entropy</strong>:</p>
+<p><span class="math display">\[
+\mathcal{L}_{\text{BCE}}=-\left[y\log\hat{p}+(1-y)\log(1-\hat{p})\right].
+\]</span></p>
+<p>For <span class="math inline">\(C\)</span> classes with one-hot <span class="math inline">\(\mathbf{y}\)</span> and <span class="math inline">\(\hat{\mathbf{p}}=\operatorname{softmax}(\mathbf{z})\)</span>, <strong>cross-entropy</strong>:</p>
+<p><span class="math display">\[
+\mathcal{L}_{\text{CE}}=-\sum_{c}y_c\log\hat{p}_c .
+\]</span></p>
+<div class="worked-example">
+<p><strong>Worked example — the gradient that makes everything simple</strong></p>
+<p>Take binary cross-entropy composed with the sigmoid, and differentiate with respect to the <strong>logit</strong> <span class="math inline">\(z\)</span>. Using <span class="math inline">\(\hat{p}=\sigma(z)\)</span> and <span class="math inline">\(\sigma'=\sigma(1-\sigma)\)</span>:</p>
+<p><span class="math display">\[
+\frac{\partial\mathcal{L}_{\text{BCE}}}{\partial z}
+=-\left[\frac{y}{\hat{p}}-\frac{1-y}{1-\hat{p}}\right]\hat{p}(1-\hat{p})
+=-\left[y(1-\hat{p})-(1-y)\hat{p}\right]
+=\hat{p}-y .
+\]</span></p>
+<p><strong>The gradient is just the prediction minus the target.</strong> Every factor cancels. The same happens for softmax with cross-entropy, giving <span class="math inline">\(\hat{\mathbf{p}}-\mathbf{y}\)</span>.</p>
+<p>This is not a coincidence: it is what makes these particular loss–activation pairs the standard ones. It is also a second reason to keep the softmax inside the loss — the combined form is numerically stable, whereas computing <span class="math inline">\(\log\)</span> of an explicit softmax is not.</p>
+</div>
+<div class="checkpoint">
+<p><strong>Where this is used</strong></p>
+<p>The MLP-versus-GCN comparison is Lecture 2 §9. ReLU, LeakyReLU and softmax appear throughout Lectures 1, 2 and 5. Logits versus probabilities is Lecture 2’s Check 6. Cross-entropy is Lecture 2’s node-classification loss; BCE is Lecture 5’s binary loss and Lecture 6’s edge loss; MSE is Lecture 4’s reconstruction and forecasting loss.</p>
+</div>
+</section>
+</section>
+<section id="backpropagation-and-stochastic-gradient-descent" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="backpropagation-and-stochastic-gradient-descent"><span class="header-section-number">4</span> Backpropagation and stochastic gradient descent</h2>
+<section id="gradient-descent" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="gradient-descent"><span class="header-section-number">4.1</span> Gradient descent</h3>
+<p>To minimize <span class="math inline">\(\mathcal{L}(\boldsymbol{\theta})\)</span>, step downhill:</p>
+<p><span class="math display">\[
+\boldsymbol{\theta}\leftarrow\boldsymbol{\theta}-\eta\,\nabla_{\boldsymbol{\theta}}\mathcal{L},
+\]</span></p>
+<p>with <span class="math inline">\(\eta\)</span> the <strong>learning rate</strong>. Too small and progress is slow; too large and the iterates overshoot and can diverge. §5 makes the safe range precise.</p>
+</section>
+<section id="backpropagation-is-the-chain-rule-organized" class="level3" data-number="4.2">
+<h3 data-number="4.2" class="anchored" data-anchor-id="backpropagation-is-the-chain-rule-organized"><span class="header-section-number">4.2</span> Backpropagation is the chain rule, organized</h3>
+<p>For a two-layer network with <span class="math inline">\(\mathbf{Z}^{(1)}=\mathbf{X}\mathbf{W}^{(0)}\)</span>, <span class="math inline">\(\mathbf{H}=\sigma(\mathbf{Z}^{(1)})\)</span>, <span class="math inline">\(\mathbf{Z}^{(2)}=\mathbf{H}\mathbf{W}^{(1)}\)</span> and a loss <span class="math inline">\(\mathcal{L}\)</span>, define the <strong>error signal</strong> at each layer as the gradient of the loss with respect to that layer’s pre-activation:</p>
+<p><span class="math display">\[
+\boldsymbol{\delta}^{(2)}=\frac{\partial\mathcal{L}}{\partial\mathbf{Z}^{(2)}},
+\qquad
+\boldsymbol{\delta}^{(1)}=\frac{\partial\mathcal{L}}{\partial\mathbf{Z}^{(1)}}.
+\]</span></p>
+<p>Then the whole algorithm is three lines:</p>
+<p><span class="math display">\[
+\boldsymbol{\delta}^{(2)}=\hat{\mathbf{P}}-\mathbf{Y}
+\qquad\text{(from the worked example above)},
+\]</span> <span class="math display">\[
+\boldsymbol{\delta}^{(1)}=\left(\boldsymbol{\delta}^{(2)}\mathbf{W}^{(1)\top}\right)\circ\sigma'\!\left(\mathbf{Z}^{(1)}\right),
+\]</span> <span class="math display">\[
+\frac{\partial\mathcal{L}}{\partial\mathbf{W}^{(1)}}=\mathbf{H}^{\top}\boldsymbol{\delta}^{(2)},
+\qquad
+\frac{\partial\mathcal{L}}{\partial\mathbf{W}^{(0)}}=\mathbf{X}^{\top}\boldsymbol{\delta}^{(1)}.
+\]</span></p>
+<p>Read the middle line: to push the error back through a layer, <strong>multiply by the transpose of its weight matrix</strong> and then multiply elementwise by the derivative of its activation. Read the last line: the gradient for a weight matrix is its input transposed times the error signal coming back.</p>
+<div class="checkpoint">
+<p><strong>What backpropagation actually saves</strong></p>
+<p>A network with <span class="math inline">\(L\)</span> layers has parameters in all of them, and the loss depends on every one through a long chain. Computing each parameter’s gradient independently would re-walk that chain each time — cost quadratic in depth.</p>
+<p>Backpropagation computes <span class="math inline">\(\boldsymbol{\delta}^{(\ell)}\)</span> <strong>once per layer</strong> and reuses it for every parameter in that layer, walking the chain a single time. The cost of the backward pass is then about twice the forward pass, regardless of the number of parameters.</p>
+<p>That is the whole idea: it is not a different derivative rule, it is the chain rule with intermediate results cached. Which is also why the <strong>forward activations must be kept in memory</strong> until the backward pass uses them — and why activation memory, not parameter memory, is what limits full-batch training in Lecture 3.</p>
+</div>
+</section>
+<section id="stochastic-gradient-descent" class="level3" data-number="4.3">
+<h3 data-number="4.3" class="anchored" data-anchor-id="stochastic-gradient-descent"><span class="header-section-number">4.3</span> Stochastic gradient descent</h3>
+<p>Training losses are averages over data points:</p>
+<p><span class="math display">\[
+\mathcal{L}(\boldsymbol{\theta})=\frac{1}{n}\sum_{i=1}^{n}\mathcal{L}_i(\boldsymbol{\theta}).
+\]</span></p>
+<p>Computing <span class="math inline">\(\nabla\mathcal{L}\)</span> exactly costs a pass over all <span class="math inline">\(n\)</span> points. Instead sample a <strong>mini-batch</strong> <span class="math inline">\(\mathcal{B}\)</span> of size <span class="math inline">\(m\)</span> and use</p>
+<p><span class="math display">\[
+\hat{\mathbf{g}}=\frac{1}{m}\sum_{i\in\mathcal{B}}\nabla\mathcal{L}_i .
+\]</span></p>
+<div class="checkpoint">
+<p><strong>Why this is legitimate — and what it does <em>not</em> require</strong></p>
+<p>If the indices in <span class="math inline">\(\mathcal{B}\)</span> are drawn <strong>uniformly</strong> from <span class="math inline">\(\{1,\dots,n\}\)</span>, then by linearity of expectation</p>
+<p><span class="math display">\[
+\mathbb{E}[\hat{\mathbf{g}}]=\frac{1}{n}\sum_{i=1}^{n}\nabla\mathcal{L}_i=\nabla\mathcal{L}.
+\]</span></p>
+<p>The estimate is unbiased. Notice what that argument used: uniform sampling of the <strong>indices</strong>, and nothing else.</p>
+<p>It did <strong>not</strong> require the data points to be statistically independent, or identically distributed, or anything else about where the data came from. The sum is a fixed finite set of numbers, and we are sampling terms from it uniformly.</p>
+<p>This matters because on a graph the data points are emphatically <em>not</em> independent — neighbouring nodes share features and structure. That does not invalidate mini-batch SGD. What <em>does</em> break on graphs is something else entirely: computing <span class="math inline">\(\mathcal{L}_i\)</span> for a node requires its neighbours’ activations, so the terms are not independently <em>computable</em>. Lecture 3 is about that problem, and Lecture 3’s Check on SGC turns on exactly this distinction.</p>
+</div>
+<p>Larger batches give lower-variance gradients at higher cost per step. <strong>Adam</strong> adapts a per-parameter learning rate from running estimates of the gradient’s first and second moments; it is the default optimizer throughout the course, and for present purposes you can treat it as SGD that needs less tuning.</p>
+<div class="checkpoint">
+<p><strong>Where this is used</strong></p>
+<p>The MLP backward pass is the template for training every model in the course. Activation memory is Lecture 3’s memory-wall argument. The unbiasedness argument and its scope are Lecture 3 §7 and the SGC discussion. Adam appears in Lectures 2, 4 and 5.</p>
+</div>
+</section>
+</section>
+<section id="optimization-as-far-as-the-course-needs-it" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="optimization-as-far-as-the-course-needs-it"><span class="header-section-number">5</span> Optimization, as far as the course needs it</h2>
+<p>The course uses a narrow slice of convex optimization: convex quadratics, when their minimizer is unique, and how fast gradient descent gets there. There is no duality or KKT theory here because no lecture uses them.</p>
+<section id="convexity" class="level3" data-number="5.1">
+<h3 data-number="5.1" class="anchored" data-anchor-id="convexity"><span class="header-section-number">5.1</span> Convexity</h3>
+<p>A function <span class="math inline">\(f\)</span> is <strong>convex</strong> if for all <span class="math inline">\(\mathbf{x},\mathbf{y}\)</span> and <span class="math inline">\(t\in[0,1]\)</span>,</p>
+<p><span class="math display">\[
+f\!\left(t\mathbf{x}+(1-t)\mathbf{y}\right)\leq t f(\mathbf{x})+(1-t)f(\mathbf{y})
+\]</span></p>
+<p>— the chord lies above the function. For twice-differentiable <span class="math inline">\(f\)</span>, this is equivalent to the <strong>Hessian</strong> <span class="math inline">\(\nabla^{2}f\)</span> being PSD everywhere.</p>
+<p>The property that matters: <strong>for a convex function, every local minimum is a global minimum.</strong> No local traps.</p>
+</section>
+<section id="convex-does-not-mean-unique" class="level3" data-number="5.2">
+<h3 data-number="5.2" class="anchored" data-anchor-id="convex-does-not-mean-unique"><span class="header-section-number">5.2</span> Convex does not mean unique</h3>
+<p>This is the point students most often get wrong, and Lecture 4 depends on it.</p>
+<p>Take the quadratic <span class="math inline">\(f(\mathbf{x})=\tfrac12\mathbf{x}^{\top}\mathbf{A}\mathbf{x}-\mathbf{b}^{\top}\mathbf{x}\)</span> with <span class="math inline">\(\mathbf{A}\)</span> symmetric PSD. Then <span class="math inline">\(\nabla f=\mathbf{A}\mathbf{x}-\mathbf{b}\)</span> and <span class="math inline">\(\nabla^{2}f=\mathbf{A}\)</span>, so <span class="math inline">\(f\)</span> is convex and any stationary point is a global minimum.</p>
+<p>But if <span class="math inline">\(\mathbf{A}\)</span> is only <strong>semi</strong>-definite it has a null space: some <span class="math inline">\(\mathbf{v}\neq\mathbf{0}\)</span> with <span class="math inline">\(\mathbf{A}\mathbf{v}=\mathbf{0}\)</span>. Then for any minimizer <span class="math inline">\(\mathbf{x}^{*}\)</span>, the whole line <span class="math inline">\(\mathbf{x}^{*}+t\mathbf{v}\)</span> has the same gradient and the same value. <strong>A flat direction, an infinite set of minimizers, and convexity throughout.</strong></p>
+<p>Uniqueness needs <span class="math inline">\(\mathbf{A}\)</span> <strong>positive definite</strong> — all eigenvalues strictly positive, no flat directions.</p>
+<div class="checkpoint">
+<p><strong>Why this is not a technicality</strong></p>
+<p>The graph Laplacian is PSD but never positive definite: <span class="math inline">\(\mathbf{L}\mathbf{1}=\mathbf{0}\)</span> always. So any objective regularized by <span class="math inline">\(\mathbf{L}\)</span> alone is flat along constants — adding the same number to every node changes nothing.</p>
+<p>Lecture 4 has a sharper version. If a sensor is unobserved at <em>every</em> time step, then shifting that sensor’s whole series by a constant changes neither the data term (nothing is observed there) nor the temporal-difference penalty (a constant has zero difference). That sensor’s level is unrecoverable, and no amount of convexity helps. Recovering it requires a <strong>sampling condition</strong> on the data, not a better solver.</p>
+</div>
+</section>
+<section id="condition-number-and-convergence" class="level3" data-number="5.3">
+<h3 data-number="5.3" class="anchored" data-anchor-id="condition-number-and-convergence"><span class="header-section-number">5.3</span> Condition number and convergence</h3>
+<p>For gradient descent on a quadratic with Hessian <span class="math inline">\(\mathbf{A}\)</span>, the useful quantity is the <strong>condition number</strong></p>
+<p><span class="math display">\[
+\kappa(\mathbf{A})=\frac{\lambda_{\max}(\mathbf{A})}{\lambda_{\min}(\mathbf{A})}.
+\]</span></p>
+<p>With optimal step size, the error contracts by a factor of <span class="math inline">\(\frac{\kappa-1}{\kappa+1}\)</span> per iteration. So:</p>
+<ul>
+<li><span class="math inline">\(\kappa\approx1\)</span> — level sets nearly spherical, gradient descent goes almost straight to the minimum;</li>
+<li><span class="math inline">\(\kappa\)</span> large — level sets are elongated valleys, and the iterates zig-zag across them, making slow progress along the floor;</li>
+<li><span class="math inline">\(\kappa=\infty\)</span> — a flat direction, and the minimizer is not unique at all.</li>
+</ul>
+<p>For a graph Laplacian <span class="math inline">\(\lambda_{\min}=0\)</span>, so <span class="math inline">\(\kappa(\mathbf{L})=\infty\)</span>. Lecture 4’s <strong>Sobolev smoothness</strong> replaces <span class="math inline">\(\mathbf{L}\)</span> by <span class="math inline">\((\mathbf{L}+\epsilon\mathbf{I})^{\beta}\)</span> precisely to move that smallest eigenvalue off zero.</p>
+</section>
+<section id="choosing-a-step-size" class="level3" data-number="5.4">
+<h3 data-number="5.4" class="anchored" data-anchor-id="choosing-a-step-size"><span class="header-section-number">5.4</span> Choosing a step size</h3>
+<p>If <span class="math inline">\(\nabla f\)</span> is <strong>Lipschitz</strong> with constant <span class="math inline">\(L\)</span> — meaning <span class="math inline">\(\|\nabla f(\mathbf{x})-\nabla f(\mathbf{y})\|\leq L\|\mathbf{x}-\mathbf{y}\|\)</span>, and for a quadratic <span class="math inline">\(L=\lambda_{\max}(\mathbf{A})\)</span> — then gradient descent converges for any</p>
+<p><span class="math display">\[
+0&lt;\eta&lt;\frac{2}{L},
+\]</span></p>
+<p>which is why <span class="math inline">\(\eta=1/L\)</span> is a safe default. This is where the step sizes in Lecture 4’s reconstruction code come from.</p>
+</section>
+<section id="closed-form-versus-iteration" class="level3" data-number="5.5">
+<h3 data-number="5.5" class="anchored" data-anchor-id="closed-form-versus-iteration"><span class="header-section-number">5.5</span> Closed form versus iteration</h3>
+<p>Setting <span class="math inline">\(\nabla f=\mathbf{0}\)</span> for a quadratic gives the linear system <span class="math inline">\(\mathbf{A}\mathbf{x}=\mathbf{b}\)</span>, so a closed-form solution exists whenever <span class="math inline">\(\mathbf{A}\)</span> is invertible. It is often useless anyway: solving costs <span class="math inline">\(O(n^{3})\)</span> and forming <span class="math inline">\(\mathbf{A}\)</span> may be impossible.</p>
+<p>Lecture 4 is the case in point. Its reconstruction problem has a closed form, but the operator acts on <span class="math inline">\(MN\)</span> unknowns — for 1000 sensors over 500 time steps, a <span class="math inline">\(500\,000\times500\,000\)</span> system. Iterating with sparse products is not a compromise; it is the only option.</p>
+<div class="checkpoint">
+<p><strong>Where this is used</strong></p>
+<p>Convexity and the Hessian are Lecture 4 §5. Convex-but-not-unique is Lecture 4’s Check 5. Condition number and Sobolev smoothness are Lecture 4 §5–6. The Lipschitz step size is in Lecture 4’s figure-generation code. Closed form versus iteration is Lecture 4’s TGSR discussion.</p>
+</div>
+</section>
+</section>
+<section id="reading-an-experiment" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="reading-an-experiment"><span class="header-section-number">6</span> Reading an experiment</h2>
+<p>This section is not mathematics, and it is the one most likely to change how you read the rest of the course. Every lecture presents figures that claim a method works. Knowing what such a figure can and cannot establish is part of the subject.</p>
+<section id="splits-and-what-leaks" class="level3" data-number="6.1">
+<h3 data-number="6.1" class="anchored" data-anchor-id="splits-and-what-leaks"><span class="header-section-number">6.1</span> Splits, and what leaks</h3>
+<p>Data is divided three ways:</p>
+<ul>
+<li><strong>training</strong> — the model fits these;</li>
+<li><strong>validation</strong> — hyperparameters are chosen on these;</li>
+<li><strong>test</strong> — reported once, at the end.</li>
+</ul>
+<p><strong>Leakage</strong> is any path by which test information reaches the model. It inflates results and is often invisible. Two forms matter here.</p>
+<p><em>Choosing hyperparameters on the test set.</em> If you try ten settings and report the best test score, that score is a maximum over ten draws, not an estimate of performance. Lecture 4’s reconstruction figure is explicitly labelled an <strong>oracle-tuned illustration</strong> for exactly this reason: its regularization weight was chosen against the complete ground truth, which no real deployment can do.</p>
+<p><em>Graph-specific leakage.</em> This one is easy to walk into. If you build the graph using all edges and then hide some for testing, the hidden edges have already influenced the model through the graph structure. And node features computed over the whole graph — a degree, a centrality — carry information from test nodes into training. On graphs, the split has to be applied to the <strong>graph construction</strong>, not only to the labels.</p>
+</section>
+<section id="baselines" class="level3" data-number="6.2">
+<h3 data-number="6.2" class="anchored" data-anchor-id="baselines"><span class="header-section-number">6.2</span> Baselines</h3>
+<p>A number means nothing alone. “94% accuracy” is only interpretable against what a simpler method achieves. Useful baselines in this course:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>setting</th>
+<th>baseline that must be beaten</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>node classification</td>
+<td>an MLP on features <strong>with no graph at all</strong></td>
+</tr>
+<tr class="even">
+<td>link prediction / recommendation</td>
+<td>most-popular; plain matrix factorization</td>
+</tr>
+<tr class="odd">
+<td>forecasting</td>
+<td>persistence — predict the last observed value</td>
+</tr>
+<tr class="even">
+<td>graph generation</td>
+<td>a fitted classical model such as <span class="math inline">\(G_{np}\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>The features-only MLP deserves emphasis. If a GNN does not beat it, the graph is contributing nothing, and no amount of architectural sophistication changes that.</p>
+</section>
+<section id="seeds-and-variance" class="level3" data-number="6.3">
+<h3 data-number="6.3" class="anchored" data-anchor-id="seeds-and-variance"><span class="header-section-number">6.3</span> Seeds and variance</h3>
+<p>Neural network training is stochastic: initialization, batch order, dropout, and the data split all involve randomness. A single run is a <strong>sample</strong>, not a measurement.</p>
+<p>Report a mean and a spread over several seeds. A 1.5-point gap between two methods means nothing if the seed-to-seed standard deviation is 2 points — a distinction most published comparisons in this field would fail. When a figure in these notes rests on one seed, its caption says so.</p>
+</section>
+<section id="reading-a-plot" class="level3" data-number="6.4">
+<h3 data-number="6.4" class="anchored" data-anchor-id="reading-a-plot"><span class="header-section-number">6.4</span> Reading a plot</h3>
+<ul>
+<li><strong>What is on the axes</strong>, and is either logarithmic? A straight line means a power law on log–log, and exponential behaviour on semi-log.</li>
+<li><strong>Is this a measurement, a bound, or a schematic?</strong> They look identical when plotted together. Lecture 3’s computational-graph figure deliberately puts a measured curve and three upper bounds on one axis and warns about it; Lecture 6’s cost figure marks its reference slope as <em>not</em> a measurement.</li>
+<li><strong>Is the comparison like for like?</strong> Same data, same tuning budget, same evaluation. Lecture 6’s degree-distribution panel puts a 77-node real graph beside 5000-node models, and says so, because the comparison is an anchor and not a matched control.</li>
+<li><strong>What is missing?</strong> No error bars, no baseline, and a suspiciously round number of runs are all worth noticing.</li>
+</ul>
+<div class="checkpoint">
+<p><strong>Where this is used</strong></p>
+<p>Everywhere. Every computed figure in Lectures 2 to 6 states its generator, seed count and tuning method, and several state explicitly what they do <strong>not</strong> show. Lecture 3’s Exercise 7, Lecture 4’s Exercise 6 and Lecture 5’s Exercise 8 are all investigations built on this section — they ask you to test a claim rather than confirm one.</p>
+</div>
+</section>
+</section>
+<section id="exercises" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="exercises"><span class="header-section-number">7</span> Exercises</h2>
+<section id="exercise-1-sampling-variance" class="level3" data-number="7.1">
+<h3 data-number="7.1" class="anchored" data-anchor-id="exercise-1-sampling-variance"><span class="header-section-number">7.1</span> Exercise 1 — Sampling variance</h3>
+<p>A node has <span class="math inline">\(d=100\)</span> neighbours with feature variance <span class="math inline">\(\sigma^{2}=4\)</span>. Compute the standard deviation of the sampled mean for <span class="math inline">\(H\in\{5,10,25\}\)</span>, with and without replacement. At which <span class="math inline">\(H\)</span> does the finite-population correction change the answer by more than 10%?</p>
+</section>
+<section id="exercise-2-poisson-degrees" class="level3" data-number="7.2">
+<h3 data-number="7.2" class="anchored" data-anchor-id="exercise-2-poisson-degrees"><span class="header-section-number">7.2</span> Exercise 2 — Poisson degrees</h3>
+<p>For <span class="math inline">\(G_{np}\)</span> with <span class="math inline">\(N=10^{6}\)</span> and mean degree <span class="math inline">\(\bar{k}=10\)</span>, compute <span class="math inline">\(\Pr(\text{degree}=100)\)</span> under the Poisson approximation. Compare with the fraction of nodes of degree <span class="math inline">\(\geq100\)</span> in a real social network (typically a few in ten thousand). By how many orders of magnitude is the model wrong?</p>
+</section>
+<section id="exercise-3-xor" class="level3" data-number="7.3">
+<h3 data-number="7.3" class="anchored" data-anchor-id="exercise-3-xor"><span class="header-section-number">7.3</span> Exercise 3 — XOR</h3>
+<p>Show that no <span class="math inline">\((\mathbf{w},b)\)</span> classifies XOR correctly. Then construct a two-layer network with two hidden ReLU units that does, and verify it on all four inputs.</p>
+</section>
+<section id="exercise-4-the-cancelling-gradient" class="level3" data-number="7.4">
+<h3 data-number="7.4" class="anchored" data-anchor-id="exercise-4-the-cancelling-gradient"><span class="header-section-number">7.4</span> Exercise 4 — The cancelling gradient</h3>
+<p>Derive <span class="math inline">\(\partial\mathcal{L}_{\text{CE}}/\partial\mathbf{z}=\hat{\mathbf{p}}-\mathbf{y}\)</span> for softmax with cross-entropy. Then explain what goes wrong numerically if you compute <span class="math inline">\(\operatorname{softmax}\)</span> and <span class="math inline">\(\log\)</span> as separate steps for a logit of <span class="math inline">\(z=800\)</span>.</p>
+</section>
+<section id="exercise-5-backpropagation-by-hand" class="level3" data-number="7.5">
+<h3 data-number="7.5" class="anchored" data-anchor-id="exercise-5-backpropagation-by-hand"><span class="header-section-number">7.5</span> Exercise 5 — Backpropagation by hand</h3>
+<p>Take <span class="math inline">\(\mathbf{X}\in\mathbb{R}^{2\times2}\)</span>, <span class="math inline">\(\mathbf{W}^{(0)}\in\mathbb{R}^{2\times2}\)</span>, ReLU, <span class="math inline">\(\mathbf{W}^{(1)}\in\mathbb{R}^{2\times1}\)</span> and MSE. Pick small integer entries, run the forward pass by hand, then compute both weight gradients using the three backpropagation equations. Verify one entry numerically with a finite difference <span class="math inline">\((\mathcal{L}(w+h)-\mathcal{L}(w-h))/2h\)</span>.</p>
+</section>
+<section id="exercise-6-convex-but-not-unique" class="level3" data-number="7.6">
+<h3 data-number="7.6" class="anchored" data-anchor-id="exercise-6-convex-but-not-unique"><span class="header-section-number">7.6</span> Exercise 6 — Convex but not unique</h3>
+<p>Let <span class="math inline">\(\mathbf{A}=\begin{bmatrix}1&amp;1\\1&amp;1\end{bmatrix}\)</span> and <span class="math inline">\(\mathbf{b}=[1,1]^{\top}\)</span>. Show <span class="math inline">\(f(\mathbf{x})=\tfrac12\mathbf{x}^{\top}\mathbf{A}\mathbf{x}-\mathbf{b}^{\top}\mathbf{x}\)</span> is convex, find all its minimizers, and identify the flat direction. What is <span class="math inline">\(\kappa(\mathbf{A})\)</span>?</p>
+</section>
+<section id="exercise-7-step-size" class="level3" data-number="7.7">
+<h3 data-number="7.7" class="anchored" data-anchor-id="exercise-7-step-size"><span class="header-section-number">7.7</span> Exercise 7 — Step size</h3>
+<p>For <span class="math inline">\(f(\mathbf{x})=\tfrac12\mathbf{x}^{\top}\mathbf{A}\mathbf{x}\)</span> with <span class="math inline">\(\mathbf{A}=\operatorname{diag}(1,100)\)</span>, compute the largest convergent step size. Run gradient descent from <span class="math inline">\([1,1]^{\top}\)</span> with <span class="math inline">\(\eta=2/L\)</span>, <span class="math inline">\(\eta=1/L\)</span> and <span class="math inline">\(\eta=0.1/L\)</span>, and plot the error. Relate what you see to <span class="math inline">\(\kappa(\mathbf{A})=100\)</span>.</p>
+</section>
+<section id="exercise-8-design-an-experiment-investigation" class="level3" data-number="7.8">
+<h3 data-number="7.8" class="anchored" data-anchor-id="exercise-8-design-an-experiment-investigation"><span class="header-section-number">7.8</span> Exercise 8 — Design an experiment (investigation)</h3>
+<p>You are told a new GNN reaches 94% node-classification accuracy on a citation network, against 89% for GCN.</p>
+<p>List everything you would need before believing the method is better. Then design the experiment you would actually run: splits, baselines including a features-only MLP, seeds, how hyperparameters are chosen for <strong>both</strong> methods, and what you would report. Finally, state the result that would convince you the graph itself is not helping.</p>
+</section>
+</section>
+<section id="what-to-take-away" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="what-to-take-away"><span class="header-section-number">8</span> What to take away</h2>
+<ol type="1">
+<li>Expectation is linear unconditionally; variance adds only for uncorrelated terms. That gap is why estimators can be unbiased yet noisy.</li>
+<li>Degrees in <span class="math inline">\(G_{np}\)</span> are Binomial, hence approximately Poisson — a tail far too light for real networks.</li>
+<li>A sampled mean is unbiased, but a <strong>nonlinearity applied after it</strong> makes the layer output and its gradient biased.</li>
+<li>Maximum likelihood maximizes <span class="math inline">\(\sum_i\log p_{\theta}(x_i)\)</span>; most losses here are negative log-likelihoods.</li>
+<li>A GCN layer is an MLP layer with one extra matrix, <span class="math inline">\(\hat{\mathbf{A}}\)</span>, that lets nodes see their neighbours.</li>
+<li>Logits are not probabilities. <code>CrossEntropyLoss</code> wants logits, and passing it a softmax applies the softmax twice with no error message.</li>
+<li>Sigmoid-with-BCE and softmax-with-CE both give <span class="math inline">\(\partial\mathcal{L}/\partial\mathbf{z}=\hat{\mathbf{p}}-\mathbf{y}\)</span>.</li>
+<li>Backpropagation is the chain rule with the per-layer error signal cached — which is why activations must be held in memory.</li>
+<li>Mini-batch SGD needs <strong>uniform sampling of indices</strong>, not independent data.</li>
+<li>Convex guarantees a global minimum, <strong>not a unique one</strong>. Flat directions come from a singular Hessian, and <span class="math inline">\(\kappa=\infty\)</span> is the signature.</li>
+<li>A result without a baseline, a split you trust, and a spread over seeds is not yet a result.</li>
+</ol>
+<p>You are ready for <a href="../../teaching/machine-learning-with-graphs/lecture-01.html">Lecture 1</a>.</p>
+</section>
+<section id="references" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="references">References</h2>
+<p>For more depth: Goodfellow, Bengio and Courville’s <em>Deep Learning</em> for §3 and §4; Boyd and Vandenberghe’s <em>Convex Optimization</em> for §5; and Murphy’s <em>Probabilistic Machine Learning</em> for §2. Shalev-Shwartz and Ben-David’s <em>Understanding Machine Learning</em> is the natural follow-up for §6.</p>
+<div id="refs" class="references-small" role="list">
+
+</div>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script src="../../assets/site.js" defer=""></script>
+
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/jhonygiraldo\.github\.io");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© 2026 Jhony H. Giraldo</p>
+</div>   
+    <div class="nav-footer-center">
+<p>Télécom Paris · Institut Polytechnique de Paris</p>
+</div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+    <a class="nav-link" href="https://orcid.org/0000-0002-0039-1270">
+<p>ORCID</p>
+</a>
+  </li>  
+    <li class="nav-item">
+    <a class="nav-link" href="mailto:jhony.giraldo@telecom-paris.fr">
+<p>Email</p>
+</a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+<script src="../../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>
