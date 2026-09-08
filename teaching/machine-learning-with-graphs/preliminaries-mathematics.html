@@ -101,7 +101,7 @@ div.csl-indent {
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-933893266c10dca58b5ae82bff0b7ef1.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-08c0ebb140374405892f1146749c070e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -281,20 +281,20 @@ window.Quarto = {
   <ul>
   <li><a href="#diagnostic-what-do-you-actually-need-to-read" id="toc-diagnostic-what-do-you-actually-need-to-read" class="nav-link active" data-scroll-target="#diagnostic-what-do-you-actually-need-to-read"><span class="header-section-number">1</span> Diagnostic: what do you actually need to read?</a></li>
   <li><a href="#the-running-example" id="toc-the-running-example" class="nav-link" data-scroll-target="#the-running-example"><span class="header-section-number">2</span> The running example</a></li>
-  <li><a href="#vectors-matrices-and-what-a-product-means" id="toc-vectors-matrices-and-what-a-product-means" class="nav-link" data-scroll-target="#vectors-matrices-and-what-a-product-means"><span class="header-section-number">3</span> Vectors, matrices, and what a product means</a>
+  <li><a href="#sec-products" id="toc-sec-products" class="nav-link" data-scroll-target="#sec-products"><span class="header-section-number">3</span> Vectors, matrices, and what a product means</a>
   <ul class="collapse">
   <li><a href="#the-two-readings-of-mathbfamathbfx" id="toc-the-two-readings-of-mathbfamathbfx" class="nav-link" data-scroll-target="#the-two-readings-of-mathbfamathbfx"><span class="header-section-number">3.1</span> The two readings of <span class="math inline">\(\mathbf{A}\mathbf{x}\)</span></a></li>
   <li><a href="#matrixmatrix-products-and-walks" id="toc-matrixmatrix-products-and-walks" class="nav-link" data-scroll-target="#matrixmatrix-products-and-walks"><span class="header-section-number">3.2</span> Matrix–matrix products, and walks</a></li>
   <li><a href="#inner-products-norms-orthogonality" id="toc-inner-products-norms-orthogonality" class="nav-link" data-scroll-target="#inner-products-norms-orthogonality"><span class="header-section-number">3.3</span> Inner products, norms, orthogonality</a></li>
   <li><a href="#transpose" id="toc-transpose" class="nav-link" data-scroll-target="#transpose"><span class="header-section-number">3.4</span> Transpose</a></li>
   </ul></li>
-  <li><a href="#structured-and-sparse-matrices" id="toc-structured-and-sparse-matrices" class="nav-link" data-scroll-target="#structured-and-sparse-matrices"><span class="header-section-number">4</span> Structured and sparse matrices</a>
+  <li><a href="#sec-structured" id="toc-sec-structured" class="nav-link" data-scroll-target="#sec-structured"><span class="header-section-number">4</span> Structured and sparse matrices</a>
   <ul class="collapse">
   <li><a href="#diagonal-matrices" id="toc-diagonal-matrices" class="nav-link" data-scroll-target="#diagonal-matrices"><span class="header-section-number">4.1</span> Diagonal matrices</a></li>
   <li><a href="#permutation-matrices" id="toc-permutation-matrices" class="nav-link" data-scroll-target="#permutation-matrices"><span class="header-section-number">4.2</span> Permutation matrices</a></li>
   <li><a href="#sparsity" id="toc-sparsity" class="nav-link" data-scroll-target="#sparsity"><span class="header-section-number">4.3</span> Sparsity</a></li>
   </ul></li>
-  <li><a href="#eigenvalues-eigenvectors-and-quadratic-forms" id="toc-eigenvalues-eigenvectors-and-quadratic-forms" class="nav-link" data-scroll-target="#eigenvalues-eigenvectors-and-quadratic-forms"><span class="header-section-number">5</span> Eigenvalues, eigenvectors, and quadratic forms</a>
+  <li><a href="#sec-eigen" id="toc-sec-eigen" class="nav-link" data-scroll-target="#sec-eigen"><span class="header-section-number">5</span> Eigenvalues, eigenvectors, and quadratic forms</a>
   <ul class="collapse">
   <li><a href="#the-definition-and-what-it-buys" id="toc-the-definition-and-what-it-buys" class="nav-link" data-scroll-target="#the-definition-and-what-it-buys"><span class="header-section-number">5.1</span> The definition, and what it buys</a></li>
   <li><a href="#the-spectral-theorem" id="toc-the-spectral-theorem" class="nav-link" data-scroll-target="#the-spectral-theorem"><span class="header-section-number">5.2</span> The spectral theorem</a></li>
@@ -302,14 +302,14 @@ window.Quarto = {
   <li><a href="#the-rayleigh-quotient" id="toc-the-rayleigh-quotient" class="nav-link" data-scroll-target="#the-rayleigh-quotient"><span class="header-section-number">5.4</span> The Rayleigh quotient</a></li>
   </ul></li>
   <li><a href="#sec-powers" id="toc-sec-powers" class="nav-link" data-scroll-target="#sec-powers"><span class="header-section-number">6</span> What matrix powers do</a></li>
-  <li><a href="#matrix-calculus" id="toc-matrix-calculus" class="nav-link" data-scroll-target="#matrix-calculus"><span class="header-section-number">7</span> Matrix calculus</a>
+  <li><a href="#sec-calculus" id="toc-sec-calculus" class="nav-link" data-scroll-target="#sec-calculus"><span class="header-section-number">7</span> Matrix calculus</a>
   <ul class="collapse">
   <li><a href="#gradients-with-respect-to-a-vector" id="toc-gradients-with-respect-to-a-vector" class="nav-link" data-scroll-target="#gradients-with-respect-to-a-vector"><span class="header-section-number">7.1</span> Gradients with respect to a vector</a></li>
   <li><a href="#trace-and-gradients-with-respect-to-a-matrix" id="toc-trace-and-gradients-with-respect-to-a-matrix" class="nav-link" data-scroll-target="#trace-and-gradients-with-respect-to-a-matrix"><span class="header-section-number">7.2</span> Trace, and gradients with respect to a matrix</a></li>
   <li><a href="#norms-and-elementwise-products" id="toc-norms-and-elementwise-products" class="nav-link" data-scroll-target="#norms-and-elementwise-products"><span class="header-section-number">7.3</span> Norms and elementwise products</a></li>
-  <li><a href="#two-constructions-for-lecture-4-only" id="toc-two-constructions-for-lecture-4-only" class="nav-link" data-scroll-target="#two-constructions-for-lecture-4-only"><span class="header-section-number">7.4</span> Two constructions for Lecture 4 only</a></li>
+  <li><a href="#sec-vec-kron" id="toc-sec-vec-kron" class="nav-link" data-scroll-target="#sec-vec-kron"><span class="header-section-number">7.4</span> Two constructions for Lecture 4 only</a></li>
   </ul></li>
-  <li><a href="#rank-and-low-rank-factorization" id="toc-rank-and-low-rank-factorization" class="nav-link" data-scroll-target="#rank-and-low-rank-factorization"><span class="header-section-number">8</span> Rank and low-rank factorization</a></li>
+  <li><a href="#sec-rank" id="toc-sec-rank" class="nav-link" data-scroll-target="#sec-rank"><span class="header-section-number">8</span> Rank and low-rank factorization</a></li>
   <li><a href="#complexity-briefly" id="toc-complexity-briefly" class="nav-link" data-scroll-target="#complexity-briefly"><span class="header-section-number">9</span> Complexity, briefly</a></li>
   <li><a href="#notation-and-conventions" id="toc-notation-and-conventions" class="nav-link" data-scroll-target="#notation-and-conventions"><span class="header-section-number">10</span> Notation and conventions</a></li>
   <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">11</span> Exercises</a>
@@ -376,21 +376,49 @@ window.Quarto = {
 <h2 data-number="1" class="anchored" data-anchor-id="diagnostic-what-do-you-actually-need-to-read"><span class="header-section-number">1</span> Diagnostic: what do you actually need to read?</h2>
 <p>Ten questions. Each names the section that covers it. If you can answer one comfortably, skip that section.</p>
 <ol class="learning-objectives">
-  <li>For \(\mathbf{A}\in\mathbb{R}^{4\times4}\) and \(\mathbf{x}\in\mathbb{R}^{4}\), what does entry \(i\) of \(\mathbf{A}\mathbf{x}\) equal as a sum? (§2)</li>
-  <li>If \(\mathbf{A}\) is a graph's adjacency matrix, what does \((\mathbf{A}^2)_{ij}\) count? (§2)</li>
-  <li>What does \(\mathbf{P}\mathbf{A}\mathbf{P}^{\top}\) do, for \(\mathbf{P}\) a permutation matrix? (§3)</li>
-  <li>A graph has \(N=10^{6}\) nodes and \(10^{7}\) edges. How much memory does its adjacency matrix need, dense and sparse? (§3)</li>
-  <li>State what the spectral theorem guarantees for a real symmetric matrix. (§4)</li>
-  <li>\(\mathbf{S}\) is symmetric with eigenvalues in \((-1,1]\). Describe \(\mathbf{S}^{k}\mathbf{x}\) as \(k\to\infty\). (§5)</li>
-  <li>What is \(\mathbf{x}^{\top}\mathbf{L}\mathbf{x}\) when \(\mathbf{L}\) is a graph Laplacian, written as a sum over edges? (§4)</li>
-  <li>Differentiate \(f(\mathbf{x})=\mathbf{x}^{\top}\mathbf{A}\mathbf{x}\) with respect to \(\mathbf{x}\), for symmetric \(\mathbf{A}\). (§6)</li>
-  <li>What is \(\nabla_{\mathbf{Z}}\operatorname{tr}(\mathbf{Z}^{\top}\mathbf{A}\mathbf{Z})\)? (§6)</li>
-  <li>If \(\mathbf{U}\in\mathbb{R}^{N\times d}\) and \(\mathbf{V}\in\mathbb{R}^{M\times d}\) with \(d\ll N,M\), what is the maximum rank of \(\mathbf{U}\mathbf{V}^{\top}\), and why does that matter? (§7)</li>
+  <li>For \(\mathbf{A}\in\mathbb{R}^{4\times4}\) and \(\mathbf{x}\in\mathbb{R}^{4}\), what does entry \(i\) of \(\mathbf{A}\mathbf{x}\) equal as a sum? (<a href="#sec-products">Products</a>)</li>
+  <li>If \(\mathbf{A}\) is a graph's adjacency matrix, what does \((\mathbf{A}^2)_{ij}\) count? (<a href="#sec-products">Products</a>)</li>
+  <li>What does \(\mathbf{P}\mathbf{A}\mathbf{P}^{\top}\) do, for \(\mathbf{P}\) a permutation matrix? (<a href="#sec-structured">Structured matrices</a>)</li>
+  <li>A graph has \(N=10^{6}\) nodes and \(10^{7}\) edges. How much memory does its adjacency matrix need, dense and sparse? (<a href="#sec-structured">Structured matrices</a>)</li>
+  <li>State what the spectral theorem guarantees for a real symmetric matrix. (<a href="#sec-eigen">Eigenvalues</a>)</li>
+  <li>\(\mathbf{S}\) is symmetric with eigenvalues in \((-1,1]\). Describe \(\mathbf{S}^{k}\mathbf{x}\) as \(k\to\infty\). (<a href="#sec-powers">Matrix powers</a>)</li>
+  <li>What is \(\mathbf{x}^{\top}\mathbf{L}\mathbf{x}\) when \(\mathbf{L}\) is a graph Laplacian, written as a sum over edges? (<a href="#sec-eigen">Eigenvalues</a>)</li>
+  <li>Differentiate \(f(\mathbf{x})=\mathbf{x}^{\top}\mathbf{A}\mathbf{x}\) with respect to \(\mathbf{x}\), for symmetric \(\mathbf{A}\). (<a href="#sec-calculus">Matrix calculus</a>)</li>
+  <li>What is \(\nabla_{\mathbf{Z}}\operatorname{tr}(\mathbf{Z}^{\top}\mathbf{A}\mathbf{Z})\)? (<a href="#sec-calculus">Matrix calculus</a>)</li>
+  <li>If \(\mathbf{U}\in\mathbb{R}^{N\times d}\) and \(\mathbf{V}\in\mathbb{R}^{M\times d}\) with \(d\ll N,M\), what is the maximum rank of \(\mathbf{U}\mathbf{V}^{\top}\), and why does that matter? (<a href="#sec-rank">Rank</a>)</li>
 </ol>
+<div class="callout callout-style-default callout-note callout-titled" title="Answers">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Answers
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ol class="diagnostic-answers">
+  <li>\((\mathbf{A}\mathbf{x})_i=\sum_{j=1}^{4}A_{ij}x_j\) — a weighted sum of the entries of \(\mathbf{x}\) at \(i\)'s neighbours.</li>
+  <li>The number of walks of length \(2\) from \(i\) to \(j\); on the diagonal, \((\mathbf{A}^2)_{ii}=\deg(i)\). Unweighted graphs only.</li>
+  <li>It relabels the nodes: \((\mathbf{P}\mathbf{A}\mathbf{P}^{\top})\) is the adjacency matrix of the same graph under the permutation \(\mathbf{P}\) encodes. The graph is unchanged, only its indexing is.</li>
+  <li>Dense: \(N^2=10^{12}\) entries, about \(4\) TB at 4 bytes each. Sparse (CSR): \(\mathcal{O}(|\mathcal{E}|)\), a few hundred MB. This gap is why every method in the course is written in terms of sparse products.</li>
+  <li>A real symmetric \(\mathbf{A}\) has an orthonormal basis of eigenvectors with real eigenvalues: \(\mathbf{A}=\mathbf{U}\boldsymbol{\Lambda}\mathbf{U}^{\top}\), \(\mathbf{U}^{\top}\mathbf{U}=\mathbf{I}\).</li>
+  <li>Components along eigenvectors with \(|\lambda|&lt;1\) decay geometrically, so \(\mathbf{S}^{k}\mathbf{x}\) converges to its projection onto the \(\lambda=1\) eigenspace. If that eigenspace is one-dimensional and spanned by a unit \(\mathbf{u}\), the limit is \((\mathbf{u}^{\top}\mathbf{x})\,\mathbf{u}\).</li>
+  <li>\(\mathbf{x}^{\top}\mathbf{L}\mathbf{x}=\sum_{(i,j)\in\mathcal{E}}(x_i-x_j)^2\) — the total squared variation across edges, and the reason \(\mathbf{L}\) measures smoothness.</li>
+  <li>\(\nabla_{\mathbf{x}}f=2\mathbf{A}\mathbf{x}\) when \(\mathbf{A}\) is symmetric (in general \((\mathbf{A}+\mathbf{A}^{\top})\mathbf{x}\)).</li>
+  <li>\(\nabla_{\mathbf{Z}}\operatorname{tr}(\mathbf{Z}^{\top}\mathbf{A}\mathbf{Z})=(\mathbf{A}+\mathbf{A}^{\top})\mathbf{Z}\), which is \(2\mathbf{A}\mathbf{Z}\) for symmetric \(\mathbf{A}\).</li>
+  <li>At most \(d\). It matters because a rank-\(d\) factorization stores \(d(N+M)\) numbers instead of \(NM\), and cannot represent an interaction pattern of higher rank — the modelling assumption behind every embedding method in Lecture 5.</li>
+</ol>
+</div>
+</div>
+</div>
 </section>
 <section id="the-running-example" class="level2" data-number="2">
 <h2 data-number="2" class="anchored" data-anchor-id="the-running-example"><span class="header-section-number">2</span> The running example</h2>
-<p>Everything below is illustrated on one graph, so that each new object lands on something familiar. This is the same four-node graph used in Lecture 1.</p>
+<p>Everything below is illustrated on one graph, so that each new object lands on something familiar.</p>
+<p>It is a small four-node graph of its own. Lecture 1 uses a similar one for its adjacency-matrix example, but that graph carries an extra edge <span class="math inline">\(\{3,4\}\)</span> and so has degrees <span class="math inline">\([2,3,2,3]\)</span>; this one omits it, giving degrees <span class="math inline">\([2,3,1,2]\)</span>. The asymmetry is deliberate — a node of degree <span class="math inline">\(1\)</span> makes degree normalization visible in a way a regular graph would hide.</p>
 <div class="figure-panel">
 <div id="fig-running" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Four nodes connected by four undirected edges">
 <figure class="quarto-float quarto-float-fig figure">
@@ -422,8 +450,8 @@ Figure&nbsp;1: The running example: four nodes, four undirected edges <span clas
 \]</span></p>
 <p>Read <span class="math inline">\(\mathbf{A}\)</span> row by row: row 2 has ones in columns 1, 3 and 4, because node 2 is adjacent to those three. <span class="math inline">\(\mathbf{D}\)</span> holds the row sums. Keep this matrix in view — it reappears in every section.</p>
 </section>
-<section id="vectors-matrices-and-what-a-product-means" class="level2" data-number="3">
-<h2 data-number="3" class="anchored" data-anchor-id="vectors-matrices-and-what-a-product-means"><span class="header-section-number">3</span> Vectors, matrices, and what a product means</h2>
+<section id="sec-products" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="sec-products"><span class="header-section-number">3</span> Vectors, matrices, and what a product means</h2>
 <section id="the-two-readings-of-mathbfamathbfx" class="level3" data-number="3.1">
 <h3 data-number="3.1" class="anchored" data-anchor-id="the-two-readings-of-mathbfamathbfx"><span class="header-section-number">3.1</span> The two readings of <span class="math inline">\(\mathbf{A}\mathbf{x}\)</span></h3>
 <p>For <span class="math inline">\(\mathbf{A}\in\mathbb{R}^{m\times n}\)</span> and <span class="math inline">\(\mathbf{x}\in\mathbb{R}^{n}\)</span>, the product <span class="math inline">\(\mathbf{y}=\mathbf{A}\mathbf{x}\in\mathbb{R}^{m}\)</span> has entries</p>
@@ -471,7 +499,7 @@ y_i=\sum_{j=1}^{n}A_{ij}x_j .
 <p>Why? By definition <span class="math inline">\((\mathbf{A}^2)_{ij}=\sum_k A_{ik}A_{kj}\)</span>, and the term <span class="math inline">\(A_{ik}A_{kj}\)</span> is <span class="math inline">\(1\)</span> exactly when <span class="math inline">\(i\!-\!k\)</span> and <span class="math inline">\(k\!-\!j\)</span> are both edges — that is, when <span class="math inline">\(k\)</span> is the middle of a two-step walk from <span class="math inline">\(i\)</span> to <span class="math inline">\(j\)</span>. <strong>So the sum counts length-two walks from <span class="math inline">\(i\)</span> to <span class="math inline">\(j\)</span>.</strong></p>
 <p>Check the diagonal: <span class="math inline">\((\mathbf{A}^2)_{22}=3\)</span>, because from node 2 you can step out to any of its three neighbors and come straight back. In general <span class="math inline">\((\mathbf{A}^2)_{ii}=d_i\)</span>.</p>
 <p>Check an off-diagonal: <span class="math inline">\((\mathbf{A}^2)_{13}=1\)</span>, the single walk <span class="math inline">\(1\to2\to3\)</span>. And <span class="math inline">\((\mathbf{A}^2)_{23}=0\)</span> — there is <em>no</em> two-step walk from 2 to 3, even though they are adjacent, because a one-step edge is not a two-step walk.</p>
-<p>The general statement is that <span class="math inline">\((\mathbf{A}^{k})_{ij}\)</span> counts walks of length exactly <span class="math inline">\(k\)</span>. This is why powers of <span class="math inline">\(\mathbf{A}\)</span> describe reach on a graph, and it is the seed of the diffusion sequence in Lecture 2.</p>
+<p>The general statement is that for an <strong>unweighted</strong> adjacency matrix, <span class="math inline">\((\mathbf{A}^{k})_{ij}\)</span> counts walks of length exactly <span class="math inline">\(k\)</span>. On a weighted graph the same sum still runs over walks, but each contributes the <strong>product of its edge weights</strong> rather than <span class="math inline">\(1\)</span>, so the entry is a weighted walk total rather than a count. Either way, powers of <span class="math inline">\(\mathbf{A}\)</span> describe reach on a graph, and this is the seed of the diffusion sequence in Lecture 2.</p>
 </div>
 </section>
 <section id="inner-products-norms-orthogonality" class="level3" data-number="3.3">
@@ -490,15 +518,15 @@ y_i=\sum_{j=1}^{n}A_{ij}x_j .
 <section id="transpose" class="level3" data-number="3.4">
 <h3 data-number="3.4" class="anchored" data-anchor-id="transpose"><span class="header-section-number">3.4</span> Transpose</h3>
 <p><span class="math inline">\((\mathbf{A}^{\top})_{ij}=A_{ji}\)</span>, and <span class="math inline">\((\mathbf{A}\mathbf{B})^{\top}=\mathbf{B}^{\top}\mathbf{A}^{\top}\)</span> — the order reverses. A matrix is <strong>symmetric</strong> when <span class="math inline">\(\mathbf{A}=\mathbf{A}^{\top}\)</span>.</p>
-<p>For a graph this is not a technical detail: <strong><span class="math inline">\(\mathbf{A}\)</span> is symmetric exactly when the graph is undirected.</strong> Lecture 1’s directed example has <span class="math inline">\(A_{13}=1\)</span> but <span class="math inline">\(A_{31}=0\)</span>, and §4’s spectral guarantees will apply only to the symmetric case.</p>
+<p>For a graph this is not a technical detail: <strong>an undirected graph always has a symmetric adjacency matrix.</strong> The converse needs care — a directed graph in which every edge is reciprocated also has a symmetric <span class="math inline">\(\mathbf{A}\)</span>, and is indistinguishable from the undirected one at the level of the matrix. What matters downstream is the symmetry, since that is what the spectral guarantees below require. Lecture 1’s directed example has <span class="math inline">\(A_{13}=1\)</span> but <span class="math inline">\(A_{31}=0\)</span>, so it is genuinely asymmetric.</p>
 <div class="checkpoint">
 <p><strong>Where this is used</strong></p>
-<p><span class="math inline">\(\mathbf{A}\mathbf{x}\)</span> as message passing is Lecture 2 §7 and every model after it. <span class="math inline">\((\mathbf{A}^{2})_{ij}\)</span> as a walk count is Lecture 1’s worked example and Exercise 1. Inner-product scoring is Lecture 1’s decoder and Lecture 5’s <span class="math inline">\(\operatorname{score}(u,v)=\langle\mathbf{u},\mathbf{v}\rangle\)</span>. Shape tracking is Lecture 2’s two-layer GCN example.</p>
+<p><span class="math inline">\(\mathbf{A}\mathbf{x}\)</span> as message passing is Lecture 2’s diffusion section and every model after it. <span class="math inline">\((\mathbf{A}^{2})_{ij}\)</span> as a walk count is Lecture 1’s worked example and Exercise 1. Inner-product scoring is Lecture 1’s decoder and Lecture 5’s <span class="math inline">\(\operatorname{score}(u,v)=\langle\mathbf{u},\mathbf{v}\rangle\)</span>. Shape tracking is Lecture 2’s two-layer GCN example.</p>
 </div>
 </section>
 </section>
-<section id="structured-and-sparse-matrices" class="level2" data-number="4">
-<h2 data-number="4" class="anchored" data-anchor-id="structured-and-sparse-matrices"><span class="header-section-number">4</span> Structured and sparse matrices</h2>
+<section id="sec-structured" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="sec-structured"><span class="header-section-number">4</span> Structured and sparse matrices</h2>
 <p>Most matrices in this course are not arbitrary. Recognizing the structure is what makes them cheap.</p>
 <section id="diagonal-matrices" class="level3" data-number="4.1">
 <h3 data-number="4.1" class="anchored" data-anchor-id="diagonal-matrices"><span class="header-section-number">4.1</span> Diagonal matrices</h3>
@@ -507,7 +535,7 @@ y_i=\sum_{j=1}^{n}A_{ij}x_j .
 <p><span class="math display">\[
 \left(\mathbf{D}^{-1/2}\mathbf{A}\mathbf{D}^{-1/2}\right)_{ij}=\frac{A_{ij}}{\sqrt{d_i d_j}} .
 \]</span></p>
-<p>Left-multiplying scales rows, right-multiplying scales columns, so the entry picks up both factors. This is the <strong>symmetric normalization</strong>, and knowing it is a two-sided scaling explains a property that catches people out: it is <em>not</em> row-stochastic. Its rows do not sum to one. (The row-stochastic operator is <span class="math inline">\(\mathbf{D}^{-1}\mathbf{A}\)</span>, the random-walk matrix.)</p>
+<p>Left-multiplying scales rows, right-multiplying scales columns, so the entry picks up both factors. This is the <strong>symmetric normalization</strong>, and knowing it is a two-sided scaling explains a property that catches people out: it is <em>not generally</em> row-stochastic. Its rows sum to one only when the graph is <strong>regular</strong>, where <span class="math inline">\(\sqrt{d_id_j}=d\)</span> for every edge and the two-sided scaling collapses to a one-sided one. On an irregular graph the rows do not sum to one, and they do not even sum to the same value. (The operator that <em>is</em> always row-stochastic is <span class="math inline">\(\mathbf{D}^{-1}\mathbf{A}\)</span>, the random-walk matrix.)</p>
 <div class="worked-example">
 <p><strong>Worked example — symmetric normalization on the running graph</strong></p>
 <p>With <span class="math inline">\(\mathbf{d}=[2,3,1,2]\)</span>,</p>
@@ -557,9 +585,14 @@ f(\mathbf{P}\mathbf{A}\mathbf{P}^{\top},\mathbf{P}\mathbf{X})=\mathbf{P}f(\mathb
 </section>
 <section id="sparsity" class="level3" data-number="4.3">
 <h3 data-number="4.3" class="anchored" data-anchor-id="sparsity"><span class="header-section-number">4.3</span> Sparsity</h3>
-<p>A matrix is <strong>sparse</strong> when almost all entries are zero. Real graphs are extremely sparse: a social network with <span class="math inline">\(10^{6}\)</span> users and <span class="math inline">\(100\)</span> friends each has <span class="math inline">\(10^{8}\)</span> nonzeros out of <span class="math inline">\(10^{12}\)</span> entries — one in ten thousand.</p>
+<p>A matrix is <strong>sparse</strong> when almost all entries are zero. Real graphs are extremely sparse: a social network with <span class="math inline">\(N=10^{6}\)</span> users and <span class="math inline">\(100\)</span> friends each has <span class="math inline">\(10^{8}\)</span> nonzeros out of <span class="math inline">\(10^{12}\)</span> entries — one in ten thousand.</p>
 <p>Storage format, not mathematics, is what changes:</p>
 <table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
 <thead>
 <tr class="header">
 <th>format</th>
@@ -575,24 +608,24 @@ f(\mathbf{P}\mathbf{A}\mathbf{P}^{\top},\mathbf{P}\mathbf{X})=\mathbf{P}f(\mathb
 </tr>
 <tr class="even">
 <td>coordinate / <code>edge_index</code></td>
-<td>one <span class="math inline">\((i,j)\)</span> pair per edge</td>
-<td><span class="math inline">\(O(M)\)</span></td>
+<td>one <span class="math inline">\((i,j)\)</span> pair per stored edge, plus a value if weighted</td>
+<td><span class="math inline">\(O(|\mathcal{E}|)\)</span></td>
 </tr>
 <tr class="odd">
 <td>compressed sparse row</td>
-<td>values plus row offsets</td>
-<td><span class="math inline">\(O(N+M)\)</span></td>
+<td>values, column indices, row offsets</td>
+<td><span class="math inline">\(O(N+|\mathcal{E}|)\)</span></td>
 </tr>
 </tbody>
 </table>
 <div class="worked-example">
 <p><strong>Worked example — why dense storage fails</strong></p>
-<p>Take <span class="math inline">\(N=10^{6}\)</span> nodes with <span class="math inline">\(100\)</span> neighbors each, so <span class="math inline">\(M=5\times10^{7}\)</span> undirected edges, at 8 bytes per number.</p>
+<p>Take <span class="math inline">\(N=10^{6}\)</span> nodes with <span class="math inline">\(100\)</span> neighbors each, so <span class="math inline">\(|\mathcal{E}|=5\times10^{7}\)</span> undirected edges, at 8 bytes per number.</p>
 <p><strong>Dense:</strong> <span class="math inline">\(8N^{2}=8\times10^{12}\)</span> bytes <span class="math inline">\(=8\)</span> terabytes.</p>
-<p><strong>Edge list:</strong> two indices per stored direction, <span class="math inline">\(8\times2\times2M=1.6\times10^{9}\)</span> bytes <span class="math inline">\(=1.6\)</span> gigabytes.</p>
+<p><strong>Edge list:</strong> two indices per stored direction, <span class="math inline">\(8\times2\times2|\mathcal{E}|=1.6\times10^{9}\)</span> bytes <span class="math inline">\(=1.6\)</span> gigabytes.</p>
 <p>A factor of five thousand, and the difference between impossible and routine. The same arithmetic at <span class="math inline">\(N=25\times10^{6}\)</span> is Lecture 2’s worked example.</p>
 </div>
-<p>The cost of a <em>product</em> changes too. Dense <span class="math inline">\(\mathbf{A}\mathbf{x}\)</span> costs <span class="math inline">\(O(N^{2})\)</span> multiply–adds; sparse costs <span class="math inline">\(O(M)\)</span>, since zero entries contribute nothing. This is the origin of the <span class="math inline">\(O(|\mathcal{E}|)\)</span> complexity quoted throughout the course.</p>
+<p>The cost of a <em>product</em> changes too. Dense <span class="math inline">\(\mathbf{A}\mathbf{x}\)</span> costs <span class="math inline">\(O(N^{2})\)</span> multiply–adds; sparse costs <span class="math inline">\(O(|\mathcal{E}|)\)</span>, since zero entries contribute nothing. This is the origin of the <span class="math inline">\(O(|\mathcal{E}|)\)</span> complexity quoted throughout the course.</p>
 <div class="checkpoint">
 <p><strong>A trap worth knowing before Lecture 2</strong></p>
 <p>Sparsity is <strong>not preserved by powers</strong>. <span class="math inline">\(\mathbf{A}\)</span> may be sparse while <span class="math inline">\(\mathbf{A}^{k}\)</span> is dense — <span class="math inline">\((\mathbf{A}^{k})_{ij}\neq0\)</span> whenever <em>any</em> length-<span class="math inline">\(k\)</span> walk joins <span class="math inline">\(i\)</span> to <span class="math inline">\(j\)</span>, and on a well-connected graph that is soon almost every pair.</p>
@@ -600,16 +633,16 @@ f(\mathbf{P}\mathbf{A}\mathbf{P}^{\top},\mathbf{P}\mathbf{X})=\mathbf{P}f(\mathb
 <p><span class="math display">\[
 \mathbf{x}\leftarrow\mathbf{A}\mathbf{x}\quad k\text{ times},
 \]</span></p>
-<p>which costs <span class="math inline">\(O(kM)\)</span> and never stores anything denser than <span class="math inline">\(\mathbf{A}\)</span>.</p>
+<p>which costs <span class="math inline">\(O(k|\mathcal{E}|)\)</span> and never stores anything denser than <span class="math inline">\(\mathbf{A}\)</span>.</p>
 </div>
 <div class="checkpoint">
 <p><strong>Where this is used</strong></p>
-<p>Symmetric normalization is the GCN operator of Lecture 2 and the LightGCN operator of Lecture 5. Permutation equivariance is Lecture 1 §6 and the justification for graph convolution in Lecture 2. Sparse storage and the <span class="math inline">\(O(N^{2})\)</span>-versus-<span class="math inline">\(O(N+M)\)</span> contrast are Lecture 1 §4 and Lecture 3’s memory-wall example. The “never form <span class="math inline">\(\mathbf{S}^{k}\)</span>” rule is Lecture 2’s Check 2.</p>
+<p>Symmetric normalization is the GCN operator of Lecture 2 and the LightGCN operator of Lecture 5. Permutation equivariance is Lecture 1’s section on why graph learning is different and the justification for graph convolution in Lecture 2. Sparse storage and the <span class="math inline">\(O(N^{2})\)</span>-versus-<span class="math inline">\(O(N+|\mathcal{E}|)\)</span> contrast are Lecture 1’s representation section and Lecture 3’s memory-wall example. The “never form <span class="math inline">\(\mathbf{S}^{k}\)</span>” rule is Lecture 2’s Check 2.</p>
 </div>
 </section>
 </section>
-<section id="eigenvalues-eigenvectors-and-quadratic-forms" class="level2" data-number="5">
-<h2 data-number="5" class="anchored" data-anchor-id="eigenvalues-eigenvectors-and-quadratic-forms"><span class="header-section-number">5</span> Eigenvalues, eigenvectors, and quadratic forms</h2>
+<section id="sec-eigen" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="sec-eigen"><span class="header-section-number">5</span> Eigenvalues, eigenvectors, and quadratic forms</h2>
 <section id="the-definition-and-what-it-buys" class="level3" data-number="5.1">
 <h3 data-number="5.1" class="anchored" data-anchor-id="the-definition-and-what-it-buys"><span class="header-section-number">5.1</span> The definition, and what it buys</h3>
 <p>A nonzero <span class="math inline">\(\mathbf{u}\)</span> is an <strong>eigenvector</strong> of <span class="math inline">\(\mathbf{A}\)</span> with <strong>eigenvalue</strong> <span class="math inline">\(\lambda\)</span> when</p>
@@ -668,7 +701,7 @@ R(\mathbf{x})=\frac{\mathbf{x}^{\top}\mathbf{A}\mathbf{x}}{\mathbf{x}^{\top}\mat
 <p>with the bounds attained at the corresponding eigenvectors. It is the scale-free measure of “how much variation”, and the reason Lecture 4 has to distinguish <em>a signal with small total variation</em> from <em>a signal that is smooth</em>.</p>
 <div class="checkpoint">
 <p><strong>Where this is used</strong></p>
-<p>The spectral theorem underwrites the graph Fourier transform in Lecture 4 §3. The Laplacian quadratic form is Lecture 4’s Definition 7 and its smoothness regularizer. PSD and definiteness return in Lecture 4’s Hessian analysis. The Rayleigh quotient is what Lecture 4’s Check 4 uses to separate amplitude from smoothness.</p>
+<p>The spectral theorem underwrites the graph Fourier transform in Lecture 4’s spectral section. The Laplacian quadratic form is Lecture 4’s Definition 7 and its smoothness regularizer. PSD and definiteness return in Lecture 4’s Hessian analysis. The Rayleigh quotient is what Lecture 4’s Check 4 uses to separate amplitude from smoothness.</p>
 </div>
 </section>
 </section>
@@ -718,16 +751,32 @@ R(\mathbf{x})=\frac{\mathbf{x}^{\top}\mathbf{A}\mathbf{x}}{\mathbf{x}^{\top}\mat
 </tr>
 <tr class="even">
 <td><span class="math inline">\(\vert\lambda\vert&gt;1\)</span></td>
-<td><span class="math inline">\(\to\infty\)</span></td>
-<td><strong>blows up</strong></td>
+<td><span class="math inline">\(\vert\lambda^{k}\vert\to\infty\)</span></td>
+<td><strong>blows up</strong> (alternating in sign if <span class="math inline">\(\lambda&lt;-1\)</span>)</td>
 </tr>
 </tbody>
 </table>
 <p>So repeated application is a <strong>filter</strong>: it keeps whatever lives at the extremes of the spectrum and destroys everything in the middle. Which components survive depends only on where their eigenvalues sit.</p>
 </div>
 <p>Three consequences you will meet by name:</p>
-<p><strong>Over-smoothing</strong> (Lecture 2). For the GCN operator, <span class="math inline">\(\lambda_{\max}=1\)</span> with a smooth eigenvector and everything else has <span class="math inline">\(|\lambda|&lt;1\)</span>. Stack many layers and every component except the smoothest is erased — all node embeddings converge to the same thing, and the model can no longer tell nodes apart.</p>
-<p><strong>Low-pass filtering</strong> (Lectures 2 and 4). The same statement from the other side: components at low graph frequency survive, components at high frequency die. Repeated propagation <em>is</em> a low-pass filter. Note the scope — this is a statement about repeated <em>fixed linear</em> propagation, not about a trained network with weights and nonlinearities.</p>
+<div class="checkpoint">
+<p><strong>Scope first: this is about a fixed linear operator</strong></p>
+<p>Everything in this section concerns applying <strong>one fixed matrix repeatedly</strong>, with no weights and no nonlinearity. A trained network interleaves <span class="math inline">\(\mathbf{W}^{(\ell)}\)</span> and <span class="math inline">\(\sigma\)</span>, which are not diagonal in this eigenbasis, so the composition is not a spectral filter and needs its own analysis. Read what follows as the behaviour of the <em>propagation</em>, which is one ingredient of a GNN rather than the whole of it.</p>
+</div>
+<p><strong>Over-smoothing</strong> (Lecture 2). Take the GCN operator <span class="math inline">\(\mathbf{S}=\tilde{\mathbf{D}}^{-1/2}\tilde{\mathbf{A}}\tilde{\mathbf{D}}^{-1/2}\)</span> on a connected graph with self-loops. Its largest eigenvalue is <span class="math inline">\(1\)</span>, with unit eigenvector <span class="math inline">\(\mathbf{u}\propto\sqrt{\tilde{\mathbf{d}}}\)</span>, and every other eigenvalue satisfies <span class="math inline">\(|\lambda|&lt;1\)</span>. So</p>
+<p><span class="math display">\[
+\mathbf{S}^{k}\mathbf{X}\;\longrightarrow\;\mathbf{u}\mathbf{u}^{\top}\mathbf{X},
+\]</span></p>
+<p>a <strong>rank-one</strong> limit. Be careful about what that does and does not say. The rows do not become <em>identical</em>: they become proportional to <span class="math inline">\(\sqrt{\tilde{d}_i}\)</span>, so on an irregular graph they still differ. What is lost is the <strong>independent variation between nodes</strong> — every column of the limit is a multiple of the same vector, so the representation retains one degree of freedom where it started with <span class="math inline">\(N\)</span>. That is enough to destroy a classifier’s ability to separate nodes that the degrees alone do not separate. (A disconnected graph keeps one such mode per component.)</p>
+<div class="worked-example">
+<p><strong>Worked example — the limit on the running graph</strong></p>
+<p>With self-loops, <span class="math inline">\(\tilde{\mathbf{d}}=[3,4,2,3]\)</span>. Propagating <span class="math inline">\(\mathbf{x}=[1,0,0,0]^{\top}\)</span> to convergence gives</p>
+<p><span class="math display">\[
+\mathbf{S}^{k}\mathbf{x}\;\longrightarrow\;[0.2500,\;0.2887,\;0.2041,\;0.2500]^{\top},
+\]</span></p>
+<p>which is exactly <span class="math inline">\(\mathbf{u}(\mathbf{u}^{\top}\mathbf{x})\)</span> with <span class="math inline">\(\mathbf{u}\propto\sqrt{\tilde{\mathbf{d}}}\)</span>. Four different values, not one — nodes 1 and 4 agree only because they happen to share a degree. The ratios <span class="math inline">\(0.2500:0.2887:0.2041\)</span> are <span class="math inline">\(\sqrt{3}:\sqrt{4}:\sqrt{2}\)</span>.</p>
+</div>
+<p><strong>Low-pass filtering</strong> (Lectures 2 and 4), with a caveat. It is tempting to say repeated propagation is <em>always</em> low-pass; it is not. What survives is whatever sits at <span class="math inline">\(|\lambda|\approx1\)</span>, and that can be either end of the spectrum. For <span class="math inline">\(\mathbf{S}=\mathbf{I}-\hat{\mathbf{L}}\)</span> the response at graph frequency <span class="math inline">\(\mu\)</span> is <span class="math inline">\((1-\mu)^{k}\)</span>, which is large near <span class="math inline">\(\mu=0\)</span> <strong>and</strong> near <span class="math inline">\(\mu=2\)</span> — and <span class="math inline">\(\mu=2\)</span> is attained exactly on a bipartite graph. Adding self-loops is what pushes the spectrum away from <span class="math inline">\(-1\)</span> and makes the operator genuinely low-pass; the <strong>lazy</strong> operator <span class="math inline">\(\tfrac12(\mathbf{I}+\mathbf{D}^{-1/2}\mathbf{A}\mathbf{D}^{-1/2})\)</span> does the same with a monotone response.</p>
 <p><strong>Why bipartite graphs behave strangely</strong> (Lectures 1 and 3). A bipartite graph has a symmetric spectrum, so if <span class="math inline">\(\lambda_{\max}\)</span> is an eigenvalue then so is <span class="math inline">\(-\lambda_{\max}\)</span>. Two consequences: power iteration oscillates instead of converging (Lecture 1), and the component at <span class="math inline">\(\lambda\approx-1\)</span> survives repeated diffusion just as well as the one at <span class="math inline">\(\lambda\approx+1\)</span> — it merely alternates sign. That is why Lecture 3 finds diffusion helping at <em>both</em> extremes of homophily and failing in between.</p>
 <div class="worked-example">
 <p><strong>Worked example — watch a signal collapse</strong></p>
@@ -773,16 +822,23 @@ R(\mathbf{x})=\frac{\mathbf{x}^{\top}\mathbf{A}\mathbf{x}}{\mathbf{x}^{\top}\mat
 </tr>
 </tbody>
 </table>
-<p>By <span class="math inline">\(k=20\)</span> the signal is essentially a multiple of <span class="math inline">\(\mathbf{u}_1\)</span>: three of its four degrees of freedom are gone. Nothing was lost to rounding — this is what the operator <em>does</em>.</p>
-<p>Now the important question: how fast? The decay of component <span class="math inline">\(i\)</span> relative to the survivor is <span class="math inline">\((\lambda_i/\lambda_1)^{k}\)</span>, so the <strong>ratio</strong> <span class="math inline">\(\lambda_2/\lambda_1\)</span> sets the timescale. Here <span class="math inline">\(0.9/1=0.9\)</span>, decaying slowly; had <span class="math inline">\(\lambda_2\)</span> been <span class="math inline">\(0.3\)</span> the collapse would have taken a handful of steps. This ratio is called the <strong>spectral gap</strong>, and a graph with a small gap tolerates more layers than one with a large gap.</p>
+<p>By <span class="math inline">\(k=20\)</span> the signal is dominated by <span class="math inline">\(\mathbf{u}_1\)</span>: the other three components have been <strong>suppressed</strong> by factors of <span class="math inline">\(0.12\)</span>, <span class="math inline">\(10^{-6}\)</span> and <span class="math inline">\(10^{-14}\)</span>. Say suppressed rather than gone — in exact arithmetic every eigenvalue here is nonzero, so <span class="math inline">\(\mathbf{S}^{k}\)</span> is still invertible and no information has literally been destroyed. What has happened is that recovering it would require dividing by <span class="math inline">\(10^{-14}\)</span>, which floating-point arithmetic will not do reliably. The limit is rank one; every finite step merely approaches it.</p>
+<p>Now the important question: how fast? For an operator whose largest eigenvalue is <span class="math inline">\(1\)</span> and simple, define</p>
+<p><span class="math display">\[
+\rho=\max_{i\,:\,\lambda_i\neq1}|\lambda_i|,
+\qquad
+\text{absolute spectral gap}=1-\rho .
+\]</span></p>
+<p>Everything outside the surviving direction decays like <span class="math inline">\(\rho^{k}\)</span>, so the gap sets the timescale: a <strong>small gap means slow decay</strong>, and a graph with a small gap therefore tolerates more propagation steps before collapsing.</p>
+<p>In the table above <span class="math inline">\(\rho=0.9\)</span> and the gap is <span class="math inline">\(0.1\)</span>, so decay is slow; had the second eigenvalue been <span class="math inline">\(0.3\)</span> the gap would be <span class="math inline">\(0.7\)</span> and the collapse would take a handful of steps. Note that <span class="math inline">\(\rho\)</span> is a maximum over <strong>absolute values</strong>, so a large negative eigenvalue counts: an operator with <span class="math inline">\(\lambda=-0.95\)</span> has a small gap even though <span class="math inline">\(-0.95\)</span> is algebraically far from <span class="math inline">\(1\)</span>. Whenever a source quotes “the spectral gap”, check whether its eigenvalues are ordered algebraically or by magnitude.</p>
 </div>
 <div class="checkpoint">
 <p><strong>Where this is used</strong></p>
 <p>Lecture 1’s power iteration and its bipartite caveat. Lecture 2’s diffusion sequence, the over-smoothing measurement, and the spectral-response figure. Lecture 3’s SGC pre-processing <span class="math inline">\(\hat{\mathbf{A}}^{K}\mathbf{X}\)</span> and Check 7 on why the lowest homophily is not the worst case. Lecture 5’s LightGCN diffusion. If you read only one section of this note, read this one.</p>
 </div>
 </section>
-<section id="matrix-calculus" class="level2" data-number="7">
-<h2 data-number="7" class="anchored" data-anchor-id="matrix-calculus"><span class="header-section-number">7</span> Matrix calculus</h2>
+<section id="sec-calculus" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="sec-calculus"><span class="header-section-number">7</span> Matrix calculus</h2>
 <p>Optimization needs derivatives, and in this course the variable is usually a matrix. The rules below are the ones that actually appear.</p>
 <section id="gradients-with-respect-to-a-vector" class="level3" data-number="7.1">
 <h3 data-number="7.1" class="anchored" data-anchor-id="gradients-with-respect-to-a-vector"><span class="header-section-number">7.1</span> Gradients with respect to a vector</h3>
@@ -838,21 +894,21 @@ R(\mathbf{x})=\frac{\mathbf{x}^{\top}\mathbf{A}\mathbf{x}}{\mathbf{x}^{\top}\mat
 \]</span></p>
 <p>The mask survives into the gradient, which is what makes unobserved entries receive no data-term gradient at all — the mechanism behind Lecture 4’s reconstruction problem.</p>
 </section>
-<section id="two-constructions-for-lecture-4-only" class="level3" data-number="7.4">
-<h3 data-number="7.4" class="anchored" data-anchor-id="two-constructions-for-lecture-4-only"><span class="header-section-number">7.4</span> Two constructions for Lecture 4 only</h3>
+<section id="sec-vec-kron" class="level3" data-number="7.4">
+<h3 data-number="7.4" class="anchored" data-anchor-id="sec-vec-kron"><span class="header-section-number">7.4</span> Two constructions for Lecture 4 only</h3>
 <p><span class="math inline">\(\operatorname{vec}(\mathbf{X})\)</span> stacks the columns of <span class="math inline">\(\mathbf{X}\)</span> into one long vector. The <strong>Kronecker product</strong> <span class="math inline">\(\mathbf{A}\otimes\mathbf{B}\)</span> replaces each entry <span class="math inline">\(A_{ij}\)</span> by the block <span class="math inline">\(A_{ij}\mathbf{B}\)</span>. Together they linearize two-sided products:</p>
 <p><span class="math display">\[
 \operatorname{vec}(\mathbf{A}\mathbf{X}\mathbf{B})=(\mathbf{B}^{\top}\otimes\mathbf{A})\operatorname{vec}(\mathbf{X}).
 \]</span></p>
-<p>You need this once: to write the Hessian of Lecture 4’s reconstruction objective as a single matrix and ask whether it is invertible. If you are not reading Lecture 4, skip it.</p>
+<p>You need this once: to write the Hessian of Lecture 4’s reconstruction objective as a single matrix and ask whether it is invertible. <strong>Nothing before Lecture 4 uses it</strong>, so skip it now and return when that lecture needs it.</p>
 <div class="checkpoint">
 <p><strong>Where this is used</strong></p>
 <p><span class="math inline">\(\nabla(\mathbf{x}^{\top}\mathbf{A}\mathbf{x})\)</span> and the trace gradient are Lecture 4’s Exercise 4 and its TGSR gradient. The masked Frobenius gradient is Lecture 4’s data term. <span class="math inline">\(\operatorname{vec}\)</span> and <span class="math inline">\(\otimes\)</span> appear only in Lecture 4’s Check 5 on uniqueness. Backpropagation in the companion note is the chain rule applied to these.</p>
 </div>
 </section>
 </section>
-<section id="rank-and-low-rank-factorization" class="level2" data-number="8">
-<h2 data-number="8" class="anchored" data-anchor-id="rank-and-low-rank-factorization"><span class="header-section-number">8</span> Rank and low-rank factorization</h2>
+<section id="sec-rank" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="sec-rank"><span class="header-section-number">8</span> Rank and low-rank factorization</h2>
 <p>The <strong>rank</strong> of a matrix is the number of linearly independent columns, equivalently the dimension of its column space, equivalently the number of nonzero singular values.</p>
 <p>The fact the course needs is a bound:</p>
 <p><span class="math display">\[
@@ -864,7 +920,7 @@ R(\mathbf{x})=\frac{\mathbf{x}^{\top}\mathbf{A}\mathbf{x}}{\mathbf{x}^{\top}\mat
 <p><span class="math display">\[
 \operatorname{rank}(\mathbf{U}\mathbf{V}^{\top})\leq d .
 \]</span></p>
-<p>With <span class="math inline">\(d=64\)</span>, <span class="math inline">\(N=10^{6}\)</span> and <span class="math inline">\(M=10^{5}\)</span>, the model has <span class="math inline">\(6.4\times10^{7}\)</span> parameters describing <span class="math inline">\(10^{11}\)</span> scores. <strong>It cannot produce an arbitrary score matrix</strong>, and that constraint is the whole idea: unable to store every preference separately, it is pushed toward explaining them with shared structure — similar users near each other, similar items near each other.</p>
+<p>With <span class="math inline">\(d=64\)</span>, <span class="math inline">\(N=10^{6}\)</span> users and <span class="math inline">\(M=10^{5}\)</span> items, the two tables hold <span class="math inline">\(d(N+M)=64\times1.1\times10^{6}=7.04\times10^{7}\)</span> parameters, describing <span class="math inline">\(NM=10^{11}\)</span> scores. <strong>It cannot produce an arbitrary score matrix</strong>, and that constraint is the whole idea: unable to store every preference separately, it is pushed toward explaining them with shared structure — similar users near each other, similar items near each other.</p>
 <p>Two honest caveats, because this argument is easy to overstate. A rank bound on the <em>full</em> matrix says nothing about fitting a <em>sparse</em> set of observed entries, which a low-rank model can often do closely while generalizing poorly. And low rank creates pressure toward structure; it does not guarantee that the structure found is meaningful.</p>
 </div>
 <div class="checkpoint">
@@ -875,7 +931,7 @@ R(\mathbf{x})=\frac{\mathbf{x}^{\top}\mathbf{A}\mathbf{x}}{\mathbf{x}^{\top}\mat
 <section id="complexity-briefly" class="level2" data-number="9">
 <h2 data-number="9" class="anchored" data-anchor-id="complexity-briefly"><span class="header-section-number">9</span> Complexity, briefly</h2>
 <p>Two pieces of notation, used constantly and rarely defined.</p>
-<p><span class="math inline">\(f(n)=O(g(n))\)</span> means <span class="math inline">\(f\)</span> grows no faster than <span class="math inline">\(g\)</span> up to a constant: <span class="math inline">\(O(N+M)\)</span> storage and <span class="math inline">\(O(M)\)</span> per sparse product. Constants and lower-order terms are dropped, which is a feature when comparing <span class="math inline">\(N^{2}\)</span> against <span class="math inline">\(N\)</span> and a trap when comparing two <span class="math inline">\(O(M)\)</span> methods whose constants differ by a hundred.</p>
+<p><span class="math inline">\(f(n)=O(g(n))\)</span> means <span class="math inline">\(f\)</span> grows no faster than <span class="math inline">\(g\)</span> up to a constant: <span class="math inline">\(O(N+|\mathcal{E}|)\)</span> storage and <span class="math inline">\(O(|\mathcal{E}|)\)</span> per sparse product. Constants and lower-order terms are dropped, which is a feature when comparing <span class="math inline">\(N^{2}\)</span> against <span class="math inline">\(N\)</span> and a trap when comparing two <span class="math inline">\(O(M)\)</span> methods whose constants differ by a hundred.</p>
 <p><strong>Log axes.</strong> A straight line on a log–log plot means a power law <span class="math inline">\(y\propto x^{a}\)</span>, with <span class="math inline">\(a\)</span> the slope. A straight line on a <em>semi</em>-log plot (<span class="math inline">\(y\)</span> logarithmic, <span class="math inline">\(x\)</span> linear) means exponential growth or decay. Lectures 2, 3 and 6 all use log axes to make claims about growth rates; reading the slope rather than the height is the skill.</p>
 <div class="checkpoint">
 <p><strong>Where this is used</strong></p>
@@ -943,7 +999,7 @@ R(\mathbf{x})=\frac{\mathbf{x}^{\top}\mathbf{A}\mathbf{x}}{\mathbf{x}^{\top}\mat
 <ul>
 <li><strong>Edge counting.</strong> For an undirected graph each edge is counted <strong>once</strong>, so a triangle has <span class="math inline">\(|\mathcal{E}|=3\)</span>. Stored formats keep both directions, so an <code>edge_index</code> has <span class="math inline">\(2|\mathcal{E}|\)</span> columns. A complexity written <span class="math inline">\(O(|\mathcal{E}|)\)</span> absorbs the factor of two.</li>
 <li><strong>Graphs are simple</strong> unless stated otherwise — no self-loops, no multi-edges, nonnegative weights. Self-loops appear deliberately in Lecture 2’s renormalization trick.</li>
-<li><strong>Isolated nodes.</strong> Degree zero means no outgoing transition, clustering coefficient defined as <span class="math inline">\(0\)</span>, and <span class="math inline">\(1/0=0\)</span> in degree-normalized operators.</li>
+<li><strong>Isolated nodes.</strong> Degree zero means no outgoing transition, and the clustering coefficient is defined as <span class="math inline">\(0\)</span>. Degree-normalized operators use the <strong>pseudo-inverse convention</strong>: the diagonal entry of <span class="math inline">\(\mathbf{D}^{-1}\)</span> or <span class="math inline">\(\mathbf{D}^{-1/2}\)</span> is set to <span class="math inline">\(0\)</span> when <span class="math inline">\(d_i=0\)</span>. This is a definition, not arithmetic — <span class="math inline">\(1/0\)</span> is undefined, and the resulting matrix is a generalized inverse rather than an ordinary one. Note the consequence: with an isolated node, <span class="math inline">\(\mathbf{D}^{-1}\mathbf{A}\)</span> has an all-zero row and is therefore <strong>not</strong> row-stochastic.</li>
 </ul>
 <p>One symbol genuinely shifts meaning between lectures, so watch for it: <strong><span class="math inline">\(M\)</span></strong> is the edge count in Lecture 1, the mini-batch size in Lecture 3, and the number of time samples in Lecture 4. Each lecture states which it means; this note uses <span class="math inline">\(|\mathcal{E}|\)</span> for edges throughout to avoid the clash.</p>
 </section>
@@ -955,7 +1011,8 @@ R(\mathbf{x})=\frac{\mathbf{x}^{\top}\mathbf{A}\mathbf{x}}{\mathbf{x}^{\top}\mat
 </section>
 <section id="exercise-2-walks" class="level3" data-number="11.2">
 <h3 data-number="11.2" class="anchored" data-anchor-id="exercise-2-walks"><span class="header-section-number">11.2</span> Exercise 2 — Walks</h3>
-<p>Compute <span class="math inline">\(\mathbf{A}^{3}\)</span> for the running graph. Interpret <span class="math inline">\((\mathbf{A}^{3})_{11}\)</span> and explain why it is nonzero even though there is no triangle through node 1.</p>
+<p>Compute <span class="math inline">\(\mathbf{A}^{3}\)</span> for the running graph and check that <span class="math inline">\((\mathbf{A}^{3})_{11}=2\)</span>. Identify the triangle through node 1 and explain why it contributes exactly two closed walks of length three. Then argue that in a <strong>simple undirected graph</strong> a closed walk of length three must traverse a triangle, so <span class="math inline">\((\mathbf{A}^{3})_{ii}&gt;0\)</span> detects triangles.</p>
+<p>Now compute <span class="math inline">\(\mathbf{A}^{4}\)</span> and check that <span class="math inline">\((\mathbf{A}^{4})_{33}=3\)</span> even though node 3 lies on no triangle. Where do those three closed walks come from?</p>
 </section>
 <section id="exercise-3-normalization" class="level3" data-number="11.3">
 <h3 data-number="11.3" class="anchored" data-anchor-id="exercise-3-normalization"><span class="header-section-number">11.3</span> Exercise 3 — Normalization</h3>
@@ -1003,10 +1060,16 @@ R(\mathbf{x})=\frac{\mathbf{x}^{\top}\mathbf{A}\mathbf{x}}{\mathbf{x}^{\top}\mat
 </section>
 <section id="references" class="level2 unnumbered">
 <h2 class="unnumbered anchored" data-anchor-id="references">References</h2>
-<p>Standard references for anything here in more depth: Strang’s <em>Linear Algebra and Learning from Data</em> for the matrix material, and Boyd and Vandenberghe’s <em>Convex Optimization</em> for §6 onward. Ortega’s <em>Introduction to Graph Signal Processing</em> <span class="citation" data-cites="ortega2022introduction">(<a href="#ref-ortega2022introduction" role="doc-biblioref">Ortega 2022</a>)</span> is the natural continuation of §4 and §5 for readers who want the spectral graph theory properly.</p>
+<p>Standard references, if you want any of this in more depth: Strang’s <em>Linear Algebra and Learning from Data</em> <span class="citation" data-cites="strang2019linear">(<a href="#ref-strang2019linear" role="doc-biblioref">Strang 2019</a>)</span> for the matrix material and Boyd and Vandenberghe’s <em>Convex Optimization</em> <span class="citation" data-cites="boyd2004convex">(<a href="#ref-boyd2004convex" role="doc-biblioref">Boyd and Vandenberghe 2004</a>)</span> for the calculus and optimization. Ortega’s <em>Introduction to Graph Signal Processing</em> <span class="citation" data-cites="ortega2022introduction">(<a href="#ref-ortega2022introduction" role="doc-biblioref">Ortega 2022</a>)</span> is the natural continuation of the eigenvalue and matrix-power sections for readers who want the spectral graph theory properly.</p>
 <div id="refs" class="references-small references csl-bib-body hanging-indent" role="list">
+<div id="ref-boyd2004convex" class="csl-entry" role="listitem">
+Boyd, Stephen, and Lieven Vandenberghe. 2004. <em>Convex Optimization</em>. Cambridge University Press.
+</div>
 <div id="ref-ortega2022introduction" class="csl-entry" role="listitem">
 Ortega, Antonio. 2022. <em>Introduction to Graph Signal Processing</em>. Cambridge University Press.
+</div>
+<div id="ref-strang2019linear" class="csl-entry" role="listitem">
+Strang, Gilbert. 2019. <em>Linear Algebra and Learning from Data</em>. Wellesley-Cambridge Press.
 </div>
 </div>
 

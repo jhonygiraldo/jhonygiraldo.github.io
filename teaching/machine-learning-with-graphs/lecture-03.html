@@ -66,7 +66,7 @@ div.csl-indent {
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-933893266c10dca58b5ae82bff0b7ef1.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-08c0ebb140374405892f1146749c070e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -260,7 +260,7 @@ window.Quarto = {
   <li><a href="#which-sub-graphs" id="toc-which-sub-graphs" class="nav-link" data-scroll-target="#which-sub-graphs"><span class="header-section-number">6.1</span> Which sub-graphs?</a></li>
   <li><a href="#what-cluster-gcn-loses" id="toc-what-cluster-gcn-loses" class="nav-link" data-scroll-target="#what-cluster-gcn-loses"><span class="header-section-number">6.2</span> What Cluster-GCN loses</a></li>
   </ul></li>
-  <li><a href="#simplifying-the-architecture-sgc" id="toc-simplifying-the-architecture-sgc" class="nav-link" data-scroll-target="#simplifying-the-architecture-sgc"><span class="header-section-number">7</span> Simplifying the architecture: SGC</a>
+  <li><a href="#sec-sgc" id="toc-sec-sgc" class="nav-link" data-scroll-target="#sec-sgc"><span class="header-section-number">7</span> Simplifying the architecture: SGC</a>
   <ul class="collapse">
   <li><a href="#unrolling-a-gcn" id="toc-unrolling-a-gcn" class="nav-link" data-scroll-target="#unrolling-a-gcn"><span class="header-section-number">7.1</span> Unrolling a GCN</a></li>
   <li><a href="#why-this-is-so-cheap" id="toc-why-this-is-so-cheap" class="nav-link" data-scroll-target="#why-this-is-so-cheap"><span class="header-section-number">7.2</span> Why this is so cheap</a></li>
@@ -433,7 +433,7 @@ Figure&nbsp;5: Measured on a 4000-node graph with 19 960 edges. Left: the fracti
 <p><strong>Worked example — The memory wall</strong></p>
 <p>Lecture 2 computed that a graph with <span class="math inline">\(N=25\,000\,000\)</span> nodes and <span class="math inline">\(300\)</span> neighbors per node needs about <span class="math inline">\(120\)</span> GB as an edge list. A server CPU can hold that.</p>
 <p>Training is normally done on a <strong>GPU</strong>, and accelerator memory is the binding constraint. Take an NVIDIA H200 as an illustrative device: 141 GB of HBM3e. The graph alone is 120 GB of that, before any node features, activations, gradients, or optimizer state — and a full-batch backward pass has to store activations for every node at every layer. It does not fit, and the next graph up will not fit on the next accelerator either.</p>
-<p>(Nothing here <em>requires</em> a GPU: SGC’s preprocessing in <strong>?@sec-sgc</strong> runs perfectly well on a CPU with far more RAM, which is part of its appeal. What requires a GPU is training a deep nonlinear model in reasonable time.)</p>
+<p>(Nothing here <em>requires</em> a GPU: SGC’s preprocessing in <a href="#sec-sgc" class="quarto-xref">Section&nbsp;7</a> runs perfectly well on a CPU with far more RAM, which is part of its appeal. What requires a GPU is training a deep nonlinear model in reasonable time.)</p>
 <p>And <span class="math inline">\(25\)</span> million nodes is modest: a European customer graph at Amazon scale is larger.</p>
 </div>
 <p>So: uniform mini-batches destroy the structure, and full batches do not fit. Everything below is a way out of that squeeze.</p>
@@ -700,8 +700,8 @@ Figure&nbsp;20: Measured on a 1500-node graph with 7461 edges. Partitioning by c
 </div>
 </section>
 </section>
-<section id="simplifying-the-architecture-sgc" class="level2" data-number="7">
-<h2 data-number="7" class="anchored" data-anchor-id="simplifying-the-architecture-sgc"><span class="header-section-number">7</span> Simplifying the architecture: SGC</h2>
+<section id="sec-sgc" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="sec-sgc"><span class="header-section-number">7</span> Simplifying the architecture: SGC</h2>
 <p>The two methods above keep the model and change the training. The third approach does the opposite: <strong>change the model so the expensive part can be done once, in advance</strong>.</p>
 <section id="unrolling-a-gcn" class="level3" data-number="7.1">
 <h3 data-number="7.1" class="anchored" data-anchor-id="unrolling-a-gcn"><span class="header-section-number">7.1</span> Unrolling a GCN</h3>
