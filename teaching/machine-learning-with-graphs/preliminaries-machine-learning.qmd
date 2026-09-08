@@ -30,26 +30,45 @@ format:
 
 The companion note covered the linear algebra. This one covers the learning: how a model is specified, how it is trained, and — a section students often skip and shouldn't — how to tell whether an experiment supports the claim made about it.
 
-As before, every section ends with **Where this is used**. The material assumes the [mathematical preliminaries](/teaching/machine-learning-with-graphs/preliminaries-mathematics.qmd), particularly matrix products and the gradient rules of its §6.
+**Not all of it is needed before Lecture 1.** Sections on probability, the MLP, backpropagation and reading an experiment are the ones to read now. The optimization section is mostly groundwork for Lecture 4, and Jensen's inequality is only needed for Lecture 6 — both are marked, and both can wait until the lecture that uses them.
+
+As before, every section ends with **Where this is used**. The material assumes the [mathematical preliminaries](/teaching/machine-learning-with-graphs/preliminaries-mathematics.qmd), particularly its sections on [matrix products](/teaching/machine-learning-with-graphs/preliminaries-mathematics.qmd#sec-products) and [matrix calculus](/teaching/machine-learning-with-graphs/preliminaries-mathematics.qmd#sec-calculus).
 
 ## Diagnostic: what do you actually need to read?
 
 ```{=html}
 <ol class="learning-objectives">
-  <li>You sample \(H\) of a node's \(d\) neighbours uniformly and average their features. Is the result an unbiased estimate of the true neighbour mean? What is its variance? (§2)</li>
-  <li>A coin has \(\Pr(\text{heads})=p\), flipped \(n\) times. Name the distribution of the number of heads and give its mean. (§2)</li>
-  <li>What does maximum likelihood estimation maximize, and why do we take a logarithm? (§2)</li>
-  <li>Why can a perceptron not represent XOR, and what fixes it? (§3)</li>
-  <li>What is the difference between a logit and a probability, and which does <code>CrossEntropyLoss</code> expect? (§3)</li>
-  <li>Write the derivative of the sigmoid \(\sigma(z)\) in terms of \(\sigma(z)\) itself. (§3)</li>
-  <li>In backpropagation, what exactly is being reused that makes it cheaper than computing each gradient separately? (§4)</li>
-  <li>Mini-batch SGD gives an unbiased gradient estimate. What does that require of the sampling — and does it require the data points to be independent? (§4)</li>
-  <li>A convex function has a global minimum. Does it have a <em>unique</em> one? (§5)</li>
-  <li>A paper reports 94% accuracy. Name three things you need to know before believing it beats an 89% baseline. (§6)</li>
+  <li>You sample \(H\) of a node's \(d\) neighbours uniformly and average their features. Is the result an unbiased estimate of the true neighbour mean? What is its variance? (<a href="#sec-probability">Probability</a>)</li>
+  <li>A coin has \(\Pr(\text{heads})=p\), flipped \(n\) times. Name the distribution of the number of heads and give its mean. (<a href="#sec-probability">Probability</a>)</li>
+  <li>What does maximum likelihood estimation maximize, and why do we take a logarithm? (<a href="#sec-probability">Probability</a>)</li>
+  <li>Why can a perceptron not represent XOR, and what fixes it? (<a href="#sec-mlp">Perceptron to MLP</a>)</li>
+  <li>What is the difference between a logit and a probability, and which does <code>CrossEntropyLoss</code> expect? (<a href="#sec-mlp">Perceptron to MLP</a>)</li>
+  <li>Write the derivative of the sigmoid \(\sigma(z)\) in terms of \(\sigma(z)\) itself. (<a href="#sec-mlp">Perceptron to MLP</a>)</li>
+  <li>In backpropagation, what exactly is being reused that makes it cheaper than computing each gradient separately? (<a href="#sec-backprop">Backpropagation</a>)</li>
+  <li>Mini-batch SGD gives an unbiased gradient estimate. What does that require of the sampling — and does it require the data points to be independent? (<a href="#sec-backprop">Backpropagation</a>)</li>
+  <li>Every local minimum of a convex function is global. Does a convex function always <em>have</em> a minimum, and if it does, is it unique? (<a href="#sec-optimization">Optimization</a>)</li>
+  <li>A paper reports 94% accuracy. Name three things you need to know before believing it beats an 89% baseline. (<a href="#sec-experiments">Reading an experiment</a>)</li>
 </ol>
 ```
 
-## Probability and estimators
+::: {.callout-note collapse="true" title="Answers"}
+```{=html}
+<ol class="diagnostic-answers">
+  <li>Yes, unbiased — uniform sampling makes each neighbour equally likely, so the sample mean has the true neighbour mean as its expectation. With replacement the variance is \(\sigma^{2}/H\), where \(\sigma^{2}\) is the variance across the \(d\) neighbours; without replacement it is smaller by the finite-population factor \(\frac{d-H}{d-1}\).</li>
+  <li>Binomial\((n,p)\), with mean \(np\) and variance \(np(1-p)\).</li>
+  <li>The probability the model assigns to the observed data, as a function of the parameters. The logarithm turns a product over data points into a sum — numerically stable, and it does not move the maximizer because \(\log\) is increasing.</li>
+  <li>XOR is not linearly separable, and a perceptron can only draw one hyperplane. A hidden layer with a nonlinearity fixes it: two hidden units suffice.</li>
+  <li>A logit is an unconstrained real score; a probability lies in \([0,1]\) and sums to one across classes. <code>CrossEntropyLoss</code> expects <em>logits</em> — it applies the softmax itself, so passing it softmax output applies the softmax twice.</li>
+  <li>\(\sigma'(z)=\sigma(z)\bigl(1-\sigma(z)\bigr)\), which is at most \(1/4\) — the origin of vanishing gradients in deep sigmoid stacks.</li>
+  <li>The gradient of the loss with respect to each layer's <em>pre-activations</em>. Computed once per layer and reused for every parameter in that layer, it turns a cost that would grow with the number of parameters into one forward and one backward pass.</li>
+  <li>It requires the mini-batch to be sampled uniformly from the training set (or, equivalently, a shuffled pass). It does <em>not</em> require the data points themselves to be independent — the expectation is over the sampling, not over the data-generating process. This matters on graphs, where nodes are anything but independent.</li>
+  <li>Not necessarily, and not necessarily unique. \(e^{x}\) is convex with no minimizer; \(f(x,y)=x^{2}\) is convex with a whole line of them. Strict convexity plus a minimum existing gives uniqueness.</li>
+  <li>Three of: the split protocol and whether it leaks, the number of seeds and the variance across them, whether both numbers were tuned with the same budget, whether the difference exceeds the standard error, and whether a simple baseline (an MLP on features alone) was included.</li>
+</ol>
+```
+:::
+
+## Probability and estimators {#sec-probability}
 
 ### The pieces you need
 
@@ -104,7 +123,7 @@ An estimator $\hat{\theta}$ of $\theta$ is **unbiased** if $\mathbb{E}[\hat{\the
 ::: {.worked-example}
 **Worked example — sampling a node's neighbours**
 
-A node has $d$ neighbours with feature values $x_1,\dots,x_d$, true mean $\bar{x}$ and population variance $\sigma^{2}$. Computing $\bar{x}$ costs $O(d)$, which is too much when $d$ is large, so sample $H$ of them and average.
+A node has $d>1$ neighbours with feature values $x_1,\dots,x_d$, true mean $\bar{x}$, and **population** variance $\sigma^{2}=\frac{1}{d}\sum_i(x_i-\bar{x})^{2}$ — note the $1/d$, not $1/(d-1)$, which is the convention the correction below assumes. Computing $\bar{x}$ costs $O(d)$, which is too much when $d$ is large, so sample $H$ of them and average.
 
 **With replacement.** Each draw is independent with mean $\bar{x}$ and variance $\sigma^{2}$, so
 
@@ -130,23 +149,52 @@ $$
 \mathbb{E}\!\left[\sigma(\hat{m})\right]\neq\sigma\!\left(\mathbb{E}[\hat{m}]\right).
 $$
 
-So the layer **output** is biased even though the aggregate is not, and so is the gradient. Lecture 3 relies on this distinction; it is why its comparison table says "biased" rather than "unbiased".
+So the layer **output** can be biased even though the aggregate is not, and so can the gradient. "Can be" rather than "is": a nonlinearity does not force bias in every case — if every sampled value lands in ReLU's positive region, ReLU acts linearly on that sample and the equality holds. What is lost is the *guarantee*. Lecture 3 relies on this distinction; it is why its comparison table says "biased" rather than "unbiased".
 :::
 
 ### Maximum likelihood
 
-Given data $x_1,\dots,x_n$ and a model $p_{\theta}$, the **maximum likelihood estimate** is the parameter under which the data is most probable:
+Given data $x_1,\dots,x_n$ and a model $p_{\theta}$, the **maximum likelihood estimate** is the parameter under which the data is most probable. In general this means maximizing the **joint** likelihood,
+
+$$
+\theta^{*}=\arg\max_{\theta}\;\log p_{\theta}(x_1,\dots,x_n).
+$$
+
+If the observations are **independent under the model**, the joint factorizes and the familiar form appears:
 
 $$
 \theta^{*}=\arg\max_{\theta}\prod_{i}p_{\theta}(x_i)
 =\arg\max_{\theta}\sum_{i}\log p_{\theta}(x_i).
 $$
 
+When they are not independent — a sequence, for instance — use the **probability chain rule**, which needs no independence at all:
+
+$$
+p(x_1,\dots,x_n)=\prod_{i=1}^{n}p(x_i\mid x_1,\dots,x_{i-1}).
+$$
+
+Lecture 6 uses this directly: GraphRNN factorizes a graph's construction sequence exactly this way, each edge decision conditioned on everything generated before it.
+
 The logarithm changes nothing about the maximizer — it is increasing — and buys two things: a sum instead of a product, so gradients decompose over data points, and numerical stability, since a product of thousands of small probabilities underflows.
 
 Most loss functions in this course are negative log-likelihoods in disguise. Cross-entropy for a categorical model, binary cross-entropy for a Bernoulli one, and mean squared error for a Gaussian one with fixed variance.
 
-### Jensen's inequality
+That last one is worth seeing once, because it explains why squared error is the default for regression rather than an arbitrary choice. Model the target as $y_i\sim\mathcal{N}(\hat{y}_i,\sigma^{2})$ with $\sigma$ fixed. Then
+
+$$
+-\log p(y_i\mid\hat{y}_i)
+=\frac{(y_i-\hat{y}_i)^{2}}{2\sigma^{2}}+\log\sqrt{2\pi\sigma^{2}},
+$$
+
+and summing over $i$ gives squared error plus a constant. Since $\sigma$ is fixed, both the $1/2\sigma^{2}$ factor and the additive constant are irrelevant to the minimizer. **Minimizing MSE is maximum likelihood under a fixed-variance Gaussian** — which also tells you when it is the wrong choice: heavy-tailed noise, or targets whose variance changes with the input.
+
+### Jensen's inequality {#sec-jensen}
+
+::: {.checkpoint}
+**Can wait until Lecture 6**
+
+Nothing before Lecture 6 needs this. Read it now if you like the material; otherwise return when GraphRNN's training objective comes up.
+:::
 
 For a **concave** function $f$ — the logarithm, for instance —
 
@@ -154,15 +202,34 @@ $$
 \mathbb{E}[f(X)]\leq f\!\left(\mathbb{E}[X]\right).
 $$
 
-You need this exactly once, in Lecture 6. GraphRNN trains by maximizing $\mathbb{E}_{\pi}[\log p_{\theta}(S^{\pi})]$ over random node orderings $\pi$, but the quantity of interest is $\log p_{\theta}(\mathcal{G})=\log\mathbb{E}_{\pi}[p_{\theta}(S^{\pi})]$. Jensen says the first is a **lower bound** on the second, so the training objective is a bound rather than the thing itself.
+You need this in Lecture 6, so it is worth stating the setup carefully.
+
+GraphRNN puts a distribution over **sequences**, not graphs. A graph's probability is therefore the total probability of the distinct sequences that decode to it:
+
+$$
+p_{\theta}(\mathcal{G})=\sum_{s\,:\,f(s)=\mathcal{G}}p_{\theta}(s).
+$$
+
+Training maximizes $\mathbb{E}_{q}[\log p_{\theta}(s)]$ for some sampler $q$ over valid sequences. Jensen relates the two, since for any such $q$
+
+$$
+\log p_{\theta}(\mathcal{G})
+=\log\mathbb{E}_{q}\!\left[\frac{p_{\theta}(s)}{q(s\mid\mathcal{G})}\right]
+\;\geq\;
+\mathbb{E}_{q}\!\left[\log p_{\theta}(s)-\log q(s\mid\mathcal{G})\right],
+$$
+
+so the training objective is a **lower bound** on the graph log-likelihood, up to the entropy of $q$ — which is a constant when $q$ is fixed and so does not affect the maximizer.
+
+The point to carry: $p_{\theta}(\mathcal{G})$ is a **sum over sequences**, not an average of sequence probabilities, and the training objective bounds it rather than equalling it.
 
 ::: {.checkpoint}
 **Where this is used**
 
-Binomial and Poisson degrees are Lecture 6 §4. Unbiasedness and sampling variance are Lecture 3's neighbour sampling and Exercise 3. Maximum likelihood is Lecture 1's random-walk objective and Lecture 6 §5. Jensen is Lecture 6's Exercise 5.
+Binomial and Poisson degrees are Lecture 6's Erdős–Rényi section. Unbiasedness and sampling variance are Lecture 3's neighbour sampling and Exercise 3. Maximum likelihood and the chain rule are Lecture 1's random-walk objective and Lecture 6's deep-generative-models section. Jensen is Lecture 6's Exercise 5.
 :::
 
-## From a linear model to an MLP
+## From a linear model to an MLP {#sec-mlp}
 
 ### The linear model
 
@@ -177,10 +244,12 @@ Geometrically, $\{\mathbf{x}:\mathbf{w}^{\top}\mathbf{x}+b=0\}$ is a hyperplane,
 Stacking $H$ such units gives a **layer**, written for a whole batch of $N$ inputs as
 
 $$
-\mathbf{Z}=\mathbf{X}\mathbf{W}+\mathbf{b}^{\top},
+\mathbf{Z}=\mathbf{X}\mathbf{W}+\mathbf{1}\mathbf{b}^{\top},
 \qquad
-\mathbf{X}\in\mathbb{R}^{N\times F},\ \ \mathbf{W}\in\mathbb{R}^{F\times H},\ \ \mathbf{Z}\in\mathbb{R}^{N\times H}.
+\mathbf{X}\in\mathbb{R}^{N\times F},\ \ \mathbf{W}\in\mathbb{R}^{F\times H},\ \ \mathbf{b}\in\mathbb{R}^{H},\ \ \mathbf{Z}\in\mathbb{R}^{N\times H},
 $$
+
+where $\mathbf{1}\in\mathbb{R}^{N}$ is a column of ones, so $\mathbf{1}\mathbf{b}^{\top}$ copies the same bias row onto every one of the $N$ inputs.
 
 Note the convention, because it persists through the whole course: **features are rows**, and the weight matrix multiplies from the right.
 
@@ -197,16 +266,22 @@ Interleave linear maps with a pointwise nonlinearity $\sigma$:
 $$
 \mathbf{H}^{(0)}=\mathbf{X},
 \qquad
-\mathbf{H}^{(\ell+1)}=\sigma\!\left(\mathbf{H}^{(\ell)}\mathbf{W}^{(\ell)}+\mathbf{b}^{(\ell)\top}\right).
+\mathbf{H}^{(\ell+1)}=\sigma\!\left(\mathbf{H}^{(\ell)}\mathbf{W}^{(\ell)}+\mathbf{1}\mathbf{b}^{(\ell)\top}\right).
 $$
 
-Compare this with the GCN rule you will meet in Lecture 2:
+Compare this with the **GCN layer** you will meet in Lecture 2, written with the same bias convention:
 
 $$
-\mathbf{H}^{(\ell+1)}=\sigma\!\left(\hat{\mathbf{A}}\,\mathbf{H}^{(\ell)}\mathbf{W}^{(\ell)}\right).
+\mathbf{H}^{(\ell+1)}=\sigma\!\left(\hat{\mathbf{A}}_{\mathrm{sl}}\,\mathbf{H}^{(\ell)}\mathbf{W}^{(\ell)}+\mathbf{1}\mathbf{b}^{(\ell)\top}\right),
+\qquad
+\hat{\mathbf{A}}_{\mathrm{sl}}=\tilde{\mathbf{D}}^{-1/2}(\mathbf{A}+\mathbf{I})\tilde{\mathbf{D}}^{-1/2},
 $$
 
-**The only difference is $\hat{\mathbf{A}}$.** A graph neural network is an MLP with one extra matrix that mixes rows — that is, that lets nodes see their neighbours. If $\hat{\mathbf{A}}$ were the identity, the two would be identical. Holding that comparison in mind makes Lecture 2 considerably easier.
+where $\tilde{\mathbf{D}}$ is the degree matrix of $\mathbf{A}+\mathbf{I}$. (The bias is a single row vector broadcast down the $N$ rows, which is what $\mathbf{1}\mathbf{b}^{\top}$ means; PyTorch Geometric layers include one by default.)
+
+**The only difference is $\hat{\mathbf{A}}_{\mathrm{sl}}$.** It is an MLP with one extra matrix that mixes rows — that is, that lets nodes see their neighbours. Set $\hat{\mathbf{A}}_{\mathrm{sl}}=\mathbf{I}$ and the two coincide exactly.
+
+Two qualifications. The self-loops matter: $\hat{\mathbf{A}}$ *without* them is a different operator, and Lecture 2 spends a page on why the loops were added. And this comparison describes **this** layer, not every GNN — GAT's coefficients are learned, and message-passing networks in general need not be a matrix product at all.
 
 ### Activations
 
@@ -252,6 +327,8 @@ Pick a convention and hold it:
 - return **logits**, use `CrossEntropyLoss`; or
 - return **`log_softmax`**, use `NLLLoss`.
 
+The binary case has the same trap and the same fix: `BCEWithLogitsLoss` takes **logits** and applies the sigmoid internally, while `BCELoss` takes probabilities and expects you to have applied it already. Prefer the logits version — it is the numerically stable one.
+
 Lecture 2's Check 6 flags this again in the PyTorch Geometric code, because it is that easy to do.
 :::
 
@@ -289,16 +366,18 @@ $$
 
 **The gradient is just the prediction minus the target.** Every factor cancels. The same happens for softmax with cross-entropy, giving $\hat{\mathbf{p}}-\mathbf{y}$.
 
+Mind the reduction. This is the gradient for **one** example. If the loss is averaged over $n$ examples, every gradient below carries an extra $1/n$, and if it is summed, it does not. A mismatch here rescales the effective learning rate rather than producing an error message, so fix the convention once and keep it.
+
 This is not a coincidence: it is what makes these particular loss–activation pairs the standard ones. It is also a second reason to keep the softmax inside the loss — the combined form is numerically stable, whereas computing $\log$ of an explicit softmax is not.
 :::
 
 ::: {.checkpoint}
 **Where this is used**
 
-The MLP-versus-GCN comparison is Lecture 2 §9. ReLU, LeakyReLU and softmax appear throughout Lectures 1, 2 and 5. Logits versus probabilities is Lecture 2's Check 6. Cross-entropy is Lecture 2's node-classification loss; BCE is Lecture 5's binary loss and Lecture 6's edge loss; MSE is Lecture 4's reconstruction and forecasting loss.
+The MLP-versus-GCN comparison is Lecture 2's section on building a GNN from filters. ReLU, LeakyReLU and softmax appear throughout Lectures 1, 2 and 5. Logits versus probabilities is Lecture 2's Check 6. Cross-entropy is Lecture 2's node-classification loss; BCE is Lecture 5's binary loss and Lecture 6's edge loss; MSE is Lecture 4's reconstruction and forecasting loss.
 :::
 
-## Backpropagation and stochastic gradient descent
+## Backpropagation and stochastic gradient descent {#sec-backprop}
 
 ### Gradient descent
 
@@ -308,7 +387,7 @@ $$
 \boldsymbol{\theta}\leftarrow\boldsymbol{\theta}-\eta\,\nabla_{\boldsymbol{\theta}}\mathcal{L},
 $$
 
-with $\eta$ the **learning rate**. Too small and progress is slow; too large and the iterates overshoot and can diverge. §5 makes the safe range precise.
+with $\eta$ the **learning rate**. Too small and progress is slow; too large and the iterates overshoot and can diverge. The [optimization section](#sec-optimization) makes the safe range precise.
 
 ### Backpropagation is the chain rule, organized
 
@@ -382,10 +461,16 @@ Larger batches give lower-variance gradients at higher cost per step. **Adam** a
 ::: {.checkpoint}
 **Where this is used**
 
-The MLP backward pass is the template for training every model in the course. Activation memory is Lecture 3's memory-wall argument. The unbiasedness argument and its scope are Lecture 3 §7 and the SGC discussion. Adam appears in Lectures 2, 4 and 5.
+The MLP backward pass is the template for training every model in the course. Activation memory is Lecture 3's memory-wall argument. The unbiasedness argument and its scope are Lecture 3's SGC discussion. Adam appears in Lectures 2, 4 and 5.
 :::
 
-## Optimization, as far as the course needs it
+## Optimization, as far as the course needs it {#sec-optimization}
+
+::: {.checkpoint}
+**Mostly groundwork for Lecture 4**
+
+Gradient descent and the learning rate are used from Lecture 2 onward. Everything about convexity, condition numbers and the Hessian is there for Lecture 4's reconstruction problem, and can be read then.
+:::
 
 The course uses a narrow slice of convex optimization: convex quadratics, when their minimizer is unique, and how fast gradient descent gets there. There is no duality or KKT theory here because no lecture uses them.
 
@@ -401,20 +486,28 @@ $$
 
 The property that matters: **for a convex function, every local minimum is a global minimum.** No local traps.
 
+Note what that does *not* say. It does not promise a minimum exists: $f(x)=e^{x}$ is convex on $\mathbb{R}$, with infimum $0$ that is never attained. And it does not promise uniqueness. Existence and uniqueness are separate conditions, and the next two subsections give each of them.
+
 ### Convex does not mean unique
 
 This is the point students most often get wrong, and Lecture 4 depends on it.
 
 Take the quadratic $f(\mathbf{x})=\tfrac12\mathbf{x}^{\top}\mathbf{A}\mathbf{x}-\mathbf{b}^{\top}\mathbf{x}$ with $\mathbf{A}$ symmetric PSD. Then $\nabla f=\mathbf{A}\mathbf{x}-\mathbf{b}$ and $\nabla^{2}f=\mathbf{A}$, so $f$ is convex and any stationary point is a global minimum.
 
-But if $\mathbf{A}$ is only **semi**-definite it has a null space: some $\mathbf{v}\neq\mathbf{0}$ with $\mathbf{A}\mathbf{v}=\mathbf{0}$. Then for any minimizer $\mathbf{x}^{*}$, the whole line $\mathbf{x}^{*}+t\mathbf{v}$ has the same gradient and the same value. **A flat direction, an infinite set of minimizers, and convexity throughout.**
+Now suppose $\mathbf{A}$ is only **semi**-definite, so it has a null space: some $\mathbf{v}\neq\mathbf{0}$ with $\mathbf{A}\mathbf{v}=\mathbf{0}$. Two things can happen, and which one depends on $\mathbf{b}$.
 
-Uniqueness needs $\mathbf{A}$ **positive definite** — all eigenvalues strictly positive, no flat directions.
+**A minimizer exists only if $\mathbf{b}\in\operatorname{range}(\mathbf{A})$.** Otherwise $\mathbf{b}$ has a component along the null space, and moving along that direction decreases $f$ without bound: $f(t\mathbf{v})=-t\,\mathbf{b}^{\top}\mathbf{v}\to-\infty$. Convex, and unbounded below.
+
+**When it does exist, it is not unique.** For any minimizer $\mathbf{x}^{*}$, the whole line $\mathbf{x}^{*}+t\mathbf{v}$ has the same gradient and the same value. A flat direction, an infinite set of minimizers, and convexity throughout.
+
+Uniqueness needs $\mathbf{A}$ **positive definite** — all eigenvalues strictly positive, no flat directions. That also gives existence, since $\operatorname{range}(\mathbf{A})$ is then everything.
 
 ::: {.checkpoint}
 **Why this is not a technicality**
 
-The graph Laplacian is PSD but never positive definite: $\mathbf{L}\mathbf{1}=\mathbf{0}$ always. So any objective regularized by $\mathbf{L}$ alone is flat along constants — adding the same number to every node changes nothing.
+The graph Laplacian is PSD but never positive definite: $\mathbf{L}\mathbf{1}=\mathbf{0}$ always. So the **regularizer** $\mathbf{x}^{\top}\mathbf{L}\mathbf{x}$ is flat along constants — adding the same number to every node leaves it unchanged.
+
+Whether the *objective* inherits that flatness depends on the other term. A data term like $\Vert\mathbf{x}-\mathbf{y}\Vert^{2}$ is strictly convex and removes the flat direction entirely. The problem arises only when the data term is also blind to it.
 
 Lecture 4 has a sharper version. If a sensor is unobserved at *every* time step, then shifting that sensor's whole series by a constant changes neither the data term (nothing is observed there) nor the temporal-difference penalty (a constant has zero difference). That sensor's level is unrecoverable, and no amount of convexity helps. Recovering it requires a **sampling condition** on the data, not a better solver.
 :::
@@ -427,7 +520,7 @@ $$
 \kappa(\mathbf{A})=\frac{\lambda_{\max}(\mathbf{A})}{\lambda_{\min}(\mathbf{A})}.
 $$
 
-With optimal step size, the error contracts by a factor of $\frac{\kappa-1}{\kappa+1}$ per iteration. So:
+For a **positive definite** quadratic with the optimal constant step $\eta=\dfrac{2}{\lambda_{\max}+\lambda_{\min}}$, the Euclidean error contracts by a factor of at most $\dfrac{\kappa-1}{\kappa+1}$ per iteration. (This is a worst-case bound for that specific setting; it is not a general guarantee for arbitrary convex functions.) So:
 
 - $\kappa\approx1$ — level sets nearly spherical, gradient descent goes almost straight to the minimum;
 - $\kappa$ large — level sets are elongated valleys, and the iterates zig-zag across them, making slow progress along the floor;
@@ -445,19 +538,21 @@ $$
 
 which is why $\eta=1/L$ is a safe default. This is where the step sizes in Lecture 4's reconstruction code come from.
 
+Two caveats. The bound is **open** at both ends: at $\eta=2/L$ exactly, the component along $\lambda_{\max}$ is multiplied by $|1-2|=1$ every step and neither grows nor decays. And Lipschitz continuity gives convergence of the *iterates* for a convex $f$; it does not by itself guarantee that a global minimizer exists to converge to.
+
 ### Closed form versus iteration
 
-Setting $\nabla f=\mathbf{0}$ for a quadratic gives the linear system $\mathbf{A}\mathbf{x}=\mathbf{b}$, so a closed-form solution exists whenever $\mathbf{A}$ is invertible. It is often useless anyway: solving costs $O(n^{3})$ and forming $\mathbf{A}$ may be impossible.
+Setting $\nabla f=\mathbf{0}$ for a quadratic gives the linear system $\mathbf{A}\mathbf{x}=\mathbf{b}$, so a closed-form solution exists whenever $\mathbf{A}$ is invertible. It is often impractical anyway: a **generic dense** direct solve costs $O(n^{3})$, and forming $\mathbf{A}$ at all may be impossible. Sparse direct methods and structured solvers can do far better than $O(n^{3})$ when the structure permits — the honest argument for iterating is not that direct solving is always cubic, but that it needs the matrix **assembled**, whereas an iterative method needs only the ability to apply it.
 
-Lecture 4 is the case in point. Its reconstruction problem has a closed form, but the operator acts on $MN$ unknowns — for 1000 sensors over 500 time steps, a $500\,000\times500\,000$ system. Iterating with sparse products is not a compromise; it is the only option.
+Lecture 4 is the case in point. Its reconstruction problem has a closed form, but the operator acts on $MN$ unknowns — for 1000 sensors over 500 time steps, a $500\,000\times500\,000$ system that is never formed explicitly. The objective is instead evaluated through sparse products with $\mathbf{L}$ and $\mathbf{D}_h$, which is exactly the matrix-free setting iterative methods are built for.
 
 ::: {.checkpoint}
 **Where this is used**
 
-Convexity and the Hessian are Lecture 4 §5. Convex-but-not-unique is Lecture 4's Check 5. Condition number and Sobolev smoothness are Lecture 4 §5–6. The Lipschitz step size is in Lecture 4's figure-generation code. Closed form versus iteration is Lecture 4's TGSR discussion.
+Convexity and the Hessian are Lecture 4's reconstruction section. Convex-but-not-unique is Lecture 4's Check 5. Condition number and Sobolev smoothness are Lecture 4's Sobolev discussion. The Lipschitz step size is in Lecture 4's figure-generation code. Closed form versus iteration is Lecture 4's TGSR discussion.
 :::
 
-## Reading an experiment
+## Reading an experiment {#sec-experiments}
 
 This section is not mathematics, and it is the one most likely to change how you read the rest of the course. Every lecture presents figures that claim a method works. Knowing what such a figure can and cannot establish is part of the subject.
 
@@ -469,11 +564,23 @@ Data is divided three ways:
 - **validation** — hyperparameters are chosen on these;
 - **test** — reported once, at the end.
 
-**Leakage** is any path by which test information reaches the model. It inflates results and is often invisible. Two forms matter here.
+**Leakage** is any path by which information reaches the model that would not be available at prediction time **under the protocol you have declared**. That last clause matters, and on graphs it is where most confusion lives — so declare the protocol first.
+
+::: {.checkpoint}
+**Three protocols, three different rules**
+
+**Transductive node classification.** The whole graph and all node features are available during training; only the test **labels** are withheld. Seeing test nodes' features and their edges is not leakage — it is the setting, and it is what the original GCN paper evaluates [@kipf2016semi]. Using test *labels*, directly or through a label-derived feature, is.
+
+**Inductive.** The model must handle nodes or graphs unseen at training time. Test nodes and their edges are removed from the training graph, so nothing about them may influence training.
+
+**Link prediction.** The held-out edges are the targets, so they must be removed from the **message-passing graph** and from anything derived from it before training. This is the one that catches people: fit the graph with all edges present, hide 10% for testing, and the model has already seen the answers through the structure. Degrees, centralities and embeddings all have to be recomputed on the training graph.
+:::
+
+Two forms of genuine leakage are worth naming.
 
 *Choosing hyperparameters on the test set.* If you try ten settings and report the best test score, that score is a maximum over ten draws, not an estimate of performance. Lecture 4's reconstruction figure is explicitly labelled an **oracle-tuned illustration** for exactly this reason: its regularization weight was chosen against the complete ground truth, which no real deployment can do.
 
-*Graph-specific leakage.* This one is easy to walk into. If you build the graph using all edges and then hide some for testing, the hidden edges have already influenced the model through the graph structure. And node features computed over the whole graph — a degree, a centrality — carry information from test nodes into training. On graphs, the split has to be applied to the **graph construction**, not only to the labels.
+*Ignoring time.* In a temporal setting, any feature computed from data after the prediction point leaks, however innocuous it looks.
 
 ### Baselines
 
@@ -486,20 +593,26 @@ A number means nothing alone. "94% accuracy" is only interpretable against what 
 | forecasting | persistence — predict the last observed value |
 | graph generation | a fitted classical model such as $G_{np}$ |
 
-The features-only MLP deserves emphasis. If a GNN does not beat it, the graph is contributing nothing, and no amount of architectural sophistication changes that.
+The features-only MLP deserves emphasis. If a GNN does not beat it, then **under that experiment** the graph has not been shown to help — which is not the same as proving the graph carries no useful information. A different architecture, a different graph construction, or a different split might extract it. But the burden has shifted: the claim that the graph matters now needs evidence.
 
 ### Seeds and variance
 
 Neural network training is stochastic: initialization, batch order, dropout, and the data split all involve randomness. A single run is a **sample**, not a measurement.
 
-Report a mean and a spread over several seeds. A 1.5-point gap between two methods means nothing if the seed-to-seed standard deviation is 2 points — a distinction most published comparisons in this field would fail. When a figure in these notes rests on one seed, its caption says so.
+Report a mean and a spread over several seeds — and then reason about the **uncertainty of the difference**, not about the spread alone.
+
+A 1.5-point gap with a per-run standard deviation of 2 points is not automatically meaningless: precision improves with the number of runs. With $n$ independent runs of each method, the standard error of the difference is $\sqrt{s_1^{2}/n+s_2^{2}/n}$, which for $s=2$ and $n=100$ is about $0.28$ points — a 1.5-point gap would then be well supported. With $n=3$ it is about $1.6$ points, and the same gap tells you almost nothing.
+
+Two refinements worth knowing. If both methods are run on the **same splits and seeds**, compare *paired* differences: the shared variation cancels and the comparison is far more precise. And distinguish the two sources of randomness — variation across seeds on one dataset is a different question from variation across datasets, and a method that wins on one benchmark has not been shown to win in general.
+
+When a figure in these notes rests on a single seed, its caption says so.
 
 ### Reading a plot
 
 - **What is on the axes**, and is either logarithmic? A straight line means a power law on log–log, and exponential behaviour on semi-log.
 - **Is this a measurement, a bound, or a schematic?** They look identical when plotted together. Lecture 3's computational-graph figure deliberately puts a measured curve and three upper bounds on one axis and warns about it; Lecture 6's cost figure marks its reference slope as *not* a measurement.
 - **Is the comparison like for like?** Same data, same tuning budget, same evaluation. Lecture 6's degree-distribution panel puts a 77-node real graph beside 5000-node models, and says so, because the comparison is an anchor and not a matched control.
-- **What is missing?** No error bars, no baseline, and a suspiciously round number of runs are all worth noticing.
+- **What is missing?** No error bars, no baseline, no statement of how hyperparameters were chosen, or a comparison where only one method was tuned.
 
 ::: {.checkpoint}
 **Where this is used**
@@ -515,7 +628,11 @@ A node has $d=100$ neighbours with feature variance $\sigma^{2}=4$. Compute the 
 
 ### Exercise 2 — Poisson degrees
 
-For $G_{np}$ with $N=10^{6}$ and mean degree $\bar{k}=10$, compute $\Pr(\text{degree}=100)$ under the Poisson approximation. Compare with the fraction of nodes of degree $\geq100$ in a real social network (typically a few in ten thousand). By how many orders of magnitude is the model wrong?
+Fit $G_{np}$ to a **named** network rather than a remembered statistic. Take a snapshot you can download — the SNAP `ego-Facebook` graph ($N=4039$, $|\mathcal{E}|=88\,234$, mean degree $\bar{k}\approx43.7$) is a convenient one — and set $p=\bar{k}/(N-1)$ so the model matches its mean degree.
+
+Now compare **the same event on both sides**: the fraction of nodes with degree $\geq 100$. Measure it in the data, then compute it under the Poisson approximation with the same $\bar{k}$. By how many orders of magnitude do they differ?
+
+To see how light the Poisson tail is on its own, evaluate $\Pr(D\geq100)$ for mean $10$: it is about $5.4\times10^{-63}$, of which $\Pr(D=100)\approx4.86\times10^{-63}$ — the tail is dominated by its first term, which is itself the signature of a distribution that decays faster than exponentially.
 
 ### Exercise 3 — XOR
 
@@ -527,7 +644,17 @@ Derive $\partial\mathcal{L}_{\text{CE}}/\partial\mathbf{z}=\hat{\mathbf{p}}-\mat
 
 ### Exercise 5 — Backpropagation by hand
 
-Take $\mathbf{X}\in\mathbb{R}^{2\times2}$, $\mathbf{W}^{(0)}\in\mathbb{R}^{2\times2}$, ReLU, $\mathbf{W}^{(1)}\in\mathbb{R}^{2\times1}$ and MSE. Pick small integer entries, run the forward pass by hand, then compute both weight gradients using the three backpropagation equations. Verify one entry numerically with a finite difference $(\mathcal{L}(w+h)-\mathcal{L}(w-h))/2h$.
+Take $\mathbf{X}=\begin{bmatrix}1&2\\ -1&3\end{bmatrix}$, $\mathbf{W}^{(0)}=\begin{bmatrix}1&-1\\ 0&2\end{bmatrix}$, ReLU, $\mathbf{W}^{(1)}=[1,\,-2]^{\top}$, a **linear output** $\mathbf{Z}^{(2)}=\mathbf{H}\mathbf{W}^{(1)}$, targets $\mathbf{Y}=[1,\,0]^{\top}$, and the mean-reduced loss $\mathcal{L}=\tfrac{1}{n}\Vert\mathbf{Z}^{(2)}-\mathbf{Y}\Vert_F^{2}$ with $n=2$.
+
+Note that the output error is **not** $\hat{\mathbf{P}}-\mathbf{Y}$ here: that form belongs to sigmoid-with-BCE or softmax-with-cross-entropy. For this loss and a linear output,
+
+$$
+\boldsymbol{\delta}^{(2)}=\frac{2}{n}\left(\mathbf{Z}^{(2)}-\mathbf{Y}\right).
+$$
+
+The other two backpropagation equations apply unchanged. Run the forward pass by hand, compute both weight gradients, and verify one entry with a central finite difference $(\mathcal{L}(w+h)-\mathcal{L}(w-h))/2h$ at $h=10^{-5}$.
+
+Check first that no hidden pre-activation is zero. ReLU is not differentiable there, and taking the derivative to be $0$ is an implementation convention rather than a fact — a finite difference across that point will disagree with the analytic gradient.
 
 ### Exercise 6 — Convex but not unique
 
@@ -535,7 +662,9 @@ Let $\mathbf{A}=\begin{bmatrix}1&1\\1&1\end{bmatrix}$ and $\mathbf{b}=[1,1]^{\to
 
 ### Exercise 7 — Step size
 
-For $f(\mathbf{x})=\tfrac12\mathbf{x}^{\top}\mathbf{A}\mathbf{x}$ with $\mathbf{A}=\operatorname{diag}(1,100)$, compute the largest convergent step size. Run gradient descent from $[1,1]^{\top}$ with $\eta=2/L$, $\eta=1/L$ and $\eta=0.1/L$, and plot the error. Relate what you see to $\kappa(\mathbf{A})=100$.
+For $f(\mathbf{x})=\tfrac12\mathbf{x}^{\top}\mathbf{A}\mathbf{x}$ with $\mathbf{A}=\operatorname{diag}(1,100)$, determine the **interval** of constant step sizes for which gradient descent converges from $[1,1]^{\top}$, and identify its upper endpoint. Note that the endpoint itself is excluded: state what the second coordinate does at $\eta=2/L$ exactly, and why it neither converges nor diverges there.
+
+Then run from $[1,1]^{\top}$ with $\eta=1/L$, $\eta=0.1/L$, and $\eta$ just above and just below $2/L$, and plot the error. Relate the contraction rate you observe to $\kappa(\mathbf{A})=100$ and to the optimal constant step $2/(\lambda_{\max}+\lambda_{\min})$.
 
 ### Exercise 8 — Design an experiment (investigation)
 
@@ -547,21 +676,21 @@ List everything you would need before believing the method is better. Then desig
 
 1. Expectation is linear unconditionally; variance adds only for uncorrelated terms. That gap is why estimators can be unbiased yet noisy.
 2. Degrees in $G_{np}$ are Binomial, hence approximately Poisson — a tail far too light for real networks.
-3. A sampled mean is unbiased, but a **nonlinearity applied after it** makes the layer output and its gradient biased.
+3. A sampled mean is unbiased, but a **nonlinearity applied after it** removes the guarantee: the layer output and its gradient can be biased.
 4. Maximum likelihood maximizes $\sum_i\log p_{\theta}(x_i)$; most losses here are negative log-likelihoods.
-5. A GCN layer is an MLP layer with one extra matrix, $\hat{\mathbf{A}}$, that lets nodes see their neighbours.
+5. A GCN layer is an MLP layer with one extra matrix, $\hat{\mathbf{A}}_{\mathrm{sl}}$, that lets nodes see their neighbours. That is this layer, not every GNN.
 6. Logits are not probabilities. `CrossEntropyLoss` wants logits, and passing it a softmax applies the softmax twice with no error message.
 7. Sigmoid-with-BCE and softmax-with-CE both give $\partial\mathcal{L}/\partial\mathbf{z}=\hat{\mathbf{p}}-\mathbf{y}$.
 8. Backpropagation is the chain rule with the per-layer error signal cached — which is why activations must be held in memory.
 9. Mini-batch SGD needs **uniform sampling of indices**, not independent data.
-10. Convex guarantees a global minimum, **not a unique one**. Flat directions come from a singular Hessian, and $\kappa=\infty$ is the signature.
+10. Convex means every local minimum is global — **not that a minimum exists, nor that it is unique**. Existence needs $\mathbf{b}\in\operatorname{range}(\mathbf{A})$; uniqueness needs a positive definite Hessian. Flat directions come from a singular Hessian, and $\kappa=\infty$ is the signature.
 11. A result without a baseline, a split you trust, and a spread over seeds is not yet a result.
 
 You are ready for [Lecture 1](/teaching/machine-learning-with-graphs/lecture-01.qmd).
 
 ## References {.unnumbered}
 
-For more depth: Goodfellow, Bengio and Courville's *Deep Learning* for §3 and §4; Boyd and Vandenberghe's *Convex Optimization* for §5; and Murphy's *Probabilistic Machine Learning* for §2. Shalev-Shwartz and Ben-David's *Understanding Machine Learning* is the natural follow-up for §6.
+For more depth: Goodfellow, Bengio and Courville's *Deep Learning* [@goodfellow2016deep] for the network and backpropagation material; Boyd and Vandenberghe's *Convex Optimization* [@boyd2004convex] for the optimization; and Murphy's *Probabilistic Machine Learning* [@murphy2022probabilistic] for the probability. Shalev-Shwartz and Ben-David's *Understanding Machine Learning* [@shalev2014understanding] is the natural follow-up for the experimental material.
 
 ::: {#refs .references-small}
 :::

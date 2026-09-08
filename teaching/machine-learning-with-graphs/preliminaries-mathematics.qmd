@@ -38,22 +38,41 @@ Ten questions. Each names the section that covers it. If you can answer one comf
 
 ```{=html}
 <ol class="learning-objectives">
-  <li>For \(\mathbf{A}\in\mathbb{R}^{4\times4}\) and \(\mathbf{x}\in\mathbb{R}^{4}\), what does entry \(i\) of \(\mathbf{A}\mathbf{x}\) equal as a sum? (§2)</li>
-  <li>If \(\mathbf{A}\) is a graph's adjacency matrix, what does \((\mathbf{A}^2)_{ij}\) count? (§2)</li>
-  <li>What does \(\mathbf{P}\mathbf{A}\mathbf{P}^{\top}\) do, for \(\mathbf{P}\) a permutation matrix? (§3)</li>
-  <li>A graph has \(N=10^{6}\) nodes and \(10^{7}\) edges. How much memory does its adjacency matrix need, dense and sparse? (§3)</li>
-  <li>State what the spectral theorem guarantees for a real symmetric matrix. (§4)</li>
-  <li>\(\mathbf{S}\) is symmetric with eigenvalues in \((-1,1]\). Describe \(\mathbf{S}^{k}\mathbf{x}\) as \(k\to\infty\). (§5)</li>
-  <li>What is \(\mathbf{x}^{\top}\mathbf{L}\mathbf{x}\) when \(\mathbf{L}\) is a graph Laplacian, written as a sum over edges? (§4)</li>
-  <li>Differentiate \(f(\mathbf{x})=\mathbf{x}^{\top}\mathbf{A}\mathbf{x}\) with respect to \(\mathbf{x}\), for symmetric \(\mathbf{A}\). (§6)</li>
-  <li>What is \(\nabla_{\mathbf{Z}}\operatorname{tr}(\mathbf{Z}^{\top}\mathbf{A}\mathbf{Z})\)? (§6)</li>
-  <li>If \(\mathbf{U}\in\mathbb{R}^{N\times d}\) and \(\mathbf{V}\in\mathbb{R}^{M\times d}\) with \(d\ll N,M\), what is the maximum rank of \(\mathbf{U}\mathbf{V}^{\top}\), and why does that matter? (§7)</li>
+  <li>For \(\mathbf{A}\in\mathbb{R}^{4\times4}\) and \(\mathbf{x}\in\mathbb{R}^{4}\), what does entry \(i\) of \(\mathbf{A}\mathbf{x}\) equal as a sum? (<a href="#sec-products">Products</a>)</li>
+  <li>If \(\mathbf{A}\) is a graph's adjacency matrix, what does \((\mathbf{A}^2)_{ij}\) count? (<a href="#sec-products">Products</a>)</li>
+  <li>What does \(\mathbf{P}\mathbf{A}\mathbf{P}^{\top}\) do, for \(\mathbf{P}\) a permutation matrix? (<a href="#sec-structured">Structured matrices</a>)</li>
+  <li>A graph has \(N=10^{6}\) nodes and \(10^{7}\) edges. How much memory does its adjacency matrix need, dense and sparse? (<a href="#sec-structured">Structured matrices</a>)</li>
+  <li>State what the spectral theorem guarantees for a real symmetric matrix. (<a href="#sec-eigen">Eigenvalues</a>)</li>
+  <li>\(\mathbf{S}\) is symmetric with eigenvalues in \((-1,1]\). Describe \(\mathbf{S}^{k}\mathbf{x}\) as \(k\to\infty\). (<a href="#sec-powers">Matrix powers</a>)</li>
+  <li>What is \(\mathbf{x}^{\top}\mathbf{L}\mathbf{x}\) when \(\mathbf{L}\) is a graph Laplacian, written as a sum over edges? (<a href="#sec-eigen">Eigenvalues</a>)</li>
+  <li>Differentiate \(f(\mathbf{x})=\mathbf{x}^{\top}\mathbf{A}\mathbf{x}\) with respect to \(\mathbf{x}\), for symmetric \(\mathbf{A}\). (<a href="#sec-calculus">Matrix calculus</a>)</li>
+  <li>What is \(\nabla_{\mathbf{Z}}\operatorname{tr}(\mathbf{Z}^{\top}\mathbf{A}\mathbf{Z})\)? (<a href="#sec-calculus">Matrix calculus</a>)</li>
+  <li>If \(\mathbf{U}\in\mathbb{R}^{N\times d}\) and \(\mathbf{V}\in\mathbb{R}^{M\times d}\) with \(d\ll N,M\), what is the maximum rank of \(\mathbf{U}\mathbf{V}^{\top}\), and why does that matter? (<a href="#sec-rank">Rank</a>)</li>
 </ol>
 ```
 
+::: {.callout-note collapse="true" title="Answers"}
+```{=html}
+<ol class="diagnostic-answers">
+  <li>\((\mathbf{A}\mathbf{x})_i=\sum_{j=1}^{4}A_{ij}x_j\) — a weighted sum of the entries of \(\mathbf{x}\) at \(i\)'s neighbours.</li>
+  <li>The number of walks of length \(2\) from \(i\) to \(j\); on the diagonal, \((\mathbf{A}^2)_{ii}=\deg(i)\). Unweighted graphs only.</li>
+  <li>It relabels the nodes: \((\mathbf{P}\mathbf{A}\mathbf{P}^{\top})\) is the adjacency matrix of the same graph under the permutation \(\mathbf{P}\) encodes. The graph is unchanged, only its indexing is.</li>
+  <li>Dense: \(N^2=10^{12}\) entries, about \(4\) TB at 4 bytes each. Sparse (CSR): \(\mathcal{O}(|\mathcal{E}|)\), a few hundred MB. This gap is why every method in the course is written in terms of sparse products.</li>
+  <li>A real symmetric \(\mathbf{A}\) has an orthonormal basis of eigenvectors with real eigenvalues: \(\mathbf{A}=\mathbf{U}\boldsymbol{\Lambda}\mathbf{U}^{\top}\), \(\mathbf{U}^{\top}\mathbf{U}=\mathbf{I}\).</li>
+  <li>Components along eigenvectors with \(|\lambda|&lt;1\) decay geometrically, so \(\mathbf{S}^{k}\mathbf{x}\) converges to its projection onto the \(\lambda=1\) eigenspace. If that eigenspace is one-dimensional and spanned by a unit \(\mathbf{u}\), the limit is \((\mathbf{u}^{\top}\mathbf{x})\,\mathbf{u}\).</li>
+  <li>\(\mathbf{x}^{\top}\mathbf{L}\mathbf{x}=\sum_{(i,j)\in\mathcal{E}}(x_i-x_j)^2\) — the total squared variation across edges, and the reason \(\mathbf{L}\) measures smoothness.</li>
+  <li>\(\nabla_{\mathbf{x}}f=2\mathbf{A}\mathbf{x}\) when \(\mathbf{A}\) is symmetric (in general \((\mathbf{A}+\mathbf{A}^{\top})\mathbf{x}\)).</li>
+  <li>\(\nabla_{\mathbf{Z}}\operatorname{tr}(\mathbf{Z}^{\top}\mathbf{A}\mathbf{Z})=(\mathbf{A}+\mathbf{A}^{\top})\mathbf{Z}\), which is \(2\mathbf{A}\mathbf{Z}\) for symmetric \(\mathbf{A}\).</li>
+  <li>At most \(d\). It matters because a rank-\(d\) factorization stores \(d(N+M)\) numbers instead of \(NM\), and cannot represent an interaction pattern of higher rank — the modelling assumption behind every embedding method in Lecture 5.</li>
+</ol>
+```
+:::
+
 ## The running example
 
-Everything below is illustrated on one graph, so that each new object lands on something familiar. This is the same four-node graph used in Lecture 1.
+Everything below is illustrated on one graph, so that each new object lands on something familiar.
+
+It is a small four-node graph of its own. Lecture 1 uses a similar one for its adjacency-matrix example, but that graph carries an extra edge $\{3,4\}$ and so has degrees $[2,3,2,3]$; this one omits it, giving degrees $[2,3,1,2]$. The asymmetry is deliberate — a node of degree $1$ makes degree normalization visible in a way a regular graph would hide.
 
 ::: {.figure-panel}
 ![The running example: four nodes, four undirected edges $\{1,2\}$, $\{1,4\}$, $\{2,3\}$, $\{2,4\}$.](../../assets/figures/edge-list-graph.svg){#fig-running fig-alt="Four nodes connected by four undirected edges"}
@@ -80,7 +99,7 @@ $$
 
 Read $\mathbf{A}$ row by row: row 2 has ones in columns 1, 3 and 4, because node 2 is adjacent to those three. $\mathbf{D}$ holds the row sums. Keep this matrix in view — it reappears in every section.
 
-## Vectors, matrices, and what a product means
+## Vectors, matrices, and what a product means {#sec-products}
 
 ### The two readings of $\mathbf{A}\mathbf{x}$
 
@@ -148,7 +167,7 @@ Check the diagonal: $(\mathbf{A}^2)_{22}=3$, because from node 2 you can step ou
 
 Check an off-diagonal: $(\mathbf{A}^2)_{13}=1$, the single walk $1\to2\to3$. And $(\mathbf{A}^2)_{23}=0$ — there is *no* two-step walk from 2 to 3, even though they are adjacent, because a one-step edge is not a two-step walk.
 
-The general statement is that $(\mathbf{A}^{k})_{ij}$ counts walks of length exactly $k$. This is why powers of $\mathbf{A}$ describe reach on a graph, and it is the seed of the diffusion sequence in Lecture 2.
+The general statement is that for an **unweighted** adjacency matrix, $(\mathbf{A}^{k})_{ij}$ counts walks of length exactly $k$. On a weighted graph the same sum still runs over walks, but each contributes the **product of its edge weights** rather than $1$, so the entry is a weighted walk total rather than a count. Either way, powers of $\mathbf{A}$ describe reach on a graph, and this is the seed of the diffusion sequence in Lecture 2.
 :::
 
 ### Inner products, norms, orthogonality
@@ -171,15 +190,15 @@ The inner product is how similarity gets measured throughout the course: it is t
 
 $(\mathbf{A}^{\top})_{ij}=A_{ji}$, and $(\mathbf{A}\mathbf{B})^{\top}=\mathbf{B}^{\top}\mathbf{A}^{\top}$ — the order reverses. A matrix is **symmetric** when $\mathbf{A}=\mathbf{A}^{\top}$.
 
-For a graph this is not a technical detail: **$\mathbf{A}$ is symmetric exactly when the graph is undirected.** Lecture 1's directed example has $A_{13}=1$ but $A_{31}=0$, and §4's spectral guarantees will apply only to the symmetric case.
+For a graph this is not a technical detail: **an undirected graph always has a symmetric adjacency matrix.** The converse needs care — a directed graph in which every edge is reciprocated also has a symmetric $\mathbf{A}$, and is indistinguishable from the undirected one at the level of the matrix. What matters downstream is the symmetry, since that is what the spectral guarantees below require. Lecture 1's directed example has $A_{13}=1$ but $A_{31}=0$, so it is genuinely asymmetric.
 
 ::: {.checkpoint}
 **Where this is used**
 
-$\mathbf{A}\mathbf{x}$ as message passing is Lecture 2 §7 and every model after it. $(\mathbf{A}^{2})_{ij}$ as a walk count is Lecture 1's worked example and Exercise 1. Inner-product scoring is Lecture 1's decoder and Lecture 5's $\operatorname{score}(u,v)=\langle\mathbf{u},\mathbf{v}\rangle$. Shape tracking is Lecture 2's two-layer GCN example.
+$\mathbf{A}\mathbf{x}$ as message passing is Lecture 2's diffusion section and every model after it. $(\mathbf{A}^{2})_{ij}$ as a walk count is Lecture 1's worked example and Exercise 1. Inner-product scoring is Lecture 1's decoder and Lecture 5's $\operatorname{score}(u,v)=\langle\mathbf{u},\mathbf{v}\rangle$. Shape tracking is Lecture 2's two-layer GCN example.
 :::
 
-## Structured and sparse matrices
+## Structured and sparse matrices {#sec-structured}
 
 Most matrices in this course are not arbitrary. Recognizing the structure is what makes them cheap.
 
@@ -193,7 +212,7 @@ $$
 \left(\mathbf{D}^{-1/2}\mathbf{A}\mathbf{D}^{-1/2}\right)_{ij}=\frac{A_{ij}}{\sqrt{d_i d_j}} .
 $$
 
-Left-multiplying scales rows, right-multiplying scales columns, so the entry picks up both factors. This is the **symmetric normalization**, and knowing it is a two-sided scaling explains a property that catches people out: it is *not* row-stochastic. Its rows do not sum to one. (The row-stochastic operator is $\mathbf{D}^{-1}\mathbf{A}$, the random-walk matrix.)
+Left-multiplying scales rows, right-multiplying scales columns, so the entry picks up both factors. This is the **symmetric normalization**, and knowing it is a two-sided scaling explains a property that catches people out: it is *not generally* row-stochastic. Its rows sum to one only when the graph is **regular**, where $\sqrt{d_id_j}=d$ for every edge and the two-sided scaling collapses to a one-sided one. On an irregular graph the rows do not sum to one, and they do not even sum to the same value. (The operator that *is* always row-stochastic is $\mathbf{D}^{-1}\mathbf{A}$, the random-walk matrix.)
 
 ::: {.worked-example}
 **Worked example — symmetric normalization on the running graph**
@@ -258,29 +277,29 @@ so **every polynomial in the adjacency matrix is automatically equivariant**. Th
 
 ### Sparsity
 
-A matrix is **sparse** when almost all entries are zero. Real graphs are extremely sparse: a social network with $10^{6}$ users and $100$ friends each has $10^{8}$ nonzeros out of $10^{12}$ entries — one in ten thousand.
+A matrix is **sparse** when almost all entries are zero. Real graphs are extremely sparse: a social network with $N=10^{6}$ users and $100$ friends each has $10^{8}$ nonzeros out of $10^{12}$ entries — one in ten thousand.
 
 Storage format, not mathematics, is what changes:
 
 | format | stores | memory |
 |---|---|---|
 | dense array | every entry | $O(N^{2})$ |
-| coordinate / `edge_index` | one $(i,j)$ pair per edge | $O(M)$ |
-| compressed sparse row | values plus row offsets | $O(N+M)$ |
+| coordinate / `edge_index` | one $(i,j)$ pair per stored edge, plus a value if weighted | $O(|\mathcal{E}|)$ |
+| compressed sparse row | values, column indices, row offsets | $O(N+|\mathcal{E}|)$ |
 
 ::: {.worked-example}
 **Worked example — why dense storage fails**
 
-Take $N=10^{6}$ nodes with $100$ neighbors each, so $M=5\times10^{7}$ undirected edges, at 8 bytes per number.
+Take $N=10^{6}$ nodes with $100$ neighbors each, so $|\mathcal{E}|=5\times10^{7}$ undirected edges, at 8 bytes per number.
 
 **Dense:** $8N^{2}=8\times10^{12}$ bytes $=8$ terabytes.
 
-**Edge list:** two indices per stored direction, $8\times2\times2M=1.6\times10^{9}$ bytes $=1.6$ gigabytes.
+**Edge list:** two indices per stored direction, $8\times2\times2|\mathcal{E}|=1.6\times10^{9}$ bytes $=1.6$ gigabytes.
 
 A factor of five thousand, and the difference between impossible and routine. The same arithmetic at $N=25\times10^{6}$ is Lecture 2's worked example.
 :::
 
-The cost of a *product* changes too. Dense $\mathbf{A}\mathbf{x}$ costs $O(N^{2})$ multiply–adds; sparse costs $O(M)$, since zero entries contribute nothing. This is the origin of the $O(|\mathcal{E}|)$ complexity quoted throughout the course.
+The cost of a *product* changes too. Dense $\mathbf{A}\mathbf{x}$ costs $O(N^{2})$ multiply–adds; sparse costs $O(|\mathcal{E}|)$, since zero entries contribute nothing. This is the origin of the $O(|\mathcal{E}|)$ complexity quoted throughout the course.
 
 ::: {.checkpoint}
 **A trap worth knowing before Lecture 2**
@@ -293,16 +312,16 @@ $$
 \mathbf{x}\leftarrow\mathbf{A}\mathbf{x}\quad k\text{ times},
 $$
 
-which costs $O(kM)$ and never stores anything denser than $\mathbf{A}$.
+which costs $O(k|\mathcal{E}|)$ and never stores anything denser than $\mathbf{A}$.
 :::
 
 ::: {.checkpoint}
 **Where this is used**
 
-Symmetric normalization is the GCN operator of Lecture 2 and the LightGCN operator of Lecture 5. Permutation equivariance is Lecture 1 §6 and the justification for graph convolution in Lecture 2. Sparse storage and the $O(N^{2})$-versus-$O(N+M)$ contrast are Lecture 1 §4 and Lecture 3's memory-wall example. The "never form $\mathbf{S}^{k}$" rule is Lecture 2's Check 2.
+Symmetric normalization is the GCN operator of Lecture 2 and the LightGCN operator of Lecture 5. Permutation equivariance is Lecture 1's section on why graph learning is different and the justification for graph convolution in Lecture 2. Sparse storage and the $O(N^{2})$-versus-$O(N+|\mathcal{E}|)$ contrast are Lecture 1's representation section and Lecture 3's memory-wall example. The "never form $\mathbf{S}^{k}$" rule is Lecture 2's Check 2.
 :::
 
-## Eigenvalues, eigenvectors, and quadratic forms
+## Eigenvalues, eigenvectors, and quadratic forms {#sec-eigen}
 
 ### The definition, and what it buys
 
@@ -380,7 +399,7 @@ with the bounds attained at the corresponding eigenvectors. It is the scale-free
 ::: {.checkpoint}
 **Where this is used**
 
-The spectral theorem underwrites the graph Fourier transform in Lecture 4 §3. The Laplacian quadratic form is Lecture 4's Definition 7 and its smoothness regularizer. PSD and definiteness return in Lecture 4's Hessian analysis. The Rayleigh quotient is what Lecture 4's Check 4 uses to separate amplitude from smoothness.
+The spectral theorem underwrites the graph Fourier transform in Lecture 4's spectral section. The Laplacian quadratic form is Lecture 4's Definition 7 and its smoothness regularizer. PSD and definiteness return in Lecture 4's Hessian analysis. The Rayleigh quotient is what Lecture 4's Check 4 uses to separate amplitude from smoothness.
 :::
 
 ## What matrix powers do {#sec-powers}
@@ -411,16 +430,40 @@ Sort by $|\lambda_i|$ and let $k$ grow.
 | $\lambda=1$ | stays $1$ | this component **survives untouched** |
 | $\vert\lambda\vert<1$ | $\to0$ | this component is **erased**, geometrically fast |
 | $\lambda=-1$ | alternates $-1,+1,\dots$ | survives in magnitude, **flips sign every step** |
-| $\vert\lambda\vert>1$ | $\to\infty$ | **blows up** |
+| $\vert\lambda\vert>1$ | $\vert\lambda^{k}\vert\to\infty$ | **blows up** (alternating in sign if $\lambda<-1$) |
 
 So repeated application is a **filter**: it keeps whatever lives at the extremes of the spectrum and destroys everything in the middle. Which components survive depends only on where their eigenvalues sit.
 :::
 
 Three consequences you will meet by name:
 
-**Over-smoothing** (Lecture 2). For the GCN operator, $\lambda_{\max}=1$ with a smooth eigenvector and everything else has $|\lambda|<1$. Stack many layers and every component except the smoothest is erased — all node embeddings converge to the same thing, and the model can no longer tell nodes apart.
+::: {.checkpoint}
+**Scope first: this is about a fixed linear operator**
 
-**Low-pass filtering** (Lectures 2 and 4). The same statement from the other side: components at low graph frequency survive, components at high frequency die. Repeated propagation *is* a low-pass filter. Note the scope — this is a statement about repeated *fixed linear* propagation, not about a trained network with weights and nonlinearities.
+Everything in this section concerns applying **one fixed matrix repeatedly**, with no weights and no nonlinearity. A trained network interleaves $\mathbf{W}^{(\ell)}$ and $\sigma$, which are not diagonal in this eigenbasis, so the composition is not a spectral filter and needs its own analysis. Read what follows as the behaviour of the *propagation*, which is one ingredient of a GNN rather than the whole of it.
+:::
+
+**Over-smoothing** (Lecture 2). Take the GCN operator $\mathbf{S}=\tilde{\mathbf{D}}^{-1/2}\tilde{\mathbf{A}}\tilde{\mathbf{D}}^{-1/2}$ on a connected graph with self-loops. Its largest eigenvalue is $1$, with unit eigenvector $\mathbf{u}\propto\sqrt{\tilde{\mathbf{d}}}$, and every other eigenvalue satisfies $|\lambda|<1$. So
+
+$$
+\mathbf{S}^{k}\mathbf{X}\;\longrightarrow\;\mathbf{u}\mathbf{u}^{\top}\mathbf{X},
+$$
+
+a **rank-one** limit. Be careful about what that does and does not say. The rows do not become *identical*: they become proportional to $\sqrt{\tilde{d}_i}$, so on an irregular graph they still differ. What is lost is the **independent variation between nodes** — every column of the limit is a multiple of the same vector, so the representation retains one degree of freedom where it started with $N$. That is enough to destroy a classifier's ability to separate nodes that the degrees alone do not separate. (A disconnected graph keeps one such mode per component.)
+
+::: {.worked-example}
+**Worked example — the limit on the running graph**
+
+With self-loops, $\tilde{\mathbf{d}}=[3,4,2,3]$. Propagating $\mathbf{x}=[1,0,0,0]^{\top}$ to convergence gives
+
+$$
+\mathbf{S}^{k}\mathbf{x}\;\longrightarrow\;[0.2500,\;0.2887,\;0.2041,\;0.2500]^{\top},
+$$
+
+which is exactly $\mathbf{u}(\mathbf{u}^{\top}\mathbf{x})$ with $\mathbf{u}\propto\sqrt{\tilde{\mathbf{d}}}$. Four different values, not one — nodes 1 and 4 agree only because they happen to share a degree. The ratios $0.2500:0.2887:0.2041$ are $\sqrt{3}:\sqrt{4}:\sqrt{2}$.
+:::
+
+**Low-pass filtering** (Lectures 2 and 4), with a caveat. It is tempting to say repeated propagation is *always* low-pass; it is not. What survives is whatever sits at $|\lambda|\approx1$, and that can be either end of the spectrum. For $\mathbf{S}=\mathbf{I}-\hat{\mathbf{L}}$ the response at graph frequency $\mu$ is $(1-\mu)^{k}$, which is large near $\mu=0$ **and** near $\mu=2$ — and $\mu=2$ is attained exactly on a bipartite graph. Adding self-loops is what pushes the spectrum away from $-1$ and makes the operator genuinely low-pass; the **lazy** operator $\tfrac12(\mathbf{I}+\mathbf{D}^{-1/2}\mathbf{A}\mathbf{D}^{-1/2})$ does the same with a monotone response.
 
 **Why bipartite graphs behave strangely** (Lectures 1 and 3). A bipartite graph has a symmetric spectrum, so if $\lambda_{\max}$ is an eigenvalue then so is $-\lambda_{\max}$. Two consequences: power iteration oscillates instead of converging (Lecture 1), and the component at $\lambda\approx-1$ survives repeated diffusion just as well as the one at $\lambda\approx+1$ — it merely alternates sign. That is why Lecture 3 finds diffusion helping at *both* extremes of homophily and failing in between.
 
@@ -436,9 +479,19 @@ Take a symmetric $\mathbf{S}$ with eigenvalues $1$, $0.9$, $0.5$ and $-0.2$, and
 | $20$ | $1$ | $0.12$ | $10^{-6}$ | $10^{-14}$ |
 | $50$ | $1$ | $0.005$ | $\approx0$ | $\approx0$ |
 
-By $k=20$ the signal is essentially a multiple of $\mathbf{u}_1$: three of its four degrees of freedom are gone. Nothing was lost to rounding — this is what the operator *does*.
+By $k=20$ the signal is dominated by $\mathbf{u}_1$: the other three components have been **suppressed** by factors of $0.12$, $10^{-6}$ and $10^{-14}$. Say suppressed rather than gone — in exact arithmetic every eigenvalue here is nonzero, so $\mathbf{S}^{k}$ is still invertible and no information has literally been destroyed. What has happened is that recovering it would require dividing by $10^{-14}$, which floating-point arithmetic will not do reliably. The limit is rank one; every finite step merely approaches it.
 
-Now the important question: how fast? The decay of component $i$ relative to the survivor is $(\lambda_i/\lambda_1)^{k}$, so the **ratio** $\lambda_2/\lambda_1$ sets the timescale. Here $0.9/1=0.9$, decaying slowly; had $\lambda_2$ been $0.3$ the collapse would have taken a handful of steps. This ratio is called the **spectral gap**, and a graph with a small gap tolerates more layers than one with a large gap.
+Now the important question: how fast? For an operator whose largest eigenvalue is $1$ and simple, define
+
+$$
+\rho=\max_{i\,:\,\lambda_i\neq1}|\lambda_i|,
+\qquad
+\text{absolute spectral gap}=1-\rho .
+$$
+
+Everything outside the surviving direction decays like $\rho^{k}$, so the gap sets the timescale: a **small gap means slow decay**, and a graph with a small gap therefore tolerates more propagation steps before collapsing.
+
+In the table above $\rho=0.9$ and the gap is $0.1$, so decay is slow; had the second eigenvalue been $0.3$ the gap would be $0.7$ and the collapse would take a handful of steps. Note that $\rho$ is a maximum over **absolute values**, so a large negative eigenvalue counts: an operator with $\lambda=-0.95$ has a small gap even though $-0.95$ is algebraically far from $1$. Whenever a source quotes "the spectral gap", check whether its eigenvalues are ordered algebraically or by magnitude.
 :::
 
 ::: {.checkpoint}
@@ -447,7 +500,7 @@ Now the important question: how fast? The decay of component $i$ relative to the
 Lecture 1's power iteration and its bipartite caveat. Lecture 2's diffusion sequence, the over-smoothing measurement, and the spectral-response figure. Lecture 3's SGC pre-processing $\hat{\mathbf{A}}^{K}\mathbf{X}$ and Check 7 on why the lowest homophily is not the worst case. Lecture 5's LightGCN diffusion. If you read only one section of this note, read this one.
 :::
 
-## Matrix calculus
+## Matrix calculus {#sec-calculus}
 
 Optimization needs derivatives, and in this course the variable is usually a matrix. The rules below are the ones that actually appear.
 
@@ -521,7 +574,7 @@ $$
 
 The mask survives into the gradient, which is what makes unobserved entries receive no data-term gradient at all — the mechanism behind Lecture 4's reconstruction problem.
 
-### Two constructions for Lecture 4 only
+### Two constructions for Lecture 4 only {#sec-vec-kron}
 
 $\operatorname{vec}(\mathbf{X})$ stacks the columns of $\mathbf{X}$ into one long vector. The **Kronecker product** $\mathbf{A}\otimes\mathbf{B}$ replaces each entry $A_{ij}$ by the block $A_{ij}\mathbf{B}$. Together they linearize two-sided products:
 
@@ -529,7 +582,7 @@ $$
 \operatorname{vec}(\mathbf{A}\mathbf{X}\mathbf{B})=(\mathbf{B}^{\top}\otimes\mathbf{A})\operatorname{vec}(\mathbf{X}).
 $$
 
-You need this once: to write the Hessian of Lecture 4's reconstruction objective as a single matrix and ask whether it is invertible. If you are not reading Lecture 4, skip it.
+You need this once: to write the Hessian of Lecture 4's reconstruction objective as a single matrix and ask whether it is invertible. **Nothing before Lecture 4 uses it**, so skip it now and return when that lecture needs it.
 
 ::: {.checkpoint}
 **Where this is used**
@@ -537,7 +590,7 @@ You need this once: to write the Hessian of Lecture 4's reconstruction objective
 $\nabla(\mathbf{x}^{\top}\mathbf{A}\mathbf{x})$ and the trace gradient are Lecture 4's Exercise 4 and its TGSR gradient. The masked Frobenius gradient is Lecture 4's data term. $\operatorname{vec}$ and $\otimes$ appear only in Lecture 4's Check 5 on uniqueness. Backpropagation in the companion note is the chain rule applied to these.
 :::
 
-## Rank and low-rank factorization
+## Rank and low-rank factorization {#sec-rank}
 
 The **rank** of a matrix is the number of linearly independent columns, equivalently the dimension of its column space, equivalently the number of nonzero singular values.
 
@@ -556,7 +609,7 @@ $$
 \operatorname{rank}(\mathbf{U}\mathbf{V}^{\top})\leq d .
 $$
 
-With $d=64$, $N=10^{6}$ and $M=10^{5}$, the model has $6.4\times10^{7}$ parameters describing $10^{11}$ scores. **It cannot produce an arbitrary score matrix**, and that constraint is the whole idea: unable to store every preference separately, it is pushed toward explaining them with shared structure — similar users near each other, similar items near each other.
+With $d=64$, $N=10^{6}$ users and $M=10^{5}$ items, the two tables hold $d(N+M)=64\times1.1\times10^{6}=7.04\times10^{7}$ parameters, describing $NM=10^{11}$ scores. **It cannot produce an arbitrary score matrix**, and that constraint is the whole idea: unable to store every preference separately, it is pushed toward explaining them with shared structure — similar users near each other, similar items near each other.
 
 Two honest caveats, because this argument is easy to overstate. A rank bound on the *full* matrix says nothing about fitting a *sparse* set of observed entries, which a low-rank model can often do closely while generalizing poorly. And low rank creates pressure toward structure; it does not guarantee that the structure found is meaningful.
 :::
@@ -571,7 +624,7 @@ Lecture 5's Check 5 on why embeddings work, and its qualification. Lecture 4's r
 
 Two pieces of notation, used constantly and rarely defined.
 
-$f(n)=O(g(n))$ means $f$ grows no faster than $g$ up to a constant: $O(N+M)$ storage and $O(M)$ per sparse product. Constants and lower-order terms are dropped, which is a feature when comparing $N^{2}$ against $N$ and a trap when comparing two $O(M)$ methods whose constants differ by a hundred.
+$f(n)=O(g(n))$ means $f$ grows no faster than $g$ up to a constant: $O(N+|\mathcal{E}|)$ storage and $O(|\mathcal{E}|)$ per sparse product. Constants and lower-order terms are dropped, which is a feature when comparing $N^{2}$ against $N$ and a trap when comparing two $O(M)$ methods whose constants differ by a hundred.
 
 **Log axes.** A straight line on a log–log plot means a power law $y\propto x^{a}$, with $a$ the slope. A straight line on a *semi*-log plot ($y$ logarithmic, $x$ linear) means exponential growth or decay. Lectures 2, 3 and 6 all use log axes to make claims about growth rates; reading the slope rather than the height is the skill.
 
@@ -602,7 +655,7 @@ Three conventions worth stating explicitly:
 
 - **Edge counting.** For an undirected graph each edge is counted **once**, so a triangle has $|\mathcal{E}|=3$. Stored formats keep both directions, so an `edge_index` has $2|\mathcal{E}|$ columns. A complexity written $O(|\mathcal{E}|)$ absorbs the factor of two.
 - **Graphs are simple** unless stated otherwise — no self-loops, no multi-edges, nonnegative weights. Self-loops appear deliberately in Lecture 2's renormalization trick.
-- **Isolated nodes.** Degree zero means no outgoing transition, clustering coefficient defined as $0$, and $1/0=0$ in degree-normalized operators.
+- **Isolated nodes.** Degree zero means no outgoing transition, and the clustering coefficient is defined as $0$. Degree-normalized operators use the **pseudo-inverse convention**: the diagonal entry of $\mathbf{D}^{-1}$ or $\mathbf{D}^{-1/2}$ is set to $0$ when $d_i=0$. This is a definition, not arithmetic — $1/0$ is undefined, and the resulting matrix is a generalized inverse rather than an ordinary one. Note the consequence: with an isolated node, $\mathbf{D}^{-1}\mathbf{A}$ has an all-zero row and is therefore **not** row-stochastic.
 
 One symbol genuinely shifts meaning between lectures, so watch for it: **$M$** is the edge count in Lecture 1, the mini-batch size in Lecture 3, and the number of time samples in Lecture 4. Each lecture states which it means; this note uses $|\mathcal{E}|$ for edges throughout to avoid the clash.
 
@@ -614,7 +667,9 @@ For the running graph, compute $\mathbf{A}\mathbf{x}$ with $\mathbf{x}=[1,2,0,1]
 
 ### Exercise 2 — Walks
 
-Compute $\mathbf{A}^{3}$ for the running graph. Interpret $(\mathbf{A}^{3})_{11}$ and explain why it is nonzero even though there is no triangle through node 1.
+Compute $\mathbf{A}^{3}$ for the running graph and check that $(\mathbf{A}^{3})_{11}=2$. Identify the triangle through node 1 and explain why it contributes exactly two closed walks of length three. Then argue that in a **simple undirected graph** a closed walk of length three must traverse a triangle, so $(\mathbf{A}^{3})_{ii}>0$ detects triangles.
+
+Now compute $\mathbf{A}^{4}$ and check that $(\mathbf{A}^{4})_{33}=3$ even though node 3 lies on no triangle. Where do those three closed walks come from?
 
 ### Exercise 3 — Normalization
 
@@ -663,7 +718,7 @@ Next: the [machine-learning preliminaries](/teaching/machine-learning-with-graph
 
 ## References {.unnumbered}
 
-Standard references for anything here in more depth: Strang's *Linear Algebra and Learning from Data* for the matrix material, and Boyd and Vandenberghe's *Convex Optimization* for §6 onward. Ortega's *Introduction to Graph Signal Processing* [@ortega2022introduction] is the natural continuation of §4 and §5 for readers who want the spectral graph theory properly.
+Standard references, if you want any of this in more depth: Strang's *Linear Algebra and Learning from Data* [@strang2019linear] for the matrix material and Boyd and Vandenberghe's *Convex Optimization* [@boyd2004convex] for the calculus and optimization. Ortega's *Introduction to Graph Signal Processing* [@ortega2022introduction] is the natural continuation of the eigenvalue and matrix-power sections for readers who want the spectral graph theory properly.
 
 ::: {#refs .references-small}
 :::

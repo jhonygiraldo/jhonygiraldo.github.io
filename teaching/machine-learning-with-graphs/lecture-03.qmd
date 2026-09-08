@@ -286,7 +286,7 @@ Partition the nodes into community-aligned groups, treat the induced sub-graph a
 The price is an **approximation of the neighborhood**: edges leaving the batch are not traversed. In the single-cluster form this is a fixed, systematic omission — the same edges are missing every time that cluster is used. Sampling several small clusters per batch (Definition 4) restores the edges among the chosen clusters and makes the batch representative, which is why it is the version actually used. The remaining bias is then a function of how many clusters you can afford per batch.
 :::
 
-## Simplifying the architecture: SGC
+## Simplifying the architecture: SGC {#sec-sgc}
 
 The two methods above keep the model and change the training. The third approach does the opposite: **change the model so the expensive part can be done once, in advance**.
 

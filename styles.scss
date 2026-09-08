@@ -653,6 +653,21 @@ body.fullcontent #quarto-content > main.content,
   font-weight: 800;
 }
 
+.diagnostic-answers {
+  margin: 0;
+  padding-left: 1.4rem;
+  list-style: decimal;
+}
+
+.diagnostic-answers li {
+  margin-bottom: 0.65rem;
+  line-height: 1.6;
+}
+
+.diagnostic-answers li:last-child {
+  margin-bottom: 0;
+}
+
 .definition,
 .worked-example,
 .checkpoint,

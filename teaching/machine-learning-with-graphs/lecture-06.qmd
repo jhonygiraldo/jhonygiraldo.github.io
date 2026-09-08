@@ -464,15 +464,23 @@ Reproduce the left panel of @fig-er-properties with `scripts/figures/lecture_06_
 
 A graph with $N$ nodes admits up to $N!$ node orderings. For $N=10$, how many is that?
 
-Now set the likelihood up properly. GraphRNN models a *sequence*, so it defines $p_\theta(S^{\pi})$ for an ordering $\pi$, whereas we want $p_\theta(\mathcal{G})$. These are related by marginalizing over orderings,
+Now set the likelihood up properly, because the obvious guess is wrong. GraphRNN models a *sequence*: it defines $p_\theta(s)$, whereas we want $p_\theta(\mathcal{G})$. The two are related by summing over the **distinct sequences that decode to that graph**,
 
 $$
-p_\theta(\mathcal{G})=\sum_{\pi}p_\theta(S^{\pi})\,\Pr(\pi),
+p_\theta(\mathcal{G})=\sum_{s\,:\,f(s)=\mathcal{G}}p_\theta(s),
 $$
 
-with $\Pr(\pi)$ the distribution the training procedure samples orderings from. Training maximizes $\mathbb{E}_{\pi\sim\Pr}[\log p_\theta(S^{\pi})]$ — the expectation of the log, not the log of the expectation. Use Jensen's inequality to show this is a **lower bound** on $\log p_\theta(\mathcal{G})$, and state when the bound is tight.
+which is a *sum of probabilities*, not an average of them weighted by an ordering sampler [@you2018graphrnn]. Note also that different permutations can produce the **same** sequence, through the graph's automorphisms, so the map from orderings to sequences is not injective.
 
-Then make it concrete on a three-node path with just two orderings: write both sequences, assign each probability $\tfrac12$, and compute both sides of the inequality for a model of your choosing. Finally, explain what the BFS restriction does to $\Pr(\pi)$ and why that helps.
+Training instead maximizes $\mathbb{E}_{q}[\log p_\theta(s)]$ for the sampler $q$ over orderings. Use Jensen's inequality on
+
+$$
+\log p_\theta(\mathcal{G})=\log\mathbb{E}_{q}\!\left[\frac{p_\theta(s)}{q(s\mid\mathcal{G})}\right]
+$$
+
+to show that $\mathbb{E}_{q}[\log p_\theta(s)-\log q(s\mid\mathcal{G})]$ is a **lower bound** on $\log p_\theta(\mathcal{G})$, and state when it is tight. Why does the entropy term not affect the maximizer when $q$ is fixed?
+
+Then make it concrete on a three-node path. Enumerate its $3!=6$ orderings, identify which produce the same sequence (the path has a nontrivial automorphism), and count the **distinct** sequences. Assign each a probability under a model of your choosing and compute both sides of the inequality. Finally, explain what the BFS restriction does to the support of $q$ and why that helps.
 
 ### Exercise 6 — Counting decisions
 
