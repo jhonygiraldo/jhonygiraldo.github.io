@@ -23,33 +23,12 @@
       "url": "https://doriangailhard.github.io/"
     },
     {
-      "name": "Vahan Martirosyan",
-      "role": "PhD student",
-      "institution": "CentraleSupélec",
-      "topic": "Graph neural networks",
-      "dates": "Nov 2023–present"
-    },
-    {
       "name": "Emanuele Mule",
       "role": "Research engineer",
       "institution": "Télécom Paris",
       "topic": "Geometric deep learning",
       "dates": "Sep 2026–present",
       "url": "https://emamule.github.io/"
-    },
-    {
-      "name": "Sergei Gerasimov",
-      "role": "Research intern",
-      "institution": "Télécom Paris",
-      "topic": "Graph summarization",
-      "dates": "Apr–Sep 2026"
-    },
-    {
-      "name": "Matthieu Kaeppelin",
-      "role": "Research intern",
-      "institution": "Télécom Paris",
-      "topic": "Knowledge graphs",
-      "dates": "Apr–Sep 2026"
     }
   ],
   "visitors": [
@@ -85,6 +64,11 @@
       "url": "https://arefeinizade.github.io/"
     },
     {
+      "name": "Vahan Martirosyan",
+      "former_role": "PhD student",
+      "dates": "2023–2026"
+    },
+    {
       "name": "Gabriele Spadaro",
       "former_role": "PhD student",
       "dates": "2023–2025",
@@ -116,8 +100,7 @@
     {
       "name": "Vahan Martirosyan",
       "former_role": "Research intern",
-      "dates": "2023",
-      "destination": "PhD student, CentraleSupélec"
+      "dates": "2023"
     },
     {
       "name": "Nicolas Dunou",
@@ -139,6 +122,16 @@
       "name": "Bochun Jia",
       "former_role": "Research intern",
       "dates": "2026"
+    },
+    {
+      "name": "Sergei Gerasimov",
+      "former_role": "Research intern",
+      "dates": "2026"
+    },
+    {
+      "name": "Matthieu Kaeppelin",
+      "former_role": "Research intern",
+      "dates": "2026"
     }
   ],
   "masters": [
@@ -154,4 +147,3 @@
     "Ayoub Benabbou (2023–2024)"
   ]
 }
-
