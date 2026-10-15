@@ -1,5 +1,23 @@
 [
   {
+    "date": "2026-10-15",
+    "title": "Open PhD position: graph summarization (SIGMA)",
+    "body": "We are recruiting a PhD student for the Hi! PARIS project SIGMA, “Signal-aware Graph Summarization with GNN Guarantees”, co-supervised with Aref Einizade and Philippe Ciblat at Télécom Paris and Télécom SudParis. The three-year position starts in spring 2027; applications are reviewed on a rolling basis.",
+    "url": "/assets/pdf/PhD-Position-SIGMA-Graph-Summarization.pdf"
+  },
+  {
+    "date": "2026-10-01",
+    "title": "Intensive course in Graph ML at Universidad de Antioquia",
+    "body": "From September to October 2026, I was a visiting professor at Universidad de Antioquia, Colombia, where I taught an intensive course on Machine Learning with Graphs.",
+    "url": "teaching/"
+  },
+  {
+    "date": "2026-09-25",
+    "title": "Sparse low-rank biclique decomposition at NeurIPS 2026",
+    "body": "Our paper “A Sparse Low-Rank Biclique Decomposition for Graphs” was accepted at NeurIPS 2026.",
+    "publication_key": "vialle2026sparse"
+  },
+  {
     "date": "2026-06-04",
     "title": "CALICE accepted in ACM TOMM",
     "body": "Our paper “CALICE: Continuous bitrate control with Adapted LIC modEl” was accepted in ACM Transactions on Multimedia Computing, Communications, and Applications.",
@@ -134,4 +152,3 @@
     "publication_key": "einizade2024citrus"
   }
 ]
-

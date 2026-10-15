@@ -1,9 +1,18 @@
 ```{=html}
 <div class="publication-tools">
   <label><span class="visually-hidden">Search publications</span><input class="publication-search" type="search" placeholder="Search by title, author, venue, or year" data-publication-search></label>
-  <div class="publication-count" data-publication-count>56 publications</div>
+  <div class="publication-count" data-publication-count>57 publications</div>
 </div>
 <h2 class="publication-year" data-publication-year="2026">2026</h2>
+<article id="vialle2026sparse" class="publication-item" data-publication-item data-year="2026">
+  <div class="publication-venue">NeurIPS</div>
+  <div>
+    <div class="publication-title">A Sparse Low-Rank Biclique Decomposition for Graphs</div>
+    <div class="publication-authors">Antoine Vialle, Sergei Gerasimov, Aref Einizade, Antonio Ortega, Fragkiskos D. Malliaros, and <strong>Jhony H. Giraldo</strong></div>
+    <div class="publication-meta">Advances in Neural Information Processing Systems · 2026</div>
+
+  </div>
+</article>
 <article id="Gailhard2026feature" class="publication-item" data-publication-item data-year="2026">
   <div class="publication-venue">ICML</div>
   <div>

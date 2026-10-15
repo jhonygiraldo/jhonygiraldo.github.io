@@ -20,12 +20,6 @@ DeSNAP studies neural networks for higher-order geometric structures, with empha
 
 SIGMA connects graph summarization with signal preservation and guarantees for downstream graph-neural-network behavior.
 
-### Compressing Graph Data: From Signal Processing to Machine Learning
-
-**IMT Futur, Ruptures & Impacts · Supervisor · 2026–2029 · €155,000**
-
-This doctoral project develops principled graph compression methods across signal-processing and machine-learning perspectives.
-
 ### SODA — System on Chip Design Leveraging Artificial Intelligence
 
 **ANR · Team member · 2023–2027 · €531,000 consortium funding**

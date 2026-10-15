@@ -1,4 +1,13 @@
 ```{=html}
+<article id="vialle2026sparse" class="publication-item" data-publication-item data-year="2026">
+  <div class="publication-venue">NeurIPS</div>
+  <div>
+    <div class="publication-title">A Sparse Low-Rank Biclique Decomposition for Graphs</div>
+    <div class="publication-authors">Antoine Vialle, Sergei Gerasimov, Aref Einizade, Antonio Ortega, Fragkiskos D. Malliaros, and <strong>Jhony H. Giraldo</strong></div>
+    <div class="publication-meta">Advances in Neural Information Processing Systems · 2026</div>
+
+  </div>
+</article>
 <article id="Gailhard2026feature" class="publication-item" data-publication-item data-year="2026">
   <div class="publication-venue">ICML</div>
   <div>
@@ -42,15 +51,6 @@
     <div class="publication-authors">Jhon A. Castro-Correa, <strong>Jhony H. Giraldo</strong>, Mohsen Badiey, and Fragkiskos D. Malliaros</div>
     <div class="publication-meta">IEEE Transactions on Neural Networks and Learning Systems · 2024</div>
     <div class="publication-links"><a href="https://arxiv.org/abs/2403.19800">arXiv</a></div>
-  </div>
-</article>
-<article id="giraldo2020graphmos" class="publication-item" data-publication-item data-year="2022">
-  <div class="publication-venue">IEEE TPAMI</div>
-  <div>
-    <div class="publication-title">Graph Moving Object Segmentation</div>
-    <div class="publication-authors"><strong>Jhony H. Giraldo</strong>, Sajid Javed, and Thierry Bouwmans</div>
-    <div class="publication-meta">IEEE Transactions on Pattern Analysis and Machine Intelligence · 2022</div>
-
   </div>
 </article>
 ```

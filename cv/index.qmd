@@ -18,7 +18,7 @@ I am an Assistant Professor in Machine Learning and Computer Vision at Télécom
 
 ```{=html}
 <div class="metrics-grid">
-  <div class="metric-card"><strong>€900k+</strong><span>funding as PI, co-PI, or supervisor</span></div>
+  <div class="metric-card"><strong>€700k+</strong><span>funding as PI, co-PI, or supervisor</span></div>
   <div class="metric-card"><strong>2022</strong><span>joined Télécom Paris as Assistant Professor</span></div>
   <div class="metric-card"><strong>ELLIS</strong><span>Society member, Paris Unit</span></div>
 </div>
@@ -29,6 +29,7 @@ I am an Assistant Professor in Machine Learning and Computer Vision at Télécom
 **Assistant Professor in Machine Learning and Computer Vision**  
 Télécom Paris, Institut Polytechnique de Paris · Oct 2022–present
 
+- Visiting Professor, Universidad de Antioquia, Colombia, Sep–Oct 2026; taught an intensive course on Machine Learning with Graphs.
 - Visiting Professor, EPFL LTS4 laboratory, Oct–Nov 2024, supported by EuroTech.
 
 **Research Assistant in Graph Signal Processing**  
@@ -59,4 +60,4 @@ University of Delaware · Sep 2018–Aug 2019
 
 Service includes program-committee, reviewing, and workshop-organization roles across NeurIPS, ICML, ICLR, CVPR, ICCV, AISTATS, ECCV, ECML, WACV, ICASSP, JMLR, and multiple IEEE Transactions.
 
-The downloadable CV contains the complete publication, patent, funding, supervision, committee, talk, and teaching records. **PDF updated September 2026.**
+The downloadable CV contains the complete publication, patent, funding, supervision, committee, talk, and teaching records. **PDF updated October 2026.**
