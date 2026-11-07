@@ -17,7 +17,7 @@ The site is generated in `_site/`. LaTeX equations are rendered with MathJax.
 - News: add one object to `_data/news.json`.
 - Team members: edit `_data/people.json`.
 - Publications: edit `_bibliography/papers.bib`; use unique citation keys and separate authors with `and`.
-- Courses: edit `_data/courses.json` and add lecture `.qmd` files beneath `teaching/`.
+- Courses: edit `_data/courses.json` and add lecture `.qmd` files beneath `teaching/<slug>/`. A course with a `lectures` array needs a `slug`; its session list is generated as `_includes/generated/lecture-notes-<slug>.md` for the course page to include. Sessions may carry an optional `date`, `lecturer`, and `status`.
 - CV: replace `assets/pdf/Jhony-Giraldo-CV.pdf` with the new PDF, keeping the filename stable.
 
 The pre-render script turns structured data into reusable page fragments. Validate an update with:

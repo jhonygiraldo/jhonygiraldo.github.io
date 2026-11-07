@@ -58,6 +58,8 @@ University of Delaware · Sep 2018–Aug 2019
 
 ## Professional service
 
-Service includes program-committee, reviewing, and workshop-organization roles across NeurIPS, ICML, ICLR, CVPR, ICCV, AISTATS, ECCV, ECML, WACV, ICASSP, JMLR, and multiple IEEE Transactions.
+- Area Chair: ICML 2027; BMVC 2024; NeurIPS Workshop on New Perspectives in Graph Machine Learning 2025.
 
-The downloadable CV contains the complete publication, patent, funding, supervision, committee, talk, and teaching records. **PDF updated October 2026.**
+Service also includes program-committee, reviewing, and workshop-organization roles across NeurIPS, ICML, ICLR, CVPR, ICCV, AISTATS, ECCV, ECML, WACV, ICASSP, JMLR, and multiple IEEE Transactions.
+
+The downloadable CV contains the complete publication, patent, funding, supervision, committee, talk, and teaching records. **PDF updated November 2026.**

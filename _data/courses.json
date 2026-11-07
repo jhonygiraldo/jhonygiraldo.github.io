@@ -2,6 +2,7 @@
   {
     "code": "APM 5DS30 TP",
     "title": "Machine Learning with Graphs",
+    "slug": "machine-learning-with-graphs",
     "level": "MSc",
     "institution": "Institut Polytechnique de Paris",
     "role": "Course lead",
@@ -77,11 +78,75 @@
   {
     "code": "APM 5DA12 TP",
     "title": "Deep Learning for Computer Vision",
+    "slug": "deep-learning-for-computer-vision",
     "level": "MSc",
     "institution": "Institut Polytechnique de Paris",
     "role": "Course lead",
     "period": "2023–present",
-    "summary": "Modern representation learning and deep neural architectures for visual understanding.",
-    "featured": false
+    "summary": "Vision tasks and backbones, detection, segmentation, pose and tracking, foundation and vision–language models, generative models, and deep learning for 3D.",
+    "url": "teaching/deep-learning-for-computer-vision/index.qmd",
+    "featured": true,
+    "lectures": [
+      {
+        "number": 1,
+        "kind": "lecture",
+        "date": "2026-11-13",
+        "lecturer": "Jhony H. Giraldo",
+        "title": "From pixels to structured scene understanding",
+        "topics": "Computer-vision recap; CNN and Vision Transformer backbones; object detection, from anchors to DETR; semantic, instance, and panoptic segmentation; human pose estimation; multi-object tracking.",
+        "note": "teaching/deep-learning-for-computer-vision/lecture-01.qmd",
+        "slides": "DL4CV-Lecture-01-Deep-Learning-for-Computer-Vision.pdf"
+      },
+      {
+        "number": 2,
+        "kind": "practical",
+        "date": "2026-11-20",
+        "lecturer": "Jhony H. Giraldo",
+        "title": "From detection to multi-object tracking",
+        "topics": "Pretrained detectors, evaluation, and a tracking-by-detection pipeline."
+      },
+      {
+        "number": 3,
+        "kind": "lecture",
+        "date": "2026-11-27",
+        "lecturer": "Stephan Alaniz",
+        "title": "Foundation models",
+        "topics": "Foundation models; contrastive and vision–language learning.",
+        "status": ""
+      },
+      {
+        "number": 4,
+        "kind": "practical",
+        "date": "2026-12-04",
+        "lecturer": "Jhony H. Giraldo and Stephan Alaniz",
+        "title": "Foundation models",
+        "topics": "Hands-on work with vision foundation models. First written test in the second half."
+      },
+      {
+        "number": 5,
+        "kind": "lecture",
+        "date": "2026-12-11",
+        "lecturer": "Stephan Alaniz",
+        "title": "Generative foundation models and language models",
+        "topics": "Generative foundation models and language models.",
+        "status": ""
+      },
+      {
+        "number": 6,
+        "kind": "lecture",
+        "date": "2026-12-18",
+        "lecturer": "Jhony H. Giraldo",
+        "title": "Deep learning for 3D",
+        "topics": "Deep learning on meshes and point clouds."
+      },
+      {
+        "number": 7,
+        "kind": "practical",
+        "date": "2027-01-08",
+        "lecturer": "Jhony H. Giraldo",
+        "title": "3D deep learning",
+        "topics": "Hands-on 3D deep learning. Second written test in the second half."
+      }
+    ]
   }
 ]

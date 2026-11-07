@@ -36,7 +36,7 @@ The lectures assume a working knowledge of linear algebra, probability, and neur
 The course comprises six lectures. Web notes and slides appear below as each
 lecture is given.
 
-{{< include ../../_includes/generated/lecture-notes.md >}}
+{{< include ../../_includes/generated/lecture-notes-machine-learning-with-graphs.md >}}
 
 ## Core references
 

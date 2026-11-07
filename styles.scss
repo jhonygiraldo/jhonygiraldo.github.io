@@ -378,6 +378,15 @@ body.fullcontent #quarto-content > main.content,
   background: linear-gradient(135deg, #eaf5f3, #fffaf4);
 }
 
+/* Stacked spotlights (one per course) sit closer together than a lone one. */
+.spotlight:has(+ .spotlight) {
+  margin-bottom: 1.25rem;
+}
+
+.spotlight + .spotlight {
+  margin-top: 1.25rem;
+}
+
 .spotlight-also {
   margin: 1rem 0 0;
   color: var(--muted);
@@ -446,6 +455,14 @@ body.fullcontent #quarto-content > main.content,
 
 .lecture-body .button-row {
   margin-top: 0.9rem;
+}
+
+.lecture-body p.lecture-session {
+  margin-bottom: 0.35rem;
+  color: var(--teal);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .lecture-status {
@@ -706,6 +723,27 @@ body.fullcontent #quarto-content > main.content,
   color: var(--ink);
   font-family: $headings-font-family;
   font-size: 1.08rem;
+}
+
+.note-part {
+  margin: 3rem 0 1rem;
+  padding: 0.85rem 1.1rem;
+  border-top: 3px solid var(--teal);
+  border-radius: 0 0 0.6rem 0.6rem;
+  background: var(--aqua);
+  color: var(--teal-dark);
+  font-family: $headings-font-family;
+  font-size: 1.35rem;
+  font-weight: 750;
+}
+
+.note-part span {
+  display: block;
+  color: var(--teal);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
 }
 
 .figure-panel {

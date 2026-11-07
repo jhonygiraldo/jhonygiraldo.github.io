@@ -8,8 +8,8 @@
 </article>
 <article class="course-card">
   <div class="course-code">APM 5DA12 TP</div>
-  <h3>Deep Learning for Computer Vision</h3>
-  <p>Modern representation learning and deep neural architectures for visual understanding.</p>
+  <h3><a href="/teaching/deep-learning-for-computer-vision/index.qmd">Deep Learning for Computer Vision</a></h3>
+  <p>Vision tasks and backbones, detection, segmentation, pose and tracking, foundation and vision–language models, generative models, and deep learning for 3D.</p>
   <p class="person-links">MSc · Course lead · 2023–present</p>
 </article>
 </div>

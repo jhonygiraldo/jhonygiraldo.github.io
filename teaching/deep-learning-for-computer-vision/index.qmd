@@ -1,0 +1,86 @@
+---
+title: "Deep Learning for Computer Vision"
+subtitle: "APM 5DA12 TP · Institut Polytechnique de Paris"
+description: "Course hub for Deep Learning for Computer Vision, including web lecture notes, slides, the course calendar, and the evaluation rules."
+toc: false
+---
+
+This graduate course covers modern deep learning for visual understanding. It starts from the structured outputs of computer vision — detection, segmentation, pose, and tracking — and the backbones that produce them, then moves to foundation and vision–language models, generative models, and deep learning on 3D data. The course team is Jhony H. Giraldo and Stephan Alaniz.
+
+```{=html}
+<div class="feature-grid">
+  <article class="feature-card"><span class="number">Level</span><h3>MSc</h3><p>Institut Polytechnique de Paris.</p></article>
+  <article class="feature-card"><span class="number">Prerequisites</span><h3>Linear algebra + deep learning</h3><p>Vectors, matrices, and tensors; gradients, SGD, and regularization; CNN basics, losses, and backpropagation; Python and basic PyTorch.</p></article>
+  <article class="feature-card"><span class="number">Format</span><h3>Four lectures, three practicals</h3><p>Lectures (CM), hands-on practical sessions (TP), and an oral paper discussion.</p></article>
+</div>
+```
+
+## Learning objectives
+
+The course has two kinds of objectives. On the **application** side, students should be able to choose, train, evaluate, and diagnose modern vision systems:
+
+- match an output representation to a task;
+- build reproducible PyTorch pipelines;
+- interpret metrics and failure modes.
+
+On the **fundamentals** side, students should understand why architectures, losses, data, and optimization choices work:
+
+- connect inductive bias to data efficiency;
+- reason about geometry, uncertainty, and scale;
+- read papers beyond their headline result.
+
+Two principles run through the course: computer vision is not just deep learning, and deep learning is not plug-and-play.
+
+## Course sequence
+
+Web notes and slides appear below as each session is given.
+
+{{< include ../../_includes/generated/lecture-notes-deep-learning-for-computer-vision.md >}}
+
+## Calendar 2026–2027
+
+| Date | Type | Focus | Responsible |
+|---|---|---|---|
+| 13 Nov 2026 | CM | CV recap; CNNs/ViTs; detection, segmentation, pose estimation, tracking | Jhony H. Giraldo |
+| 20 Nov 2026 | TP | From detection to multi-object tracking | Jhony H. Giraldo |
+| 27 Nov 2026 | CM | Foundation models; contrastive and vision–language learning | Stephan Alaniz |
+| 04 Dec 2026 | TP | Foundation models | Jhony H. Giraldo, Stephan Alaniz |
+| 11 Dec 2026 | CM | Generative foundation models and language models | Stephan Alaniz |
+| 18 Dec 2026 | CM | Deep learning for 3D: meshes and point clouds | Jhony H. Giraldo |
+| 08 Jan 2027 | TP | 3D deep learning | Jhony H. Giraldo |
+| 15 Jan 2027 | Eval. | Oral paper discussion / course evaluation | Course team |
+
+: All sessions are scheduled in the afternoon; some students will be evaluated on the morning of 15 January. CM = *cours magistral* (lecture); TP = *travaux pratiques* (practical session).
+
+## Evaluation
+
+**Continuous assessment — 50%.** Two one-hour written tests, held during the second half of a practical session:
+
+- TP 2, 4 December 2026: CM 1, TP 1, and CM 2;
+- TP 3, 8 January 2027: TP 2, CM 3, and CM 4.
+
+The tests cover both the lecture material and the practical sessions.
+
+**Final project and oral exam — 50%.** Work in groups of two on an approved recent research paper.
+
+- Present the problem, the method, the main results, and the limitations.
+- Formulate a testable hypothesis inspired by the paper or by one of its limitations, and keep it **feasible** given your time and computational resources.
+- Test the hypothesis experimentally and provide evidence for your conclusions.
+- Submit a working and reproducible notebook before the final presentation.
+- Answer individual questions during the final presentation.
+
+**Use of LLMs and agents.** You may use them for the final project, but you remain responsible for all presented material and must be able to explain and defend every choice. We strongly recommend developing the research hypothesis yourselves.
+
+## Expectations and academic integrity
+
+- Limit the use of phones during lectures for non-academic purposes; participation in the lectures is important.
+- Plagiarism, cheating, and misuse of LLMs will be penalized. Verify every claim and run every submitted result.
+- Examples of misuse of LLMs: submitting or presenting something you cannot explain; using invented references, data, or measurements.
+
+You remain responsible for every line, claim, figure, and number you submit.
+
+## Resources
+
+**Concepts.** Stanford [CS231n](https://cs231n.stanford.edu/); Goodfellow, Bengio, and Courville, [*Deep Learning*](https://www.deeplearningbook.org/), MIT Press, 2016; and the original papers — read the method *and* the ablations.
+
+**Code and empirical context.** [torchvision](https://pytorch.org/vision/stable/), [Detectron2](https://github.com/facebookresearch/detectron2), and [MMDetection](https://github.com/open-mmlab/mmdetection).

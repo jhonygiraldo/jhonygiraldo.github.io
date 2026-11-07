@@ -238,6 +238,8 @@ def validate(news: list[dict[str, Any]], people: dict[str, Any], courses: list[d
             if note and not (ROOT / note).exists():
                 errors.append(f"{tag} points at a missing web note: {note}")
 
+        if course.get("lectures") and not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", course.get("slug", "")):
+            errors.append(f"course {index} has lectures but no valid slug (lowercase words joined by hyphens)")
         numbers = [lecture.get("number") for lecture in course.get("lectures", [])]
         if numbers != sorted(number for number in numbers if isinstance(number, int)):
             errors.append(f"course {index} has lectures that are unnumbered or out of order")
@@ -248,6 +250,11 @@ def validate(news: list[dict[str, Any]], people: dict[str, Any], courses: list[d
                     errors.append(f"{label} is missing {field}")
             if lecture.get("kind") not in (None, "lecture", "practical"):
                 errors.append(f"{label} has an unknown kind: {lecture['kind']}")
+            if lecture.get("date"):
+                try:
+                    date.fromisoformat(lecture["date"])
+                except ValueError:
+                    errors.append(f"{label} has an invalid ISO date")
             if lecture.get("kind") == "practical" and lecture.get("note"):
                 errors.append(f"{label} is a practical but declares a web note")
             note = lecture.get("note")
@@ -256,6 +263,10 @@ def validate(news: list[dict[str, Any]], people: dict[str, Any], courses: list[d
             slides = lecture.get("slides")
             if slides and not (ROOT / "assets" / "pdf" / slides).exists():
                 errors.append(f"{label} points at missing slides: {slides}")
+
+    slugs = [course["slug"] for course in courses if course.get("slug")]
+    if len(slugs) != len(set(slugs)):
+        errors.append("two courses share a slug")
 
     keys = [publication.get("key", "") for publication in publications]
     duplicate_keys = [key for key, count in Counter(keys).items() if key and count > 1]
@@ -386,14 +397,26 @@ def render_lecture_item(
         f'  <div class="lecture-index">{number}</div>',
         '  <div class="lecture-body">',
         f'    <h3>{html.escape(lecture["title"])}</h3>',
-        f'    <p>{html.escape(lecture["topics"])}</p>',
     ]
+    # Optional session metadata, e.g. "13 Nov 2026 · Jhony H. Giraldo".
+    session = []
+    if lecture.get("date"):
+        session.append(date.fromisoformat(lecture["date"]).strftime("%d %b %Y"))
+    if lecture.get("lecturer"):
+        session.append(html.escape(lecture["lecturer"]))
+    if session:
+        lines.append(f'    <p class="lecture-session">{" · ".join(session)}</p>')
+    lines.append(f'    <p>{html.escape(lecture["topics"])}</p>')
     if buttons:
         lines.append('    <div class="button-row">')
         lines.extend(buttons)
         lines.append("    </div>")
     else:
-        lines.append('    <p class="lecture-status">Web note in preparation.</p>')
+        # "status" overrides the default line; an empty string shows nothing.
+        default = "Practical session." if lecture.get("kind") == "practical" else "Web note in preparation."
+        status = lecture.get("status", default)
+        if status:
+            lines.append(f'    <p class="lecture-status">{html.escape(status)}</p>')
     lines.extend(["  </div>", "</li>"])
     return lines
 
@@ -418,43 +441,22 @@ def render_preliminaries(courses: list[dict[str, Any]]) -> str:
     return "\n".join(raw_block(listing)) + "\n"
 
 
-def render_lectures(courses: list[dict[str, Any]]) -> tuple[str, str]:
-    """Render the course-page session list and the home-page spotlight.
-
-    Both come from the same data, so publishing a note is a single edit in
-    _data/courses.json and neither page can fall out of step with the other.
-    """
-    course = next((item for item in courses if item.get("lectures")), None)
-    if course is None:
-        empty = "\n".join(raw_block(["<!-- no lectures declared in _data/courses.json -->"])) + "\n"
-        return empty, empty
-
-    lectures = course["lectures"]
+def lecture_numbering(lectures: list[dict[str, Any]]) -> dict[int, int]:
+    """Number the lectures of a course, skipping practical sessions."""
     numbering: dict[int, int] = {}
     counter = 0
     for index, lecture in enumerate(lectures):
         if lecture.get("kind") != "practical":
             counter += 1
             numbering[index] = counter
+    return numbering
 
-    listing = ['<ol class="lecture-list">']
-    for index, lecture in enumerate(lectures):
-        listing.extend(render_lecture_item(lecture, numbering.get(index)))
-    listing.append("</ol>")
 
-    published = [
-        dict(lecture, lecture_number=numbering[index])
-        for index, lecture in enumerate(lectures)
-        if lecture.get("note")
-    ]
-    if not published:
-        spotlight_lines = ["<!-- no web notes published yet -->"]
-        return "\n".join(raw_block(listing)) + "\n", "\n".join(raw_block(spotlight_lines)) + "\n"
-
+def render_course_spotlight(course: dict[str, Any], published: list[dict[str, Any]]) -> list[str]:
     latest = published[-1]
     earlier = published[:-1]
     course_link = internal_url(course.get("url", "teaching/index.qmd"))
-    spotlight_lines = [
+    lines = [
         '<section class="spotlight">',
         '  <div class="eyebrow">Web lecture notes</div>',
         f'  <h3>{html.escape(course["title"])}</h3>',
@@ -473,10 +475,45 @@ def render_lectures(courses: list[dict[str, Any]]) -> tuple[str, str]:
         remainder = len(earlier) - len(shown)
         if remainder:
             links += f', and {remainder} more'
-        spotlight_lines.append(f'  <p class="spotlight-also">Also online: {links}.</p>')
-    spotlight_lines.append("</section>")
+        lines.append(f'  <p class="spotlight-also">Also online: {links}.</p>')
+    lines.append("</section>")
+    return lines
 
-    return "\n".join(raw_block(listing)) + "\n", "\n".join(raw_block(spotlight_lines)) + "\n"
+
+def render_lectures(courses: list[dict[str, Any]]) -> tuple[dict[str, str], str]:
+    """Render one session list per course and the home-page spotlight.
+
+    Every course with a `lectures` array gets `lecture-notes-<slug>.md`, which
+    its course page includes. The spotlight shows the latest web note of every
+    course that has one, in the order of _data/courses.json. All of it comes
+    from the same data, so publishing a note is a single edit in
+    _data/courses.json and no page can fall out of step with another.
+    """
+    listings: dict[str, str] = {}
+    spotlight_lines: list[str] = []
+    for course in courses:
+        lectures = course.get("lectures")
+        if not lectures:
+            continue
+        numbering = lecture_numbering(lectures)
+
+        listing = ['<ol class="lecture-list">']
+        for index, lecture in enumerate(lectures):
+            listing.extend(render_lecture_item(lecture, numbering.get(index)))
+        listing.append("</ol>")
+        listings[f"lecture-notes-{course['slug']}.md"] = "\n".join(raw_block(listing)) + "\n"
+
+        published = [
+            dict(lecture, lecture_number=numbering[index])
+            for index, lecture in enumerate(lectures)
+            if lecture.get("note")
+        ]
+        if published:
+            spotlight_lines.extend(render_course_spotlight(course, published))
+
+    if not spotlight_lines:
+        spotlight_lines = ["<!-- no web notes published yet -->"]
+    return listings, "\n".join(raw_block(spotlight_lines)) + "\n"
 
 
 def news_link(item: dict[str, Any]) -> str | None:
@@ -610,12 +647,11 @@ def main() -> int:
     people_full, people_preview = render_people(people)
     news_full, news_latest = render_news(news)
     publications_full, publications_selected = render_publications(publications)
-    lectures_full, lectures_spotlight = render_lectures(courses)
+    lecture_listings, lectures_spotlight = render_lectures(courses)
     generated = {
         "people.md": people_full,
         "team-preview.md": people_preview,
         "courses.md": render_courses(courses),
-        "lecture-notes.md": lectures_full,
         "preliminaries.md": render_preliminaries(courses),
         "lecture-spotlight.md": lectures_spotlight,
         "news.md": news_full,
@@ -623,6 +659,7 @@ def main() -> int:
         "publications.md": publications_full,
         "selected-publications.md": publications_selected,
     }
+    generated.update(lecture_listings)
     for name, content in generated.items():
         write_if_changed(OUTPUT_DIR / name, content)
     print(f"Rendered {len(generated)} include files from structured content.")
