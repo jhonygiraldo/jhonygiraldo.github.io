@@ -1,75 +1,75 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://jhonygiraldo.github.io/publications/index.html</loc>
-    <lastmod>2026-11-16T14:20:19.078Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jhonygiraldo.github.io/teaching/deep-learning-for-computer-vision/index.html</loc>
-    <lastmod>2026-11-16T14:20:19.080Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jhonygiraldo.github.io/teaching/machine-learning-with-graphs/preliminaries-mathematics.html</loc>
-    <lastmod>2026-11-16T14:20:19.081Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jhonygiraldo.github.io/teaching/machine-learning-with-graphs/lecture-01.html</loc>
-    <lastmod>2026-11-16T14:20:19.080Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jhonygiraldo.github.io/teaching/machine-learning-with-graphs/lecture-02.html</loc>
-    <lastmod>2026-11-16T14:20:19.080Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jhonygiraldo.github.io/teaching/machine-learning-with-graphs/lecture-05.html</loc>
-    <lastmod>2026-11-16T14:20:19.081Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jhonygiraldo.github.io/teaching/machine-learning-with-graphs/lecture-04.html</loc>
-    <lastmod>2026-11-16T14:20:19.080Z</lastmod>
+    <loc>https://jhonygiraldo.github.io/research/index.html</loc>
+    <lastmod>2026-11-23T13:19:34.925Z</lastmod>
   </url>
   <url>
     <loc>https://jhonygiraldo.github.io/cv/index.html</loc>
-    <lastmod>2026-11-16T14:20:19.077Z</lastmod>
+    <lastmod>2026-11-23T13:19:34.925Z</lastmod>
   </url>
   <url>
-    <loc>https://jhonygiraldo.github.io/research/index.html</loc>
-    <lastmod>2026-11-16T14:20:19.078Z</lastmod>
+    <loc>https://jhonygiraldo.github.io/publications/index.html</loc>
+    <lastmod>2026-11-23T13:19:34.925Z</lastmod>
   </url>
   <url>
-    <loc>https://jhonygiraldo.github.io/news/index.html</loc>
-    <lastmod>2026-11-16T14:20:19.077Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jhonygiraldo.github.io/people/index.html</loc>
-    <lastmod>2026-11-16T14:20:19.078Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jhonygiraldo.github.io/index.html</loc>
-    <lastmod>2026-11-16T14:20:19.077Z</lastmod>
+    <loc>https://jhonygiraldo.github.io/teaching/machine-learning-with-graphs/lecture-05.html</loc>
+    <lastmod>2026-11-23T13:19:34.927Z</lastmod>
   </url>
   <url>
     <loc>https://jhonygiraldo.github.io/teaching/machine-learning-with-graphs/lecture-03.html</loc>
-    <lastmod>2026-11-16T14:20:19.080Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jhonygiraldo.github.io/teaching/machine-learning-with-graphs/preliminaries-machine-learning.html</loc>
-    <lastmod>2026-11-16T14:20:19.081Z</lastmod>
+    <lastmod>2026-11-23T13:19:34.927Z</lastmod>
   </url>
   <url>
     <loc>https://jhonygiraldo.github.io/teaching/machine-learning-with-graphs/lecture-06.html</loc>
-    <lastmod>2026-11-16T14:20:19.081Z</lastmod>
+    <lastmod>2026-11-23T13:19:34.927Z</lastmod>
   </url>
   <url>
     <loc>https://jhonygiraldo.github.io/teaching/machine-learning-with-graphs/index.html</loc>
-    <lastmod>2026-11-16T14:20:19.080Z</lastmod>
+    <lastmod>2026-11-23T13:19:34.926Z</lastmod>
   </url>
   <url>
-    <loc>https://jhonygiraldo.github.io/teaching/deep-learning-for-computer-vision/lecture-01.html</loc>
-    <lastmod>2026-11-16T14:20:19.080Z</lastmod>
+    <loc>https://jhonygiraldo.github.io/teaching/machine-learning-with-graphs/preliminaries-mathematics.html</loc>
+    <lastmod>2026-11-23T13:19:34.928Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jhonygiraldo.github.io/teaching/deep-learning-for-computer-vision/index.html</loc>
+    <lastmod>2026-11-23T13:19:34.926Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jhonygiraldo.github.io/people/index.html</loc>
+    <lastmod>2026-11-23T13:19:34.925Z</lastmod>
   </url>
   <url>
     <loc>https://jhonygiraldo.github.io/teaching/index.html</loc>
-    <lastmod>2026-11-16T14:20:19.080Z</lastmod>
+    <lastmod>2026-11-23T13:19:34.926Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jhonygiraldo.github.io/teaching/deep-learning-for-computer-vision/lecture-01.html</loc>
+    <lastmod>2026-11-23T13:19:34.926Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jhonygiraldo.github.io/teaching/machine-learning-with-graphs/preliminaries-machine-learning.html</loc>
+    <lastmod>2026-11-23T13:19:34.927Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jhonygiraldo.github.io/teaching/machine-learning-with-graphs/lecture-04.html</loc>
+    <lastmod>2026-11-23T13:19:34.927Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jhonygiraldo.github.io/teaching/machine-learning-with-graphs/lecture-01.html</loc>
+    <lastmod>2026-11-23T13:19:34.927Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jhonygiraldo.github.io/teaching/machine-learning-with-graphs/lecture-02.html</loc>
+    <lastmod>2026-11-23T13:19:34.927Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jhonygiraldo.github.io/index.html</loc>
+    <lastmod>2026-11-23T13:19:34.925Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jhonygiraldo.github.io/news/index.html</loc>
+    <lastmod>2026-11-23T13:19:34.925Z</lastmod>
   </url>
 </urlset>

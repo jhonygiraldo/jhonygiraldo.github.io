@@ -67,7 +67,7 @@ div.csl-indent {
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-48510bc5692052e702e8bcd076db7917.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-f929ed368d1a06fd5fbf5f513cae5962.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
 <link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
 <link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
@@ -357,7 +357,7 @@ window.Quarto = {
   <ul class="collapse">
   <li><a href="#exercise-1-shape-arithmetic" id="toc-exercise-1-shape-arithmetic" class="nav-link" data-scroll-target="#exercise-1-shape-arithmetic"><span class="header-section-number">16.1</span> Exercise 1 — Shape arithmetic</a></li>
   <li><a href="#exercise-2-vit-tokens" id="toc-exercise-2-vit-tokens" class="nav-link" data-scroll-target="#exercise-2-vit-tokens"><span class="header-section-number">16.2</span> Exercise 2 — ViT tokens</a></li>
-  <li><a href="#exercise-3-iou-and-anchors" id="toc-exercise-3-iou-and-anchors" class="nav-link" data-scroll-target="#exercise-3-iou-and-anchors"><span class="header-section-number">16.3</span> Exercise 3 — IoU and anchors</a></li>
+  <li><a href="#exercise-3-iou" id="toc-exercise-3-iou" class="nav-link" data-scroll-target="#exercise-3-iou"><span class="header-section-number">16.3</span> Exercise 3 — IoU</a></li>
   <li><a href="#exercise-4-focal-loss" id="toc-exercise-4-focal-loss" class="nav-link" data-scroll-target="#exercise-4-focal-loss"><span class="header-section-number">16.4</span> Exercise 4 — Focal loss</a></li>
   <li><a href="#exercise-5-segmentation-metrics" id="toc-exercise-5-segmentation-metrics" class="nav-link" data-scroll-target="#exercise-5-segmentation-metrics"><span class="header-section-number">16.5</span> Exercise 5 — Segmentation metrics</a></li>
   </ul></li>
@@ -749,6 +749,7 @@ Figure&nbsp;9: The pipeline: dataset and splits, augmentation and normalization,
 </figure>
 </div>
 </div>
+<p>Before an image enters the network, it is <strong>normalized</strong>: each colour channel is shifted and rescaled so that its values have roughly zero mean and unit variance, which keeps the network’s inputs in a well-conditioned range and makes optimization easier. The mean and standard deviation are computed once, per channel, over a large training set, and then kept fixed. For ImageNet, there are well-established values that are used almost everywhere: for images with pixel values scaled to <span class="math inline">\([0,1]\)</span>, the per-channel means are <span class="math inline">\(\boldsymbol\mu=(0.485,0.456,0.406)\)</span> and the standard deviations <span class="math inline">\(\boldsymbol\sigma=(0.229,0.224,0.225)\)</span>, for the red, green, and blue channels. Most pretrained backbones were trained with exactly these values, so we reuse them whenever we start from such a backbone.</p>
 <p>Each training step normalizes and augments the images, then updates the weights on a mini-batch:</p>
 <p><span class="math display">\[
 \tilde{\mathbf{x}}=\frac{\mathbf{x}-\boldsymbol\mu}{\boldsymbol\sigma},
@@ -759,7 +760,7 @@ Figure&nbsp;9: The pipeline: dataset and splits, augmentation and normalization,
 \qquad
 \theta\leftarrow\theta-\eta\,\nabla_\theta\mathcal{L},
 \]</span></p>
-<p>where <span class="math inline">\(\boldsymbol\mu\)</span> and <span class="math inline">\(\boldsymbol\sigma\)</span> are the per-channel mean and standard deviation, <span class="math inline">\(\tilde{\mathbf{x}}\)</span> the normalized image, <span class="math inline">\(p_\theta(y\mid\tilde{\mathbf{x}})\)</span> the predicted class probabilities, <span class="math inline">\(\ell_i\)</span> the loss of example <span class="math inline">\(i\)</span>, <span class="math inline">\(B\)</span> the batch size, <span class="math inline">\(\mathcal{L}(\theta)\)</span> the batch loss, <span class="math inline">\(\eta\)</span> the learning rate, and <span class="math inline">\(\nabla_\theta\mathcal{L}\)</span> the gradient with respect to <span class="math inline">\(\theta\)</span>.</p>
+<p>where <span class="math inline">\(\boldsymbol\mu\)</span> and <span class="math inline">\(\boldsymbol\sigma\)</span> are the per-channel mean and standard deviation (the subtraction and division are applied to each channel separately), <span class="math inline">\(\tilde{\mathbf{x}}\)</span> the normalized image, <span class="math inline">\(p_\theta(y\mid\tilde{\mathbf{x}})\)</span> the predicted class probabilities, <span class="math inline">\(\ell_i\)</span> the loss of example <span class="math inline">\(i\)</span>, <span class="math inline">\(B\)</span> the batch size, <span class="math inline">\(\mathcal{L}(\theta)\)</span> the batch loss, <span class="math inline">\(\eta\)</span> the learning rate, and <span class="math inline">\(\nabla_\theta\mathcal{L}\)</span> the gradient with respect to <span class="math inline">\(\theta\)</span>.</p>
 <div class="checkpoint">
 <p><strong>Before training, and the most common leakage</strong></p>
 <p><em>Before training:</em> define the target, fix the split, inspect the labels, and establish a simple baseline.</p>
@@ -942,13 +943,13 @@ Figure&nbsp;18: ReLU and GELU.
 </figure>
 </div>
 </div>
-<p><strong>Batch normalization</strong> <span class="citation" data-cites="ioffe2015batch">(<a href="#ref-ioffe2015batch" role="doc-biblioref">Ioffe and Szegedy 2015</a>)</span> works per channel:</p>
+<p><strong>Batch normalization</strong> <span class="citation" data-cites="ioffe2015batch">(<a href="#ref-ioffe2015batch" role="doc-biblioref">Ioffe and Szegedy 2015</a>)</span> normalizes each channel with statistics computed over the mini-batch:</p>
 <p><span class="math display">\[
-\hat x=\frac{x-\mu_{\mathcal{B}}}{\sqrt{\sigma_{\mathcal{B}}^{2}+\epsilon}},
+\hat{\mathbf{x}}=\frac{\mathbf{x}-\boldsymbol{\mu}_{\mathcal{B}}}{\sqrt{\boldsymbol{\sigma}_{\mathcal{B}}^{2}+\epsilon}},
 \qquad
-y=\gamma\hat x+\beta,
+\mathbf{y}=\boldsymbol{\gamma}\odot\hat{\mathbf{x}}+\boldsymbol{\beta},
 \]</span></p>
-<p>where <span class="math inline">\(\mathcal{B}\)</span> is the current mini-batch, <span class="math inline">\(x\)</span> one activation of the channel, <span class="math inline">\(\mu_{\mathcal{B}}\)</span> and <span class="math inline">\(\sigma^2_{\mathcal{B}}\)</span> its mean and variance over <span class="math inline">\(\mathcal{B}\)</span>, <span class="math inline">\(\epsilon\)</span> a tiny constant that avoids division by zero, <span class="math inline">\(\hat x\)</span> the normalized activation, <span class="math inline">\(\gamma\)</span> and <span class="math inline">\(\beta\)</span> a learned scale and shift, and <span class="math inline">\(y\)</span> the output. It improves optimization and permits larger learning rates, but its behaviour depends on batch statistics and on train/eval mode (<code>model.eval()</code> switches to running averages). <strong>LayerNorm</strong> normalizes within one token or example and needs no batch statistics.</p>
+<p>where <span class="math inline">\(\mathcal{B}\)</span> is the current mini-batch, <span class="math inline">\(\mathbf{x}\in\mathbb{R}^{C}\)</span> the activations of one example at one position, with one entry per channel (<span class="math inline">\(C\)</span> channels), <span class="math inline">\(\boldsymbol{\mu}_{\mathcal{B}}\)</span> and <span class="math inline">\(\boldsymbol{\sigma}^2_{\mathcal{B}}\in\mathbb{R}^{C}\)</span> the per-channel mean and variance over <span class="math inline">\(\mathcal{B}\)</span> (and over all positions), <span class="math inline">\(\epsilon\)</span> a tiny constant that avoids division by zero, <span class="math inline">\(\hat{\mathbf{x}}\)</span> the normalized activations, <span class="math inline">\(\boldsymbol{\gamma}\)</span> and <span class="math inline">\(\boldsymbol{\beta}\in\mathbb{R}^{C}\)</span> a learned per-channel scale and shift, <span class="math inline">\(\odot\)</span> the element-wise product, and <span class="math inline">\(\mathbf{y}\)</span> the output. The subtraction, square root, and division are also applied element-wise, so each channel is normalized independently. It improves optimization and permits larger learning rates, but its behaviour depends on batch statistics and on train/eval mode (<code>model.eval()</code> switches to running averages). <strong>LayerNorm</strong> normalizes within one token or example and needs no batch statistics.</p>
 <p>For an activation function <span class="math inline">\(\sigma(x)\)</span> with input <span class="math inline">\(x\)</span>: <strong>ReLU</strong>, <span class="math inline">\(\max(0,x)\)</span>, is cheap, sparse, and piecewise linear; <strong>GELU</strong> <span class="citation" data-cites="hendrycks2016gaussian">(<a href="#ref-hendrycks2016gaussian" role="doc-biblioref">Hendrycks and Gimpel 2016</a>)</span> is a smooth gate common in transformers.</p>
 </section>
 <section id="transfer-learning" class="level3" data-number="5.10">
@@ -1506,12 +1507,6 @@ Figure&nbsp;42: Anchors at one cell of a stride-16 grid: three sizes (64, 128, 2
 \hat h=h_a e^{t_h},
 \tag{5}\]</span></span></p>
 <p>where <span class="math inline">\((c_x^a,c_y^a)\)</span> is the anchor centre, <span class="math inline">\(w_a,h_a\)</span> its width and height, and <span class="math inline">\((\hat c_x,\hat c_y,\hat w,\hat h)\)</span> the centre and size of the predicted box <span class="math inline">\(\hat{\mathbf{b}}\)</span>. The exponential keeps the size positive.</p>
-<div class="worked-example">
-<p><strong>Worked example — The car against its best anchor</strong></p>
-<p>With <span class="math inline">\(\mathbf{a}=(712,552,362,181)\)</span> and the car at <span class="math inline">\((712,545,308,152)\)</span>, inverting <a href="#eq-anchor-decode" class="quarto-xref">Equation&nbsp;5</a> gives <span class="math display">\[
-t_x=0,\quad t_y=\tfrac{545-552}{181}=-0.039,\quad t_w=\ln\tfrac{308}{362}=-0.162,\quad t_h=\ln\tfrac{152}{181}=-0.175,
-\]</span> small targets of order <span class="math inline">\(0.1\)</span> whatever the size of the object.</p>
-</div>
 </section>
 <section id="anchor-matching" class="level3" data-number="8.8">
 <h3 data-number="8.8" class="anchored" data-anchor-id="anchor-matching"><span class="header-section-number">8.8</span> Anchor matching</h3>
@@ -2077,9 +2072,9 @@ Figure&nbsp;68: One step of tracking by detection. (1) Detections <span class="m
 <h3 data-number="16.2" class="anchored" data-anchor-id="exercise-2-vit-tokens"><span class="header-section-number">16.2</span> Exercise 2 — ViT tokens</h3>
 <p>For ViT-B/16 at <span class="math inline">\(384\times384\)</span>, compute the number of patch tokens <span class="math inline">\(N\)</span>, the shape of <span class="math inline">\(\mathbf{z}_0\)</span>, and the size of the attention matrix <span class="math inline">\(\mathbf{A}\)</span> of one head. By what factor did the attention matrix grow compared with <span class="math inline">\(224\times224\)</span>?</p>
 </section>
-<section id="exercise-3-iou-and-anchors" class="level3" data-number="16.3">
-<h3 data-number="16.3" class="anchored" data-anchor-id="exercise-3-iou-and-anchors"><span class="header-section-number">16.3</span> Exercise 3 — IoU and anchors</h3>
-<p>Compute the IoU of the boxes <span class="math inline">\((0,0,4,4)\)</span> and <span class="math inline">\((2,2,6,6)\)</span>, given as <span class="math inline">\((x_1,y_1,x_2,y_2)\)</span>. Then encode the box <span class="math inline">\((c_x,c_y,w,h)=(150,125,100,50)\)</span> against the anchor <span class="math inline">\((140,130,128,64)\)</span> and decode it back with <a href="#eq-anchor-decode" class="quarto-xref">Equation&nbsp;5</a>.</p>
+<section id="exercise-3-iou" class="level3" data-number="16.3">
+<h3 data-number="16.3" class="anchored" data-anchor-id="exercise-3-iou"><span class="header-section-number">16.3</span> Exercise 3 — IoU</h3>
+<p>Compute the IoU of the boxes <span class="math inline">\((0,0,4,4)\)</span> and <span class="math inline">\((2,2,6,6)\)</span>, given as <span class="math inline">\((x_1,y_1,x_2,y_2)\)</span>. Then shift the second box by one pixel towards the first and compute the IoU again.</p>
 </section>
 <section id="exercise-4-focal-loss" class="level3" data-number="16.4">
 <h3 data-number="16.4" class="anchored" data-anchor-id="exercise-4-focal-loss"><span class="header-section-number">16.4</span> Exercise 4 — Focal loss</h3>
