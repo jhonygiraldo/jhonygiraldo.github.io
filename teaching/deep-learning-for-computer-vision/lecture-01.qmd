@@ -205,6 +205,8 @@ If the true class is "street scene", $\mathcal{L}_{\text{CE}}=-\ln0.84=0.17$; ha
 ![The pipeline: dataset and splits, augmentation and normalization, the model, loss and optimizer, metrics, and deployment with monitoring. New failures become new data.](../../assets/figures/dl4cv/l01-pipeline.webp){#fig-pipeline fig-alt="Six connected panels: dataset and splits, augment and normalize, model, loss and optimizer, metrics, deploy and monitor"}
 :::
 
+Before an image enters the network, it is **normalized**: each colour channel is shifted and rescaled so that its values have roughly zero mean and unit variance, which keeps the network's inputs in a well-conditioned range and makes optimization easier. The mean and standard deviation are computed once, per channel, over a large training set, and then kept fixed. For ImageNet, there are well-established values that are used almost everywhere: for images with pixel values scaled to $[0,1]$, the per-channel means are $\boldsymbol\mu=(0.485,0.456,0.406)$ and the standard deviations $\boldsymbol\sigma=(0.229,0.224,0.225)$, for the red, green, and blue channels. Most pretrained backbones were trained with exactly these values, so we reuse them whenever we start from such a backbone.
+
 Each training step normalizes and augments the images, then updates the weights on a mini-batch:
 
 $$
@@ -217,7 +219,7 @@ $$
 \theta\leftarrow\theta-\eta\,\nabla_\theta\mathcal{L},
 $$
 
-where $\boldsymbol\mu$ and $\boldsymbol\sigma$ are the per-channel mean and standard deviation, $\tilde{\mathbf{x}}$ the normalized image, $p_\theta(y\mid\tilde{\mathbf{x}})$ the predicted class probabilities, $\ell_i$ the loss of example $i$, $B$ the batch size, $\mathcal{L}(\theta)$ the batch loss, $\eta$ the learning rate, and $\nabla_\theta\mathcal{L}$ the gradient with respect to $\theta$.
+where $\boldsymbol\mu$ and $\boldsymbol\sigma$ are the per-channel mean and standard deviation (the subtraction and division are applied to each channel separately), $\tilde{\mathbf{x}}$ the normalized image, $p_\theta(y\mid\tilde{\mathbf{x}})$ the predicted class probabilities, $\ell_i$ the loss of example $i$, $B$ the batch size, $\mathcal{L}(\theta)$ the batch loss, $\eta$ the learning rate, and $\nabla_\theta\mathcal{L}$ the gradient with respect to $\theta$.
 
 ::: {.checkpoint}
 **Before training, and the most common leakage**
@@ -348,15 +350,15 @@ where $\mathbf{x}$ is the block input, $\mathbf{y}$ the block output, $\mathcal{
 ![ReLU and GELU.](../../assets/figures/dl4cv/l01-activations.webp){#fig-activations fig-alt="Plot of the ReLU and GELU activation functions"}
 :::
 
-**Batch normalization** [@ioffe2015batch] works per channel:
+**Batch normalization** [@ioffe2015batch] normalizes each channel with statistics computed over the mini-batch:
 
 $$
-\hat x=\frac{x-\mu_{\mathcal{B}}}{\sqrt{\sigma_{\mathcal{B}}^{2}+\epsilon}},
+\hat{\mathbf{x}}=\frac{\mathbf{x}-\boldsymbol{\mu}_{\mathcal{B}}}{\sqrt{\boldsymbol{\sigma}_{\mathcal{B}}^{2}+\epsilon}},
 \qquad
-y=\gamma\hat x+\beta,
+\mathbf{y}=\boldsymbol{\gamma}\odot\hat{\mathbf{x}}+\boldsymbol{\beta},
 $$
 
-where $\mathcal{B}$ is the current mini-batch, $x$ one activation of the channel, $\mu_{\mathcal{B}}$ and $\sigma^2_{\mathcal{B}}$ its mean and variance over $\mathcal{B}$, $\epsilon$ a tiny constant that avoids division by zero, $\hat x$ the normalized activation, $\gamma$ and $\beta$ a learned scale and shift, and $y$ the output. It improves optimization and permits larger learning rates, but its behaviour depends on batch statistics and on train/eval mode (`model.eval()` switches to running averages). **LayerNorm** normalizes within one token or example and needs no batch statistics.
+where $\mathcal{B}$ is the current mini-batch, $\mathbf{x}\in\mathbb{R}^{C}$ the activations of one example at one position, with one entry per channel ($C$ channels), $\boldsymbol{\mu}_{\mathcal{B}}$ and $\boldsymbol{\sigma}^2_{\mathcal{B}}\in\mathbb{R}^{C}$ the per-channel mean and variance over $\mathcal{B}$ (and over all positions), $\epsilon$ a tiny constant that avoids division by zero, $\hat{\mathbf{x}}$ the normalized activations, $\boldsymbol{\gamma}$ and $\boldsymbol{\beta}\in\mathbb{R}^{C}$ a learned per-channel scale and shift, $\odot$ the element-wise product, and $\mathbf{y}$ the output. The subtraction, square root, and division are also applied element-wise, so each channel is normalized independently. It improves optimization and permits larger learning rates, but its behaviour depends on batch statistics and on train/eval mode (`model.eval()` switches to running averages). **LayerNorm** normalizes within one token or example and needs no batch statistics.
 
 For an activation function $\sigma(x)$ with input $x$: **ReLU**, $\max(0,x)$, is cheap, sparse, and piecewise linear; **GELU** [@hendrycks2016gaussian] is a smooth gate common in transformers.
 
@@ -716,16 +718,6 @@ $$ {#eq-anchor-decode}
 
 where $(c_x^a,c_y^a)$ is the anchor centre, $w_a,h_a$ its width and height, and $(\hat c_x,\hat c_y,\hat w,\hat h)$ the centre and size of the predicted box $\hat{\mathbf{b}}$. The exponential keeps the size positive.
 
-::: {.worked-example}
-**Worked example — The car against its best anchor**
-
-With $\mathbf{a}=(712,552,362,181)$ and the car at $(712,545,308,152)$, inverting @eq-anchor-decode gives
-$$
-t_x=0,\quad t_y=\tfrac{545-552}{181}=-0.039,\quad t_w=\ln\tfrac{308}{362}=-0.162,\quad t_h=\ln\tfrac{152}{181}=-0.175,
-$$
-small targets of order $0.1$ whatever the size of the object.
-:::
-
 ### Anchor matching
 
 ::: {.figure-panel}
@@ -1060,9 +1052,9 @@ A $224\times224\times3$ image passes through a $7\times7$ convolution with 64 fi
 
 For ViT-B/16 at $384\times384$, compute the number of patch tokens $N$, the shape of $\mathbf{z}_0$, and the size of the attention matrix $\mathbf{A}$ of one head. By what factor did the attention matrix grow compared with $224\times224$?
 
-### Exercise 3 — IoU and anchors
+### Exercise 3 — IoU
 
-Compute the IoU of the boxes $(0,0,4,4)$ and $(2,2,6,6)$, given as $(x_1,y_1,x_2,y_2)$. Then encode the box $(c_x,c_y,w,h)=(150,125,100,50)$ against the anchor $(140,130,128,64)$ and decode it back with @eq-anchor-decode.
+Compute the IoU of the boxes $(0,0,4,4)$ and $(2,2,6,6)$, given as $(x_1,y_1,x_2,y_2)$. Then shift the second box by one pixel towards the first and compute the IoU again.
 
 ### Exercise 4 — Focal loss
 
